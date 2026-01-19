@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.myow.oms</groupId>
+        <artifactId>myow-oms</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>myow-app</artifactId>
+    <packaging>jar</packaging>
+
+    <name>myow-app</name>
+    <description>Application Starter</description>
+
+    <dependencies>
+        <!-- Project Modules -->
+        <dependency>
+            <groupId>com.myow.oms</groupId>
+            <artifactId>myow-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.oms</groupId>
+            <artifactId>myow-infrastructure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.oms</groupId>
+            <artifactId>myow-system</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.oms</groupId>
+            <artifactId>myow-business-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.oms</groupId>
+            <artifactId>myow-business-oms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.oms</groupId>
+            <artifactId>myow-fms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.oms</groupId>
+            <artifactId>myow-openapi</artifactId>
+        </dependency>
+
+        <!-- MyBatis-Plus Code Generator and Template Engine -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-generator</artifactId>
+            <version>${mybatis-plus.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>2.3.32</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Spring Boot Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

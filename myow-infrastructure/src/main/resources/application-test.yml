@@ -1,0 +1,26 @@
+# TEST Environment Configuration
+
+# Database Configuration (PostgreSQL)
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    jdbc-url: jdbc:postgresql://localhost:5432/myow_oms_test
+    username: your_username
+    password: your_password
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+# Redis Configuration
+spring.data.redis:
+  host: localhost
+  port: 6379
+  password:
+  database: 1
+  lettuce:
+    pool:
+      max-active: 8
+      max-wait: -1ms
+      max-idle: 8
+      min-idle: 0

@@ -1,0 +1,38 @@
+# Spring Boot Configuration
+spring:
+  application:
+    name: myow-oms
+  profiles:
+    active: dev # Specifies the default active profile
+  config:
+    import:
+        - optional:classpath:application-${spring.profiles.active}.yml
+
+# Server Configuration
+server:
+  port: 8129
+  servlet:
+    context-path: /
+
+# Sa-Token Configuration (Can be moved to a more specific module if needed)
+sa-token:
+  token-name: Authorization
+  timeout: 2592000
+  active-timeout: -1
+  is-concurrent: true
+  is-share: true
+  token-style: uuid
+  is-log: true
+
+# Knife4j Configuration (Can be moved to a more specific module if needed)
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+logging:
+  level:
+    com:
+      zaxxer:
+        hikari: DEBUG
+

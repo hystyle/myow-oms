@@ -1,0 +1,11 @@
+target/
+disconf/
+${catalina.home}/
+.settings/
+.iml
+.classpath
+.project
+.idea/
+*.iml
+logs/
+.mvn/

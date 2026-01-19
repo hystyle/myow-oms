@@ -1,0 +1,26 @@
+# PROD Environment Configuration
+
+# Database Configuration (PostgreSQL)
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    jdbc-url: jdbc:postgresql://prod_db_host:5432/myow_oms_prod
+    username: your_prod_username
+    password: your_prod_password
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 50
+      minimum-idle: 10
+
+# Redis Configuration
+spring.data.redis:
+  host: prod_redis_host
+  port: 6379
+  password: your_prod_redis_password
+  database: 0
+  lettuce:
+    pool:
+      max-active: 20
+      max-wait: -1ms
+      max-idle: 20
+      min-idle: 5
