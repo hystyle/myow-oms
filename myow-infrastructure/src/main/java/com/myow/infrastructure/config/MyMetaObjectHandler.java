@@ -2,8 +2,9 @@ package com.myow.infrastructure.config;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -14,9 +15,9 @@ import java.time.LocalDateTime;
  * @author Gemini
  * @since 2026-01-19
  */
-@Slf4j
 @Component
 public class MyMetaObjectHandler implements MetaObjectHandler {
+    private static final Logger log = LoggerFactory.getLogger(MyMetaObjectHandler.class);
 
     @Override
     public void insertFill(MetaObject metaObject) {

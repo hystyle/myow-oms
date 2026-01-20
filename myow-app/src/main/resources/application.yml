@@ -12,7 +12,7 @@ spring:
 server:
   port: 8129
   servlet:
-    context-path: /
+    context-path: /myow
 
 # Sa-Token Configuration (Can be moved to a more specific module if needed)
 sa-token:
@@ -25,14 +25,8 @@ sa-token:
   is-log: true
 
 # Knife4j Configuration (Can be moved to a more specific module if needed)
-knife4j:
-  enable: true
-  setting:
-    language: zh_cn
-
-logging:
-  level:
-    com:
-      zaxxer:
-        hikari: DEBUG
+#knife4j:
+#  enable: true
+#  setting:
+#    language: zh_cn
 
