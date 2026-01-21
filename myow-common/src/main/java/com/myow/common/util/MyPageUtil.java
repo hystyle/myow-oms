@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.myow.common.exception.BusinessException;
 import com.myow.common.response.PageParam;
 import com.myow.common.response.PageResult;
+import com.myow.common.response.ResultCode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class MyPageUtil {
 
             if (SqlInjectionUtils.check(sortItem.getColumn())) {
                 log.error("《存在SQL注入：》 : {}", sortItem.getColumn());
-                throw new BusinessException("存在SQL注入风险，请联系技术工作人员！");
+                throw new BusinessException(ResultCode.SQL_INJECTION_ERROR);
             }
             orderItemList.add(sortItem.getAsc() ? OrderItem.asc(sortItem.getColumn()) : OrderItem.desc(sortItem.getColumn()));
         }

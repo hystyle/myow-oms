@@ -31,7 +31,7 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableTransactionManagement
-@MapperScan(basePackages = {"com.myow.infrastructure.persistence"},  sqlSessionFactoryRef = "sqlSessionFactory")
+@MapperScan(basePackages = {"com.myow.**.persistence.mapper"},  sqlSessionFactoryRef = "sqlSessionFactory")
 public class DataSourceConfig {
 
     /**

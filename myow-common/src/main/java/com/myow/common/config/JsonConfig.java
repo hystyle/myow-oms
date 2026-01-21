@@ -8,7 +8,10 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.myow.common.exception.BusinessException;
+import com.myow.common.response.ResultCode;
 import io.micrometer.common.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +28,8 @@ import java.time.format.DateTimeParseException;
  */
 @Configuration
 public class JsonConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(JsonConfig.class);
 
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer customizer() {
@@ -76,7 +81,8 @@ public class JsonConfig {
             try {
                 localDate = LocalDateTimeUtil.parseDate(str, DatePattern.NORM_DATE_FORMAT.getDateTimeFormatter());
             } catch (DateTimeParseException e) {
-                throw new BusinessException("请输入正确的日期格式：yyyy-MM-dd");
+                logger.error("请输入正确的日期格式：yyyy-MM-dd");
+                throw new BusinessException(ResultCode.SYSTEM_ERROR);
             }
             return localDate;
         }

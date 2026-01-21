@@ -16,6 +16,13 @@
     <description>System management module</description>
 
     <dependencies>
+        <!-- lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.myow.oms</groupId>
             <artifactId>myow-infrastructure</artifactId>
