@@ -2,6 +2,7 @@ package com.myow.common.exception;
 
 import com.myow.common.response.Result;
 import com.myow.common.response.ResultCode;
+import com.myow.common.util.MessageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.BindException;
@@ -26,7 +27,7 @@ public class GlobalExceptionHandler {
         String msg = e instanceof MethodArgumentNotValidException ex
                 ? ex.getBindingResult().getFieldError().getDefaultMessage()
                 : ((BindException) e).getFieldError().getDefaultMessage();
-        return Result.error(ResultCode.PARAM_ERROR, msg);
+        return Result.error(ResultCode.PARAM_ERROR, MessageUtils.getMessage(msg));
     }
 
     /**
@@ -35,7 +36,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public Result<String> handleBusinessException(BusinessException e) {
         logger.error("URL:{}, 业务异常: {}", getCurrentRequestUrl(), e.getMessage(), e);
-        return Result.error(ResultCode.BUSINESS_HANDING, e.getMessage());
+        String message = MessageUtils.getMessage(String.valueOf(e.getErrorCode().getCode()), e.getArgs());
+        return Result.error(e.getErrorCode().getCode(), message);
     }
 
     /**
@@ -44,7 +46,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Throwable.class)
     public Result<String> handleException(Throwable e) {
         logger.error("URL:{}, 系统异常: {}", getCurrentRequestUrl(), e.getMessage(), e);
-        return Result.error(ResultCode.SYSTEM_ERROR);
+        return Result.error(ResultCode.SYSTEM_ERROR, MessageUtils.getMessage(String.valueOf(ResultCode.SYSTEM_ERROR.getCode())));
     }
 
     /**
