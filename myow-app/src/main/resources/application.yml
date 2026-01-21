@@ -4,6 +4,9 @@ spring:
     name: myow-oms
   profiles:
     active: dev # Specifies the default active profile
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
   config:
     import:
         - optional:classpath:application-${spring.profiles.active}.yml

@@ -1,5 +1,6 @@
 package com.myow.oms.api.controller;
 
+import com.myow.common.util.MessageUtils;
 import com.myow.infrastructure.persistence.entity.UserDO;
 import com.myow.infrastructure.persistence.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,5 +29,11 @@ public class UserController {
     @GetMapping("/list")
     public List<UserDO> listUsers() {
         return userService.list();
+    }
+
+    @Operation(summary = "获取国际化信息", description = "获取国际化信息（示例接口）")
+    @GetMapping("/getMsg")
+    public String getMsg() {
+        return MessageUtils.getMessage("user.name");
     }
 }
