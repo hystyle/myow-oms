@@ -1,9 +1,8 @@
 package com.myow.system.persistence.repository;
 
-import com.myow.system.persistence.po.SerialNoConfigDO;
-import com.myow.system.persistence.mapper.SerialNoConfigMapper;
-import com.myow.system.persistence.service.SerialNoConfigService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.myow.system.persistence.mapper.SerialNoConfigMapper;
+import com.myow.system.persistence.po.SerialNoConfigDO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +14,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-21
  */
 @Service
-public class SerialNoConfigRepository extends ServiceImpl<SerialNoConfigMapper, SerialNoConfigDO> implements SerialNoConfigService {
+public class SerialNoConfigRepository extends ServiceImpl<SerialNoConfigMapper, SerialNoConfigDO> {
 
 }

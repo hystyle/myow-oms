@@ -1,9 +1,8 @@
 package com.myow.system.persistence.repository;
 
-import com.myow.system.persistence.po.RoleDeptDO;
-import com.myow.system.persistence.mapper.RoleDeptMapper;
-import com.myow.system.persistence.service.RoleDeptService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.myow.system.persistence.mapper.RoleDeptMapper;
+import com.myow.system.persistence.po.RoleDeptDO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +14,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-21
  */
 @Service
-public class RoleDeptRepository extends ServiceImpl<RoleDeptMapper, RoleDeptDO> implements RoleDeptService {
+public class RoleDeptRepository extends ServiceImpl<RoleDeptMapper, RoleDeptDO> {
 
 }

@@ -1,9 +1,8 @@
 package com.myow.system.persistence.repository;
 
-import com.myow.system.persistence.po.TenantPlansDO;
-import com.myow.system.persistence.mapper.TenantPlansMapper;
-import com.myow.system.persistence.service.TenantPlansService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.myow.system.persistence.mapper.TenantPlansMapper;
+import com.myow.system.persistence.po.TenantPlansDO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +14,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-21
  */
 @Service
-public class TenantPlansRepository extends ServiceImpl<TenantPlansMapper, TenantPlansDO> implements TenantPlansService {
+public class TenantPlansRepository extends ServiceImpl<TenantPlansMapper, TenantPlansDO> {
 
 }

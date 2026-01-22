@@ -1,9 +1,8 @@
 package com.myow.system.persistence.repository;
 
-import com.myow.system.persistence.po.UserDO;
-import com.myow.system.persistence.mapper.UserMapper;
-import com.myow.system.persistence.service.UserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.myow.system.persistence.mapper.UserMapper;
+import com.myow.system.persistence.po.UserDO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +14,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-21
  */
 @Service
-public class UserRepository extends ServiceImpl<UserMapper, UserDO> implements UserService {
+public class UserRepository extends ServiceImpl<UserMapper, UserDO> {
 
 }

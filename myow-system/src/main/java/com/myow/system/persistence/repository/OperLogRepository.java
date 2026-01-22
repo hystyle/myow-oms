@@ -1,9 +1,8 @@
 package com.myow.system.persistence.repository;
 
-import com.myow.system.persistence.po.OperLogDO;
-import com.myow.system.persistence.mapper.OperLogMapper;
-import com.myow.system.persistence.service.OperLogService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.myow.system.persistence.mapper.OperLogMapper;
+import com.myow.system.persistence.po.OperLogDO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +14,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-21
  */
 @Service
-public class OperLogRepository extends ServiceImpl<OperLogMapper, OperLogDO> implements OperLogService {
+public class OperLogRepository extends ServiceImpl<OperLogMapper, OperLogDO>  {
 
 }

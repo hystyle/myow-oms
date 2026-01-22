@@ -1,9 +1,8 @@
 package com.myow.system.persistence.repository;
 
-import com.myow.system.persistence.po.RoleDO;
-import com.myow.system.persistence.mapper.RoleMapper;
-import com.myow.system.persistence.service.RoleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.myow.system.persistence.mapper.RoleMapper;
+import com.myow.system.persistence.po.RoleDO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +14,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-21
  */
 @Service
-public class RoleRepository extends ServiceImpl<RoleMapper, RoleDO> implements RoleService {
+public class RoleRepository extends ServiceImpl<RoleMapper, RoleDO> {
 
 }

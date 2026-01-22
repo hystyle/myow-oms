@@ -1,9 +1,8 @@
 package com.myow.system.persistence.repository;
 
-import com.myow.system.persistence.po.I18nKeyDO;
-import com.myow.system.persistence.mapper.I18nKeyMapper;
-import com.myow.system.persistence.service.I18nKeyService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.myow.system.persistence.mapper.I18nKeyMapper;
+import com.myow.system.persistence.po.I18nKeyDO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +14,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-21
  */
 @Service
-public class I18nKeyRepository extends ServiceImpl<I18nKeyMapper, I18nKeyDO> implements I18nKeyService {
+public class I18nKeyRepository extends ServiceImpl<I18nKeyMapper, I18nKeyDO>{
 
 }

@@ -55,7 +55,7 @@ public class CodeGenerator {
                             .mapperBuilder()
                             .formatXmlFileName("%sMapper") // XML 文件名
                             .serviceBuilder()
-                            .formatServiceFileName("%sService") // Service 接口名
+                            .formatServiceFileName("%sRepository") // Service 接口名
                             .formatServiceImplFileName("%sRepository")
                             .controllerBuilder()
                             .formatFileName("");

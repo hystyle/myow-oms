@@ -1,9 +1,8 @@
 package com.myow.system.persistence.repository;
 
-import com.myow.system.persistence.po.DeptDO;
-import com.myow.system.persistence.mapper.DeptMapper;
-import com.myow.system.persistence.service.DeptService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.myow.system.persistence.mapper.DeptMapper;
+import com.myow.system.persistence.po.DeptDO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +14,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-21
  */
 @Service
-public class DeptRepository extends ServiceImpl<DeptMapper, DeptDO> implements DeptService {
+public class DeptRepository extends ServiceImpl<DeptMapper, DeptDO>{
 
 }
