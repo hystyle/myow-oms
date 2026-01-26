@@ -32,7 +32,23 @@ public enum UserErrorCode implements ErrorCode {
 
     LOGIN_FAIL_WILL_LOCK(30011, "登录连续失败将会锁定提醒"),
 
-    LOGIN_ACTIVE_TIMEOUT(30012, "长时间未操作系统，需要重新登录");
+    LOGIN_ACTIVE_TIMEOUT(30012, "长时间未操作系统，需要重新登录"),
+
+    EMAIL_ALREADY_EXIST(30013, "邮箱已被使用"),
+
+    PHONE_ALREADY_EXIST(30014, "手机号已被使用"),
+
+    DEPT_NOT_EXIST(30015, "部门不存在"),
+
+    ROLE_NOT_EXIST(30016, "角色不存在"),
+
+    MENU_NOT_EXIST(30017, "菜单不存在"),
+
+    DICT_NOT_EXIST(30018, "字典不存在"),
+
+    TENANT_NOT_EXIST(30019, "租户不存在"),
+
+    POSITION_NOT_EXIST(30020, "岗位不存在");
 
 
     private final long code;
