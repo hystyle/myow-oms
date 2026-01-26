@@ -11,7 +11,7 @@ import com.myow.system.infrastructure.persistence.po.RoleMenuDO;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class RoleMenuRepository extends ServiceImpl<RoleMenuMapper, RoleMenuDO> {

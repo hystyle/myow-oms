@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class I18nKeyRepository extends ServiceImpl<I18nKeyMapper, I18nKeyDO> {

@@ -11,7 +11,7 @@ import com.myow.system.infrastructure.persistence.po.SerialNoRecordDO;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class SerialNoRecordRepository extends ServiceImpl<SerialNoRecordMapper, SerialNoRecordDO> {

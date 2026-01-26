@@ -10,7 +10,7 @@ import com.myow.system.infrastructure.persistence.po.RoleDO;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class RoleRepository extends ServiceImpl<RoleMapper, RoleDO> {

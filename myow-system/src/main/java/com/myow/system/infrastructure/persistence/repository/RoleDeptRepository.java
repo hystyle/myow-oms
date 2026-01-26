@@ -11,7 +11,7 @@ import com.myow.system.infrastructure.persistence.po.RoleDeptDO;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class RoleDeptRepository extends ServiceImpl<RoleDeptMapper, RoleDeptDO> {

@@ -11,7 +11,7 @@ import com.myow.system.infrastructure.persistence.po.UserPostDO;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class UserPostRepository extends ServiceImpl<UserPostMapper, UserPostDO> {

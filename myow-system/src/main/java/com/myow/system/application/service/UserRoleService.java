@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Service
 @RequiredArgsConstructor

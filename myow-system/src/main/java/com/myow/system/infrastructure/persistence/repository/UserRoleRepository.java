@@ -11,7 +11,7 @@ import com.myow.system.infrastructure.persistence.po.UserRoleDO;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class UserRoleRepository extends ServiceImpl<UserRoleMapper, UserRoleDO> {

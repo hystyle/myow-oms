@@ -8,7 +8,7 @@ import com.myow.system.infrastructure.persistence.po.OperLogDO;
 import org.mapstruct.Mapper;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Mapper(componentModel = "spring")
 public interface OperLogApplicationConverter {

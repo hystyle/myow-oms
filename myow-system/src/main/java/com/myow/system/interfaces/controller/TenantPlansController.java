@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Tag(name = "系统模块-租户套餐")
 @RestController

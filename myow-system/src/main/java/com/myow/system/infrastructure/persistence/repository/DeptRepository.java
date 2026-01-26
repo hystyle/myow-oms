@@ -10,7 +10,7 @@ import com.myow.system.infrastructure.persistence.po.DeptDO;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class DeptRepository extends ServiceImpl<DeptMapper, DeptDO> {

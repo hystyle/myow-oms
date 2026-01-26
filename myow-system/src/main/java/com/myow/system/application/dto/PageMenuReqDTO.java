@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Getter
 @Setter

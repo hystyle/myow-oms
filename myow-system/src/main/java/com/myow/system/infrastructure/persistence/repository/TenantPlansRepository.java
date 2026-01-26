@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Repository
 public class TenantPlansRepository extends ServiceImpl<TenantPlansMapper, TenantPlansDO> {

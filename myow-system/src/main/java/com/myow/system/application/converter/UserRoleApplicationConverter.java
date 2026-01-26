@@ -9,7 +9,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Mapper(componentModel = "spring")
 public interface UserRoleApplicationConverter {

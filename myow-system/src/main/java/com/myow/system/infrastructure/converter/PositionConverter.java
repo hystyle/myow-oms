@@ -5,7 +5,7 @@ import com.myow.system.infrastructure.persistence.po.PositionDO;
 import org.mapstruct.Mapper;
 
 /**
- * @author gemini
+ * @author yss
  */
 @Mapper(componentModel = "spring")
 public interface PositionConverter {
