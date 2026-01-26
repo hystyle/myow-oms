@@ -19,7 +19,7 @@ import java.util.Collections;
  * </p>
  */
 public class CodeGenerator {
-    private static final String table_names = "sys_dept, sys_menu, sys_oper_log, sys_position, sys_role, sys_role_dept, sys_role_menu, sys_serial_no_config, sys_serial_no_record, sys_tenant, sys_tenant_plans, sys_user, sys_user_post, sys_user_role, t_i18n_key, t_i18n_message"; // <<<--- 在这里修改为您需要生成代码的表名,可以写多个,用逗号隔开
+    private static final String table_names = "sys_dict, sys_dict_data"; // <<<--- 在这里修改为您需要生成代码的表名,可以写多个,用逗号隔开
     private static final String module_name = "myow-system";
     private static final String output_dir = System.getProperty("user.dir") + "/" + module_name + "/src/main/java";
     private static final String xml_path = System.getProperty("user.dir") + "/" + module_name + "/src/main/resources/mapper";
