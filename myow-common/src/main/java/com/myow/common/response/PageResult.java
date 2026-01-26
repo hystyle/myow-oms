@@ -1,6 +1,5 @@
 package com.myow.common.response;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
@@ -43,5 +42,13 @@ public class PageResult<T> {
      */
     private Boolean emptyFlag;
 
+    /**
+     * 创建一个空的结果集
+     */
+    public static <T> PageResult<T> empty() {
+        PageResult<T> pageResult = new PageResult<>();
+        pageResult.setEmptyFlag(true);
+        return pageResult;
+    }
 
 }

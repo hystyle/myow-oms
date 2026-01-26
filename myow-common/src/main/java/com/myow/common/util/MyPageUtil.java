@@ -28,8 +28,8 @@ public class MyPageUtil {
     /**
      * 转换为查询参数
      */
-    public static Page<?> convert2PageQuery(PageParam pageParam) {
-        Page<?> page = new Page<>(pageParam.getPageNum(), pageParam.getPageSize());
+    public static <T> Page<T> convert2PageQuery(PageParam pageParam,  Class<T> tClass) {
+        Page<T> page = new Page<>(pageParam.getPageNum(), pageParam.getPageSize());
 
         List<PageParam.SortItem> sortItemList = pageParam.getSortItemList();
         if (CollUtil.isEmpty(sortItemList)) {

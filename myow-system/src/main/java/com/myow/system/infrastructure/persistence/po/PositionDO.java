@@ -1,0 +1,84 @@
+package com.myow.system.infrastructure.persistence.po;
+
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
+/**
+ * <p>
+ * 岗位信息表
+ * </p>
+ *
+ * @author yss
+ * @since 2026-01-21
+ */
+@Getter
+@Setter
+@Accessors(chain = true)
+@TableName("sys_position")
+public class PositionDO {
+
+    /**
+     * 岗位ID
+     */
+    @TableId("position_id")
+    private Long positionId;
+
+    /**
+     * 租户编号
+     */
+    private String tenantId;
+
+    /**
+     * 部门id
+     */
+    private Long deptId;
+
+    /**
+     * 岗位编码
+     */
+    private String positionCode;
+
+    /**
+     * 岗位名称
+     */
+    private String positionName;
+
+    /**
+     * 显示顺序
+     */
+    private Integer sort;
+
+    /**
+     * 状态（0正常 1停用）
+     */
+    private String status;
+
+    /**
+     * 创建者
+     */
+    private Long createBy;
+
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
+
+    /**
+     * 更新者
+     */
+    private Long updateBy;
+
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
+
+    /**
+     * 备注
+     */
+    private String remark;
+}

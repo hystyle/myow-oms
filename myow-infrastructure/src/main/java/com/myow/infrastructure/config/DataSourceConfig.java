@@ -26,7 +26,7 @@ import javax.sql.DataSource;
 /**
  * 数据源及MyBatis-Plus配置
  *
- * @author Gemini
+ * @author yss
  * @since 2026-01-19
  */
 @Configuration

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 /**
  * MyBatis-Plus 自动填充处理器
  *
- * @author Gemini
+ * @author yss
  * @since 2026-01-19
  */
 @Component
