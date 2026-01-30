@@ -7,6 +7,8 @@ import com.myow.system.domain.entity.Role;
 import com.myow.system.infrastructure.persistence.po.RoleDO;
 import org.mapstruct.Mapper;
 
+import java.util.List;
+
 /**
  * @author yss
  */
@@ -40,4 +42,11 @@ public interface RoleApplicationConverter {
      * @return role
      */
     RoleRespDTO convert(RoleDO roleDO);
+
+    /**
+     * convert
+     * @param roleByUserId role
+     * @return role
+     */
+    List<RoleRespDTO> convert(List<RoleDO> roleByUserId);
 }

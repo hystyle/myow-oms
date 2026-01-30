@@ -1,5 +1,6 @@
 package com.myow.system.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,93 +12,52 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class TenantRespDTO {
-    /**
-     * 主键ID
-     */
+
+    @Schema(description = "租户id")
     private Long tenantId;
 
-    /**
-     * 租户编码（唯一业务标识）
-     */
+    @Schema(description = "租户编码（唯一业务标识）")
     private String tenantCode;
 
-    /**
-     * 租户名称
-     */
+    @Schema(description = "租户名称")
     private String name;
 
-    /**
-     * 租户套餐ID
-     */
+    @Schema(description = "租户套餐ID")
     private Long plansId;
 
-    /**
-     * 服务到期时间
-     */
+    @Schema(description = "租户套餐名称")
+    private String plansName;
+
+    @Schema(description = "服务到期时间")
     private LocalDateTime expireTime;
 
-    /**
-     * 用户数量限制（-1表示不限制）
-     */
+    @Schema(description = "用户数量限制（-1表示不限制）")
     private Integer accountCount;
 
-    /**
-     * 状态：0-正常 1-停用
-     */
-    private String status;
+    @Schema(description = "状态")
+    private Boolean status;
 
-    /**
-     * 联系人姓名
-     */
+    @Schema(description = "联系人姓名")
     private String contactName;
 
-    /**
-     * 联系电话
-     */
+    @Schema(description = "联系电话")
     private String contactPhone;
 
-    /**
-     * 联系地址
-     */
+    @Schema(description = "联系地址")
     private String address;
 
-    /**
-     * 统一社会信用代码
-     */
+    @Schema(description = "统一社会信用代码")
     private String licenseNumber;
 
-    /**
-     * 企业简介
-     */
+    @Schema(description = "企业简介")
     private String intro;
 
-    /**
-     * 系统访问域名
-     */
+    @Schema(description = "系统访问域名")
     private String domain;
 
-    /**
-     * 备注信息
-     */
+    @Schema(description = "备注信息")
     private String remark;
 
-    /**
-     * 创建人ID
-     */
-    private Long createBy;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 更新人ID
-     */
-    private Long updateBy;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
+    @Schema(description = "用户数量")
+    private Long userCount;
 }

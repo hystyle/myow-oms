@@ -1,7 +1,11 @@
 package com.myow.system.infrastructure.persistence.mapper;
 
-import com.myow.system.infrastructure.persistence.po.RoleDO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.myow.system.application.vo.RoleUserVO;
+import com.myow.system.infrastructure.persistence.po.RoleDO;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +17,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface RoleMapper extends BaseMapper<RoleDO> {
 
+    List<RoleUserVO> getRoleByUserIdList(@Param("userIdList") List<Long> userIdList);
+
+    List<RoleDO> getRoleByUserId(Long userId);
 }

@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: test-application
+  datasource:
+    url: jdbc:tc:postgresql:postgresql:///testdb
+    username: test
+    password: test
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+
+logging:
+  level:
+    com.myow: DEBUG
+    org.springframework.test: DEBUG

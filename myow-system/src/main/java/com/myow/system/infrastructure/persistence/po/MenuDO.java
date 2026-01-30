@@ -2,10 +2,11 @@ package com.myow.system.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -85,7 +86,7 @@ public class MenuDO {
     /**
      * 权限标识
      */
-    private String perms;
+    private String apiPerms;
 
     /**
      * 菜单图标
@@ -121,4 +122,9 @@ public class MenuDO {
      * 备注
      */
     private String remark;
+
+    /**
+     * 删除标志
+     */
+    private String deletedFlag;
 }

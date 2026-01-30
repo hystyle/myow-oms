@@ -30,6 +30,13 @@ public class GlobalExceptionHandler {
         return Result.error(ResultCode.PARAM_ERROR, MessageUtils.getMessage(msg));
     }
 
+    @ExceptionHandler(SerialNumberException.class)
+    public Result<?> handleSerialNumberException(SerialNumberException e) {
+        logger.error("SerialNumber异常: code={}, message={}, args={}",
+                e.getCode(), e.getMessage(), e.getArgs());
+        return Result.error(e.getCode(), e.getMessage());
+    }
+
     /**
      * 处理自定义业务异常
      */

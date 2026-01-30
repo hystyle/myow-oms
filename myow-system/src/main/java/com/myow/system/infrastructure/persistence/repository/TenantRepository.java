@@ -33,4 +33,11 @@ public class TenantRepository extends ServiceImpl<TenantMapper, TenantDO> {
 
         return this.page(page, queryWrapper);
     }
+
+    public boolean updateTenantStatus(Long tenantId, Boolean status) {
+        TenantDO tenantDO = new TenantDO();
+        tenantDO.setTenantId(tenantId);
+        tenantDO.setStatus(status);
+        return this.updateById(tenantDO);
+    }
 }

@@ -1,56 +1,27 @@
 package com.myow.system.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 /**
  * @author yss
  */
 @Getter
 @Setter
-public class CreateUserReqDTO {
-    /**
-     * 租户编号
-     */
-    private String tenantId;
+public class CreateUserReqDTO extends CreateUserDTO{
 
-    /**
-     * 部门ID
-     */
+    @Schema(description = "部门ID")
+    @NotNull(message = "部门id不能为空")
     private Long deptId;
 
-    /**
-     * 用户账号
-     */
-    private String userName;
+    @Schema(description = "岗位ID")
+    private Long positionId;
 
-    /**
-     * 用户昵称
-     */
-    private String nickName;
+    @Schema(description = "角色列表")
+    private List<Long> roleIdList;
 
-    /**
-     * 用户邮箱
-     */
-    private String email;
-
-    /**
-     * 手机号码
-     */
-    private String phone;
-
-    /**
-     * 用户性别（0男 1女 2未知）
-     */
-    private String gender;
-
-    /**
-     * 密码
-     */
-    private String password;
-
-    /**
-     * 备注
-     */
-    private String remark;
 }

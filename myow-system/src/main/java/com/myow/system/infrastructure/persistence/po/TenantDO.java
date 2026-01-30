@@ -2,10 +2,11 @@ package com.myow.system.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -55,7 +56,7 @@ public class TenantDO {
     /**
      * 状态：0-正常 1-停用
      */
-    private String status;
+    private Boolean status;
 
     /**
      * 联系人姓名
@@ -115,5 +116,5 @@ public class TenantDO {
     /**
      * 删除标志：0-正常 1-已删除
      */
-    private String deletedFlag;
+    private Boolean deletedFlag;
 }

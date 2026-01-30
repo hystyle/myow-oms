@@ -9,3 +9,4 @@ ${catalina.home}/
 *.iml
 logs/
 .mvn/
+.vscode/

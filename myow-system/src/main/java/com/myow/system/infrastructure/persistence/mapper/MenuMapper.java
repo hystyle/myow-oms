@@ -2,6 +2,9 @@ package com.myow.system.infrastructure.persistence.mapper;
 
 import com.myow.system.infrastructure.persistence.po.MenuDO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.lettuce.core.dynamic.annotation.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface MenuMapper extends BaseMapper<MenuDO> {
 
+    List<MenuDO> selectMenuListByRoleIdList(@Param("roleIdList") List<Long> roleIdList, @Param("deletedFlag") Boolean deleteFlag);
 }

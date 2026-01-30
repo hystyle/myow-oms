@@ -1,8 +1,9 @@
 package com.myow.system.application.converter;
 
+import com.myow.system.application.dto.CreateUserDTO;
 import com.myow.system.application.dto.CreateUserReqDTO;
-import com.myow.system.application.dto.UserRespDTO;
 import com.myow.system.application.dto.UpdateUserReqDTO;
+import com.myow.system.application.dto.UserRespDTO;
 import com.myow.system.domain.entity.User;
 import com.myow.system.infrastructure.persistence.po.UserDO;
 import org.mapstruct.Mapper;
@@ -15,6 +16,7 @@ public interface UserApplicationConverter {
 
     /**
      * convert
+     *
      * @param bean bean
      * @return user
      */
@@ -22,13 +24,15 @@ public interface UserApplicationConverter {
 
     /**
      * convert
+     *
      * @param bean bean
      * @return user
      */
     User convert(UpdateUserReqDTO bean);
-    
+
     /**
      * convert
+     *
      * @param userDO user do
      * @return UserRespDTO
      */
@@ -36,6 +40,7 @@ public interface UserApplicationConverter {
 
     /**
      * convert
+     *
      * @param user user
      * @return user do
      */
@@ -43,8 +48,33 @@ public interface UserApplicationConverter {
 
     /**
      * convert
+     *
      * @param userDO user do
      * @return UserRespDTO
      */
     UserRespDTO toDTO(UserDO userDO);
+
+    /**
+     * convert
+     *
+     * @param createUserDTO create user dto
+     * @return user do
+     */
+    UserDO toDo(CreateUserDTO createUserDTO);
+
+    /**
+     * convert
+     *
+     * @param createReqDTO create req dto
+     * @return user do
+     */
+    UserDO toDo(CreateUserReqDTO createReqDTO);
+
+    /**
+     * convert
+     *
+     * @param updateReqDTO update req dto
+     * @return user do
+     */
+    UserDO toDo(UpdateUserReqDTO updateReqDTO);
 }

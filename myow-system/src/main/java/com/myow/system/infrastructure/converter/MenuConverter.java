@@ -1,8 +1,11 @@
 package com.myow.system.infrastructure.converter;
 
+import com.myow.system.application.dto.MenuRespDTO;
 import com.myow.system.domain.entity.Menu;
 import com.myow.system.infrastructure.persistence.po.MenuDO;
 import org.mapstruct.Mapper;
+
+import java.util.List;
 
 /**
  * @author yss
@@ -23,4 +26,11 @@ public interface MenuConverter {
      * @return menu
      */
     Menu toEntity(MenuDO menuDO);
+
+    /**
+     * to dto
+     * @param menuDO menu do
+     * @return menu dto
+     */
+    List<MenuRespDTO> convert(List<MenuDO> menuDOList);
 }

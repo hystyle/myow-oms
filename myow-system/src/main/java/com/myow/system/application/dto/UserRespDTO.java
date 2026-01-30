@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author yss
@@ -25,6 +26,31 @@ public class UserRespDTO {
      * 部门ID
      */
     private Long deptId;
+
+    /**
+     * 部门名称
+     */
+    private String deptName;
+
+    /**
+     * 岗位id
+     */
+    private Long positionId;
+
+    /**
+     * 岗位名称
+     */
+    private String positionName;
+
+    /**
+     * 角色id
+     */
+    private List<Long> roleIdList;
+
+    /**
+     * 角色名称
+     */
+    private List<String> roleNameList;
 
     /**
      * 用户账号
@@ -75,4 +101,9 @@ public class UserRespDTO {
      * 备注
      */
     private String remark;
+
+    /**
+     * 是否为超级管理员
+     */
+    private Boolean adminFlag;
 }

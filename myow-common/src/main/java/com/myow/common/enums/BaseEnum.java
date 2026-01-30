@@ -10,7 +10,7 @@ public interface BaseEnum {
     /**
      * 枚举的唯一编码（数据库、接口传输用）
      */
-    String getCode();
+    Object getCode();
 
     /**
      * 枚举的中文描述（前端展示用）
@@ -25,7 +25,7 @@ public interface BaseEnum {
      * @param code      编码
      * @return 匹配的枚举 或 null
      */
-    static <T extends BaseEnum> T fromCode(Class<T> enumClass, String code) {
+    static <T extends BaseEnum> T fromCode(Class<T> enumClass, Object code) {
         if (code == null) {
             return null;
         }
@@ -51,4 +51,12 @@ public interface BaseEnum {
         }
         return null;
     }
+
+    /**
+     * 通过 code 获取枚举的描述
+     */
+    static <T extends BaseEnum> String getDesc(Class<T> enumClass, Object code) {
+        return fromCode(enumClass, code) == null ? null : fromCode(enumClass, code).getDesc();
+    }
+
 }

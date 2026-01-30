@@ -7,6 +7,8 @@ import com.myow.system.domain.entity.Position;
 import com.myow.system.infrastructure.persistence.po.PositionDO;
 import org.mapstruct.Mapper;
 
+import java.util.List;
+
 /**
  * @author yss
  */
@@ -40,4 +42,13 @@ public interface PositionApplicationConverter {
      * @return PositionRespDTO
      */
     PositionRespDTO convert(PositionDO positionDO);
+
+    /**
+     * convert
+     * @param positionDOList positionDOList
+     * @return PositionRespDTO
+     */
+    List<PositionRespDTO> convert(List<PositionDO> positionDOList);
+
+
 }

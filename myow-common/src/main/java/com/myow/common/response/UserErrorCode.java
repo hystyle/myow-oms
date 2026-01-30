@@ -48,7 +48,12 @@ public enum UserErrorCode implements ErrorCode {
 
     TENANT_NOT_EXIST(30019, "租户不存在"),
 
-    POSITION_NOT_EXIST(30020, "岗位不存在");
+    POSITION_NOT_EXIST(30020, "岗位不存在"),
+
+    USER_LOGIN_NAME_EXIST(30021, "登录名重复"),
+
+    TENANT_EXIST_USER(30022, "该租户存在用户，无法删除"),
+    ;
 
 
     private final long code;
@@ -59,4 +64,4 @@ public enum UserErrorCode implements ErrorCode {
         this.message = message;
     }
 
-}
+    }

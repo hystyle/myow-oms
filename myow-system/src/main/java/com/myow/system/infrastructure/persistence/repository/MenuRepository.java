@@ -11,6 +11,8 @@ import com.myow.system.infrastructure.persistence.po.MenuDO;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+
 /**
  * @author yss
  */
@@ -35,5 +37,9 @@ public class MenuRepository extends ServiceImpl<MenuMapper, MenuDO> {
         }
 
         return this.page(page, queryWrapper);
+    }
+
+    public List<MenuDO> selectMenuListByRoleIdList(List<Long> roleIdList, boolean deleteFlag) {
+        return baseMapper.selectMenuListByRoleIdList(roleIdList, deleteFlag);
     }
 }

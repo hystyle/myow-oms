@@ -34,6 +34,11 @@ public class UserDO {
     private String tenantId;
 
     /**
+     * 用户编号
+     */
+    private String userCode;
+
+    /**
      * 部门ID
      */
     private Long deptId;
@@ -41,7 +46,12 @@ public class UserDO {
     /**
      * 用户账号
      */
-    private String userName;
+    private String loginName;
+
+    /**
+     * 岗位id
+     */
+    private Long positionId;
 
     /**
      * 用户昵称
@@ -81,12 +91,17 @@ public class UserDO {
     /**
      * 帐号状态（0正常 1停用）
      */
-    private String status;
+    private Boolean status;
+
+    /**
+     * 是否是超级管理员 0-不是 1-是
+     */
+    private Boolean adminFlag;
 
     /**
      * 删除标志（0代表存在 1代表删除）
      */
-    private String deletedFlag;
+    private Boolean deletedFlag;
 
     /**
      * 创建部门
@@ -117,4 +132,8 @@ public class UserDO {
      * 备注
      */
     private String remark;
+
+    public UserDO() {
+    }
+
 }

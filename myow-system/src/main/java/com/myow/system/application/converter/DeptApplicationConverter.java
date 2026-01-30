@@ -3,9 +3,12 @@ package com.myow.system.application.converter;
 import com.myow.system.application.dto.CreateDeptReqDTO;
 import com.myow.system.application.dto.DeptRespDTO;
 import com.myow.system.application.dto.UpdateDeptReqDTO;
+import com.myow.system.application.vo.DepartmentTreeVO;
 import com.myow.system.domain.entity.Dept;
 import com.myow.system.infrastructure.persistence.po.DeptDO;
 import org.mapstruct.Mapper;
+
+import java.util.List;
 
 /**
  * @author yss
@@ -42,4 +45,10 @@ public interface DeptApplicationConverter {
      */
     DeptRespDTO convert(DeptDO deptDO);
 
+    /**
+     * convert
+     * @param childrenEntityList childrenEntityList
+     * @return dept resp dto
+     */
+    List<DepartmentTreeVO> convert(List<DeptDO> childrenEntityList);
 }

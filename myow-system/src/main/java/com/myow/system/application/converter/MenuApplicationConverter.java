@@ -7,6 +7,8 @@ import com.myow.system.domain.entity.Menu;
 import com.myow.system.infrastructure.persistence.po.MenuDO;
 import org.mapstruct.Mapper;
 
+import java.util.List;
+
 /**
  * @author yss
  */
@@ -40,4 +42,11 @@ public interface MenuApplicationConverter {
      * @return menu resp dto
      */
     MenuRespDTO convert(MenuDO menuDO);
+
+    /**
+     * convert
+     * @param menuDOList menu
+     * @return menu resp dto
+     */
+    List<MenuRespDTO> convert(List<MenuDO> menuDOList);
 }

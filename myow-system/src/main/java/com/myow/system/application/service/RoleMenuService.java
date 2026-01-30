@@ -1,6 +1,5 @@
 package com.myow.system.application.service;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.myow.common.exception.BusinessException;
 import com.myow.common.response.PageResult;
@@ -78,21 +77,21 @@ public class RoleMenuService {
         if (Objects.isNull(createReqDTO.getRoleId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "角色ID不能为空");
         }
-        
+
         if (Objects.isNull(createReqDTO.getMenuId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "菜单ID不能为空");
         }
-        
+
         RoleDO role = roleRepository.getById(createReqDTO.getRoleId());
         if (Objects.isNull(role)) {
             throw new BusinessException(UserErrorCode.ROLE_NOT_EXIST);
         }
-        
+
         MenuDO menu = menuRepository.getById(createReqDTO.getMenuId());
         if (Objects.isNull(menu)) {
             throw new BusinessException(UserErrorCode.MENU_NOT_EXIST);
         }
-        
+
         RoleMenuDO existRoleMenu = roleMenuRepository.getByCompositeKey(createReqDTO.getRoleId(), createReqDTO.getMenuId());
         if (Objects.nonNull(existRoleMenu)) {
             throw new BusinessException(UserErrorCode.ALREADY_EXIST, "该角色菜单关联已存在");
@@ -103,29 +102,29 @@ public class RoleMenuService {
         if (Objects.isNull(updateReqDTO.getRoleId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "角色ID不能为空");
         }
-        
+
         if (Objects.isNull(updateReqDTO.getMenuId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "菜单ID不能为空");
         }
-        
+
         if (Objects.isNull(updateReqDTO.getOriginalRoleId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "原角色ID不能为空");
         }
-        
+
         if (Objects.isNull(updateReqDTO.getOriginalMenuId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "原菜单ID不能为空");
         }
-        
+
         RoleDO role = roleRepository.getById(updateReqDTO.getRoleId());
         if (Objects.isNull(role)) {
             throw new BusinessException(UserErrorCode.ROLE_NOT_EXIST);
         }
-        
+
         MenuDO menu = menuRepository.getById(updateReqDTO.getMenuId());
         if (Objects.isNull(menu)) {
             throw new BusinessException(UserErrorCode.MENU_NOT_EXIST);
         }
-        
+
         RoleMenuDO existRoleMenu = roleMenuRepository.getByCompositeKey(updateReqDTO.getRoleId(), updateReqDTO.getMenuId());
         if (Objects.nonNull(existRoleMenu)) {
             throw new BusinessException(UserErrorCode.ALREADY_EXIST, "该角色菜单关联已存在");

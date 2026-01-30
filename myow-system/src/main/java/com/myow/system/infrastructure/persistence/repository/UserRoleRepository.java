@@ -41,4 +41,9 @@ public class UserRoleRepository extends ServiceImpl<UserRoleMapper, UserRoleDO> 
                 .eq(UserRoleDO::getUserId, userId)
                 .eq(UserRoleDO::getRoleId, roleId));
     }
+
+    public boolean deleteByUserId(Long userId) {
+        return this.remove(Wrappers.<UserRoleDO>lambdaQuery()
+                .eq(UserRoleDO::getUserId, userId));
+    }
 }

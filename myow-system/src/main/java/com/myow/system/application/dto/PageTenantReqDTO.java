@@ -10,7 +10,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PageTenantReqDTO extends PageParam {
-    // Add any specific search criteria for tenants here
     private String tenantCode;
     private String name;
     private String status;

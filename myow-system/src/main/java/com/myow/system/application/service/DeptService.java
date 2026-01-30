@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class DeptService {
     private final DeptApplicationConverter deptApplicationConverter;
     private final DeptConverter deptConverter;
     private final UserRepository userRepository;
+    private final DeptCacheService deptCacheService;
 
     public Long createDept(CreateDeptReqDTO createReqDTO) {
         validateDeptForCreate(createReqDTO);
@@ -177,4 +179,23 @@ public class DeptService {
         
         return false;
     }
+
+    /**
+     * 自身以及所有下级的部门id列表
+     */
+    public List<Long> selfAndChildrenIdList(Long departmentId) {
+        return deptCacheService.getDeptSelfAndChildren(departmentId);
+    }
+
+    /**
+     * 根据部门id集合查询部门信息
+     */
+    public List<DeptRespDTO> getDeptListByIds(List<Long> departmentIdList) {
+        return deptRepository.list(Wrappers.lambdaQuery(DeptDO.class)
+            .in(DeptDO::getDeptId, departmentIdList))
+            .stream()
+            .map(deptApplicationConverter::convert)
+            .collect(Collectors.toList());
+    }
+
 }

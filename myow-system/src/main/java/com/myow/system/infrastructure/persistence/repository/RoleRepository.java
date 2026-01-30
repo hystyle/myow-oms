@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.myow.common.util.MyPageUtil;
-import com.myow.system.application.dto.PageRoleReqDTO; // Need to create this DTO later
+import com.myow.system.application.dto.PageRoleReqDTO;
+import com.myow.system.application.vo.RoleUserVO;
 import com.myow.system.infrastructure.persistence.mapper.RoleMapper;
 import com.myow.system.infrastructure.persistence.po.RoleDO;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * @author yss
@@ -20,5 +23,13 @@ public class RoleRepository extends ServiceImpl<RoleMapper, RoleDO> {
         // Assuming there's a QueryWrapper or similar to filter the page.
         // For simplicity, using emptyWrapper for now.
         return this.page(page, Wrappers.emptyWrapper());
+    }
+
+    public List<RoleUserVO> getRoleByUserIdList(List<Long> userIdList) {
+        return baseMapper.getRoleByUserIdList(userIdList);
+    }
+
+    public List<RoleDO> getRoleByUserId(Long userId) {
+        return baseMapper.getRoleByUserId(userId);
     }
 }

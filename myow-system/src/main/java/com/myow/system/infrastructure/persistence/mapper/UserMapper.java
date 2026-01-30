@@ -1,7 +1,12 @@
 package com.myow.system.infrastructure.persistence.mapper;
 
-import com.myow.system.infrastructure.persistence.po.UserDO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.myow.system.application.dto.PageUserReqDTO;
+import com.myow.system.infrastructure.persistence.po.UserDO;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -12,5 +17,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @since 2026-01-21
  */
 public interface UserMapper extends BaseMapper<UserDO> {
+
+    Page<UserDO> selectPage(Page<UserDO> page, @Param("queryForm") PageUserReqDTO reqDTO, @Param("departmentIdList") List<Long> departmentIdList);
 
 }

@@ -10,11 +10,12 @@ import org.mapstruct.Mapper;
 /**
  * @author yss
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring"/*, imports = {EnumUtil.class, StatusEnum.class, String.class}*/)
 public interface TenantApplicationConverter {
 
     /**
      * convert
+     *
      * @param bean bean
      * @return tenant
      */
@@ -22,6 +23,7 @@ public interface TenantApplicationConverter {
 
     /**
      * convert
+     *
      * @param bean bean
      * @return tenant
      */
@@ -29,6 +31,7 @@ public interface TenantApplicationConverter {
 
     /**
      * convert
+     *
      * @param tenant tenant
      * @return tenant resp dto
      */
@@ -36,8 +39,11 @@ public interface TenantApplicationConverter {
 
     /**
      * convert
+     *
      * @param tenantDO tenantDO
      * @return tenant
      */
+//    @Mapping(source = "status", target = "statusCode")
+//    @Mapping(source = "status", target = "statusName", expression = "java(EnumUtil.getDesc(StatusEnum.class, String.valueOf(tenantDO.getStatus())))")
     TenantRespDTO convert(TenantDO tenantDO);
 }

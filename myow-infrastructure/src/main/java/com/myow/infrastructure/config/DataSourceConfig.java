@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.config.GlobalConfig;
+import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -31,15 +34,22 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableTransactionManagement
-@MapperScan(basePackages = {"com.myow.**.persistence.mapper"},  sqlSessionFactoryRef = "sqlSessionFactory")
+@MapperScan(basePackages = {"com.myow.**.persistence.mapper"}, sqlSessionFactoryRef = "sqlSessionFactory")
 public class DataSourceConfig {
+
+    @Bean
+    public TenantLineInnerInterceptor tenantLineInnerInterceptor(TenantLineHandler tenantLineHandler) {
+        return new TenantLineInnerInterceptor(tenantLineHandler);
+    }
 
     /**
      * 添加分页插件
      */
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+    public MybatisPlusInterceptor mybatisPlusInterceptor(TenantLineInnerInterceptor tenantLineInnerInterceptor) {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        // 多租户插件
+        interceptor.addInnerInterceptor(tenantLineInnerInterceptor);
         // 添加分页插件，并指定数据库类型为 PostgreSQL
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.POSTGRE_SQL));
         // 添加乐观锁插件
@@ -61,7 +71,10 @@ public class DataSourceConfig {
      * @throws Exception
      */
     @Bean
-    public SqlSessionFactory sqlSessionFactory(DataSource dataSource, MybatisPlusInterceptor mybatisPlusInterceptor) throws Exception {
+    public SqlSessionFactory sqlSessionFactory(DataSource dataSource,
+                                               MybatisPlusInterceptor mybatisPlusInterceptor,
+                                               MetaObjectHandler metaObjectHandler
+    ) throws Exception {
         MybatisSqlSessionFactoryBean factoryBean = new MybatisSqlSessionFactoryBean();
         factoryBean.setDataSource(dataSource);
 
@@ -71,8 +84,7 @@ public class DataSourceConfig {
         // 主键策略设置为自增
         dbConfig.setIdType(IdType.AUTO);
         globalConfig.setDbConfig(dbConfig);
-        // 设置元数据对象处理器为我们自定义的 MyMetaObjectHandler
-        globalConfig.setMetaObjectHandler(new MyMetaObjectHandler());
+        globalConfig.setMetaObjectHandler(metaObjectHandler);
         factoryBean.setGlobalConfig(globalConfig);
 
         // --- 添加插件 ---

@@ -9,7 +9,8 @@ import com.myow.common.enums.BaseEnum;
  */
 public final class EnumUtil {
 
-    private EnumUtil() {}
+    private EnumUtil() {
+    }
 
     public static <T extends BaseEnum> T fromCode(Class<T> enumClass, String code) {
         return BaseEnum.fromCode(enumClass, code);
@@ -23,11 +24,8 @@ public final class EnumUtil {
         return e;
     }
 
-    public static <T extends BaseEnum> String getDesc(T e) {
-        return e == null ? null : e.getDesc();
+    public static <T extends BaseEnum> String getDesc(Class<T> enumClass, String code) {
+        return BaseEnum.getDesc(enumClass, code);
     }
 
-    public static <T extends BaseEnum> String getCode(T e) {
-        return e == null ? null : e.getCode();
-    }
 }

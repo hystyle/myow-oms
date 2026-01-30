@@ -74,7 +74,7 @@ public class MenuRespDTO {
     /**
      * 权限标识
      */
-    private String perms;
+    private String apiPerms;
 
     /**
      * 菜单图标

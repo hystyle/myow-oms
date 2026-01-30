@@ -1,7 +1,17 @@
 package com.myow.system.application.dto;
 
+import com.myow.common.constant.RegexConst;
+import com.myow.common.validator.CheckEnum;
+import com.myow.system.domain.enums.GenderEnum;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.validator.constraints.Length;
+
+import java.util.List;
 
 /**
  * @author yss
@@ -9,48 +19,42 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UpdateUserReqDTO {
-    /**
-     * 用户ID
-     */
+
+    @Schema(description = "用户ID")
+    @NotNull(message = "用户id不能为空")
     private Long userId;
 
-    /**
-     * 部门ID
-     */
-    private Long deptId;
-
-    /**
-     * 用户账号
-     */
-    private String userName;
-
-    /**
-     * 用户昵称
-     */
+    @Schema(description = "用户昵称")
+    @NotNull(message = "姓名不能为空")
+    @Length(max = 30, message = "姓名最多30字符")
     private String nickName;
 
-    /**
-     * 用户邮箱
-     */
+    @Schema(description = "头像")
+    @NotBlank(message = "头像不能为空哦")
+    private String avatar;
+
+    @Schema(description = "部门ID")
+    @NotNull(message = "部门id不能为空")
+    private Long deptId;
+
+    @Schema(description = "用户性别")
+    @CheckEnum(value = GenderEnum.class, message = "性别错误")
+    private Integer gender;
+
+    @Schema(description = "用户邮箱")
+    @Pattern(regexp = RegexConst.EMAIL, message = "邮箱账号格式不正确")
     private String email;
 
-    /**
-     * 手机号码
-     */
+    @Schema(description = "手机号码")
     private String phone;
 
-    /**
-     * 用户性别（0男 1女 2未知）
-     */
-    private String gender;
+    @Schema(description = "岗位ID")
+    private Long positionId;
 
-    /**
-     * 帐号状态（0正常 1停用）
-     */
-    private String status;
+    @Schema(description = "角色列表")
+    private List<Long> roleIdList;
 
-    /**
-     * 备注
-     */
+    @Schema(description = "备注")
+    @Length(max = 200, message = "备注最多200字符")
     private String remark;
 }

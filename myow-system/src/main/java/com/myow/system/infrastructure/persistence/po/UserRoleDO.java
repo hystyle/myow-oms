@@ -30,4 +30,10 @@ public class UserRoleDO {
      * 角色ID
      */
     private Long roleId;
+
+    public UserRoleDO(Long userId, Long roleId) {
+        this.userId = userId;
+        this.roleId = roleId;
+    }
+
 }

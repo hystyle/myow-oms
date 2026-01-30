@@ -11,10 +11,6 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 import java.util.Locale;
 
-/**
- * @author liyong
- * @date 2024/01/21
- */
 @Configuration
 public class InternationalizationConfig implements WebMvcConfigurer {
 
@@ -36,6 +32,7 @@ public class InternationalizationConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
     }
+
     @Bean
     public ResourceBundleMessageSource messageSource() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
