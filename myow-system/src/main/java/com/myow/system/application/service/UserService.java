@@ -92,7 +92,7 @@ public class UserService {
      */
     private void validateUserForCreate(CreateUserDTO createUserDTO) {
         // 校验登录名是否重复
-        UserDO existUser = userRepository.getByLoginName(createUserDTO.getLoginName());
+        UserDO existUser = userRepository.getByLoginName(createUserDTO.getLoginName(), null);
         if (Objects.nonNull(existUser)) {
             throw new BusinessException(UserErrorCode.USER_LOGIN_NAME_EXIST);
         }

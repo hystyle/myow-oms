@@ -53,6 +53,10 @@ public enum UserErrorCode implements ErrorCode {
     USER_LOGIN_NAME_EXIST(30021, "登录名重复"),
 
     TENANT_EXIST_USER(30022, "该租户存在用户，无法删除"),
+
+    USERNAME_OR_PASSWORD_ERROR(30023, "用户名或密码错误"),
+
+    USER_ACCOUNT_DISABLED(30024, "用户账号已被禁用"),
     ;
 
 

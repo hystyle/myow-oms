@@ -9,7 +9,7 @@ import lombok.Getter;
  * @description: 用户类型枚举
  */
 @Getter
-public enum EnumUserType implements BaseEnum {
+public enum UserTypeEnum implements BaseEnum {
 
     SYS_USER("sys_user", "管理端用户"),
     CLIENT_USER("client_user", "客户端用户");
@@ -18,7 +18,7 @@ public enum EnumUserType implements BaseEnum {
     private final String code;
     private final String desc;
 
-    EnumUserType(String code, String desc) {
+    UserTypeEnum(String code, String desc) {
         this.code = code;
         this.desc = desc;
     }

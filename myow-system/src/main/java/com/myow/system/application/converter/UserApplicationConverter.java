@@ -4,6 +4,7 @@ import com.myow.system.application.dto.CreateUserDTO;
 import com.myow.system.application.dto.CreateUserReqDTO;
 import com.myow.system.application.dto.UpdateUserReqDTO;
 import com.myow.system.application.dto.UserRespDTO;
+import com.myow.system.application.vo.LoginResultVO;
 import com.myow.system.domain.entity.User;
 import com.myow.system.infrastructure.persistence.po.UserDO;
 import org.mapstruct.Mapper;
@@ -77,4 +78,12 @@ public interface UserApplicationConverter {
      * @return user do
      */
     UserDO toDo(UpdateUserReqDTO updateReqDTO);
+
+    /**
+     * convert
+     *
+     * @param userDO user do
+     * @return login result vo
+     */
+    LoginResultVO toLoginResultVO(UserDO userDO);
 }

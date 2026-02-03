@@ -28,8 +28,8 @@ import java.util.Map;
 @Repository
 public class UserRepository extends ServiceImpl<UserMapper, UserDO> {
 
-    public UserDO getByLoginName(String loginName) {
-        return baseMapper.selectOne(Wrappers.<UserDO>lambdaQuery().eq(UserDO::getLoginName, loginName));
+    public UserDO getByLoginName(String loginName, Boolean deleteFlag) {
+        return baseMapper.selectOne(Wrappers.<UserDO>lambdaQuery().eq(UserDO::getLoginName, loginName).eq(deleteFlag != null, UserDO::getDeletedFlag, deleteFlag));
     }
 
     public UserDO getByPhone(String phone) {

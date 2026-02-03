@@ -9,8 +9,8 @@ import com.myow.system.application.dto.UserRespDTO;
 import com.myow.system.application.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -26,13 +26,13 @@ public class UserController {
 
     @PostMapping("/create")
     @Operation(summary = "创建用户")
-    public Result<String> createUser(@Valid @RequestBody CreateUserReqDTO createReqDTO) {
+    public Result<String> createUser(@RequestBody @Validated CreateUserReqDTO createReqDTO) {
         return Result.success(userService.createUser(createReqDTO));
     }
 
     @PostMapping("/update")
     @Operation(summary = "更新用户")
-    public Result<Boolean> updateUser(@Valid @RequestBody UpdateUserReqDTO updateReqDTO) {
+    public Result<Boolean> updateUser(@RequestBody @Validated UpdateUserReqDTO updateReqDTO) {
         userService.updateUser(updateReqDTO);
         return Result.success(true);
     }

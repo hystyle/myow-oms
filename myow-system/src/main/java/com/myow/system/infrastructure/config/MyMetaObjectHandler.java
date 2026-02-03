@@ -2,6 +2,7 @@ package com.myow.system.infrastructure.config;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.myow.system.domain.enums.SystemUserEnum;
 import org.apache.ibatis.reflection.MetaObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +25,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         // 自动填充创建时间
         this.strictInsertFill(metaObject, "createTime", LocalDateTime::now, LocalDateTime.class);
         // 自动填充创建人
-        this.strictInsertFill(metaObject, "createBy", this::getCurrentUsername, String.class);
+        this.strictInsertFill(metaObject, "createBy", this::getCurrentLoginName, String.class);
         // 自动填充更新时间
         this.strictInsertFill(metaObject, "updatedAt", LocalDateTime::now, LocalDateTime.class);
         // 自动填充更新人
-        this.strictInsertFill(metaObject, "updateTime", this::getCurrentUsername, String.class);
+        this.strictInsertFill(metaObject, "updateTime", this::getCurrentLoginName, String.class);
     }
 
     @Override
@@ -36,7 +37,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         // 自动填充更新时间
         this.strictUpdateFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
         // 自动填充更新人
-        this.strictUpdateFill(metaObject, "updateBy", this::getCurrentUsername, String.class);
+        this.strictUpdateFill(metaObject, "updateBy", this::getCurrentLoginName, String.class);
     }
 
     /**
@@ -44,7 +45,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
      *
      * @return 当前用户名，如果未登录则返回 "system"
      */
-    private String getCurrentUsername() {
+    private String getCurrentLoginName() {
         try {
             if (StpUtil.isLogin()) {
                 return StpUtil.getLoginIdAsString();
@@ -52,6 +53,6 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         } catch (Exception e) {
             log.warn("Failed to get current user for meta object handler, will use 'system'.", e);
         }
-        return "system"; // 默认值
+        return SystemUserEnum.SYSTEM_USER.getCode();
     }
 }
