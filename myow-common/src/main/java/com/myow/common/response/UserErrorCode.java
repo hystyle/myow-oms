@@ -40,6 +40,12 @@ public enum UserErrorCode implements ErrorCode {
 
     DEPT_NOT_EXIST(30015, "部门不存在"),
 
+    DEPT_NAME_EXIST(30016, "同一父部门下部门名称已存在"),
+
+    DEPT_EXIST_CHILDREN(30017, "该部门存在子部门，无法删除, 请先删除子级部门"),
+
+    DEPT_EXIST_USER(30018, "该部门存在用户，无法删除, 请先删除部门员工"),
+
     ROLE_NOT_EXIST(30016, "角色不存在"),
 
     MENU_NOT_EXIST(30017, "菜单不存在"),

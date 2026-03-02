@@ -20,7 +20,9 @@ public enum ResultCode implements ErrorCode {
     SQL_INJECTION_ERROR(10004, "存在SQL注入风险，请联系技术工作人员！"),
 
     SERIAL_NUMBER_NOT_FOUND(10005, "没有找到支持类型%s的单号生成器"),
+
     SERIAL_NUMBER_LOCK_TIMEOUT(10006, "获取单号锁超时,type=%s,date=%s"),
+
     SERIAL_NUMBER_GENERATE_FAILED(10007, "生成单号失败,第%s次尝试"),
     ;
 

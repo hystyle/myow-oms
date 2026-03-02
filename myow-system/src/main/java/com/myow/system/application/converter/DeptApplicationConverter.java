@@ -4,6 +4,7 @@ import com.myow.system.application.dto.CreateDeptReqDTO;
 import com.myow.system.application.dto.DeptRespDTO;
 import com.myow.system.application.dto.UpdateDeptReqDTO;
 import com.myow.system.application.vo.DepartmentTreeVO;
+import com.myow.system.application.vo.DepartmentVO;
 import com.myow.system.domain.entity.Dept;
 import com.myow.system.infrastructure.persistence.po.DeptDO;
 import org.mapstruct.Mapper;
@@ -19,16 +20,16 @@ public interface DeptApplicationConverter {
     /**
      * convert
      * @param bean bean
-     * @return dept
+     * @return deptDO
      */
-    Dept convert(CreateDeptReqDTO bean);
+    DeptDO convert(CreateDeptReqDTO bean);
 
     /**
      * convert
      * @param bean bean
-     * @return dept
+     * @return DeptDO
      */
-    Dept convert(UpdateDeptReqDTO bean);
+    DeptDO convert(UpdateDeptReqDTO bean);
 
     /**
      * convert
@@ -43,7 +44,7 @@ public interface DeptApplicationConverter {
      * @param deptDO deptDO
      * @return dept resp dto
      */
-    DeptRespDTO convert(DeptDO deptDO);
+    DepartmentVO convert(DeptDO deptDO);
 
     /**
      * convert

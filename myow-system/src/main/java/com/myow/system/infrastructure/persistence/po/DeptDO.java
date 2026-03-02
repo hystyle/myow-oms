@@ -2,10 +2,11 @@ package com.myow.system.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -56,11 +57,6 @@ public class DeptDO {
      * 删除标志（0代表存在 1代表删除）
      */
     private String deletedFlag;
-
-    /**
-     * 创建部门
-     */
-    private Long createDept;
 
     /**
      * 创建者
