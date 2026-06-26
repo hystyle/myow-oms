@@ -1,0 +1,81 @@
+package com.myow.user.system.application.converter;
+
+import com.myow.user.system.application.dto.CreateUserDTO;
+import com.myow.user.system.application.dto.CreateUserReqDTO;
+import com.myow.user.system.application.dto.UpdateUserReqDTO;
+import com.myow.user.system.application.dto.UserRespDTO;
+import com.myow.user.system.domain.entity.User;
+import com.myow.user.system.infrastructure.persistence.po.UserDO;
+import org.mapstruct.Mapper;
+
+/**
+ * @author yss
+ */
+@Mapper(componentModel = "spring")
+public interface UserApplicationConverter {
+
+    /**
+     * convert
+     *
+     * @param bean bean
+     * @return user
+     */
+    User convert(CreateUserReqDTO bean);
+
+    /**
+     * convert
+     *
+     * @param bean bean
+     * @return user
+     */
+    User convert(UpdateUserReqDTO bean);
+
+    /**
+     * convert
+     *
+     * @param userDO user do
+     * @return UserRespDTO
+     */
+    UserRespDTO convert(UserDO userDO);
+
+    /**
+     * convert
+     *
+     * @param user user
+     * @return user do
+     */
+    UserDO toDo(User user);
+
+    /**
+     * convert
+     *
+     * @param userDO user do
+     * @return UserRespDTO
+     */
+    UserRespDTO toDTO(UserDO userDO);
+
+    /**
+     * convert
+     *
+     * @param createUserDTO create user dto
+     * @return user do
+     */
+    UserDO toDo(CreateUserDTO createUserDTO);
+
+    /**
+     * convert
+     *
+     * @param createReqDTO create req dto
+     * @return user do
+     */
+    UserDO toDo(CreateUserReqDTO createReqDTO);
+
+    /**
+     * convert
+     *
+     * @param updateReqDTO update req dto
+     * @return user do
+     */
+    UserDO toDo(UpdateUserReqDTO updateReqDTO);
+
+}

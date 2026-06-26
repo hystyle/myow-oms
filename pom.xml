@@ -39,14 +39,13 @@
     </properties>
 
     <modules>
-        <module>myow-app</module>
-        <module>myow-common</module>
-        <module>myow-infrastructure</module>
-        <module>myow-system</module>
-        <module>myow-business-core</module>
-        <module>myow-business-oms</module>
-        <module>myow-fms</module>
-        <module>myow-openapi</module>
+        <module>myow-overseas-app</module>
+        <module>myow-firstmile-app</module>
+        <module>myow-common-parent</module>
+        <module>myow-user</module>
+        <module>myow-overseas</module>
+        <module>myow-finance</module>
+        <module>myow-distribution</module>
     </modules>
 
     <dependencyManagement>
@@ -155,37 +154,58 @@
             <!-- Project Modules -->
             <dependency>
                 <groupId>com.myow.oms</groupId>
-                <artifactId>myow-common</artifactId>
+                <artifactId>myow-common-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.myow.oms</groupId>
-                <artifactId>myow-infrastructure</artifactId>
+                <artifactId>myow-common-parent</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>com.myow.oms</groupId>
+                <artifactId>myow-common-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.myow.oms</groupId>
-                <artifactId>myow-system</artifactId>
+                <artifactId>myow-common-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.myow.oms</groupId>
-                <artifactId>myow-business-core</artifactId>
+                <artifactId>myow-common-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.myow.oms</groupId>
-                <artifactId>myow-business-oms</artifactId>
+                <artifactId>myow-common-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.myow.oms</groupId>
-                <artifactId>myow-fms</artifactId>
+                <artifactId>myow-common-excel</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.myow.oms</groupId>
-                <artifactId>myow-openapi</artifactId>
+                <artifactId>myow-user</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.myow.oms</groupId>
+                <artifactId>myow-overseas</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.myow.oms</groupId>
+                <artifactId>myow-finance</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.myow.oms</groupId>
+                <artifactId>myow-distribution</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

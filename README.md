@@ -1,41 +1,582 @@
-# myow-oms
-M.Y
+# MyOW 项目架构规范（V1.0）
 
-### 模块划分：
-- myow-infrastructure 层，负责数据库访问、MyBatis-Plus 配置、缓存、消息队列等基础设施。
-- myow-common 层，负责公共代码、工具类、枚举、异常、自定义框架等。
-- myow-system 层，负责系统设置、菜单管理、数据字典、单号管理、文件管理、定时任务、系统层（用户、角色、权限、Tenant、日志、通知、国际化）等。
-- myow-business-core 层，负责业务逻辑的核心模块，如地址库、公海客户管理、客户管理、供应商管理、商品管理、仓库管理、物流基础、第三方系统配置、计费科目 / 费用项基础等。
-- myow-business-oms 层，负责订单管理系统（Oms）的业务逻辑模块，包括订单创建、查询、更新、取消、状态转换等。
-- myow-fms 层，负责财务相关的业务逻辑模块，包括订单支付、退款、对账、发票管理等。
-- myow-openapi 层，负责开放接口的业务逻辑模块，包括用户注册、登录、权限校验、接口文档等。
-- myow-app 层，启动入口 + 模块组装 + @SpringBootApplication。
+# 一、设计目标
 
-## 四层架构 + 核心领域（Domain）高度纯净：
-````
-com.myow.{模块名}    （模块根包，例如 com.company.myow.business.core）
-├── application               （应用层 - 协调、用例、事务边界）
-│   ├── dto                   （入参/出参DTO，接收/返回给外层）
-│   ├── vo                    （视图对象，可选，用于复杂展示）
-│   ├── query                 （查询条件对象）
-│   ├── converter             （DTO ↔ Domain 转换器，可选）
-│   ├── service               （应用服务接口 + impl）
-│   └── executor / usecase    （可选，如果想更细粒度，可放命令/查询执行器）
-├── domain                    （领域层 - 核心业务规则，纯POJO，零框架依赖）
-│   ├── entity                （实体，有唯一标识）
-│   ├── valueobject           （值对象，无标识，不可变）
-│   ├── aggregate             （聚合根，通常和主实体同包或单独放root）
-│   ├── repository            （仓储接口 - 纯领域语言，无任何框架）
-│   ├── service               （领域服务 - 跨聚合协作的业务逻辑）
-│   └── policy / rule         （可选，业务规则/策略/规格）
-├── infrastructure            （基础设施层 - 技术实现）
-│   ├── repository            （仓储接口的实现，mybatis-plus mapper）
-│   ├── persistence           （mybatis-plus Mapper 接口）
-│   ├── converter             （DO ↔ Entity 转换，可选）
-│   ├── config                （模块内特殊配置类）
-│   └── client                （调用第三方、rpc、消息等适配器）
-└── interfaces                （用户接口层 / 展示层 / 适配层）
-    ├── controller            （RestController）
-    ├── facade                （可选，内部模块对外门面）
-    ├── assembler             （可选，VO/DTO 组装）
-    └── advice / filter       （模块内异常处理、拦截器等，可选）
+MyOW（My Overseas Warehouse）采用 **模块化单体（Modular Monolith）** 架构。
+
+目标：
+
+* 业务边界清晰
+* 模块低耦合
+* 公共能力统一管理
+* 后续可平滑演进到微服务
+* 避免过度拆分
+
+当前阶段 **不设计微服务**，也 **不提前拆分 API 服务**。
+
+整个项目按照 **业务域（Bounded Context）** 拆分，而不是按照菜单、页面或数据库表拆分。
+
+---
+
+# 二、整体项目结构
+
+```text
+myow-parent (pom)
+
+│
+├── myow-overseas-app          // 海外仓系统（SpringBoot）
+├── myow-firstmile-app         // 头程系统（SpringBoot）
+│
+├── myow-user                  // 用户中心
+├── myow-overseas              // 海外仓业务中心
+├── myow-finance               // 财务中心
+├── myow-distribution          // 分销中心（后续）
+│
+├── myow-common-parent         // Common父工程（pom）
+│
+├── myow-common-core
+├── myow-common-web
+├── myow-common-security
+├── myow-common-mybatis
+├── myow-common-redis
+├── myow-common-excel
+└── ...
+```
+
+命名规范：
+
+* 所有模块统一使用 **myow-** 开头
+* SpringBoot 启动项目统一使用 **-app** 结尾
+* 业务模块不使用 module 后缀
+* Common 模块统一使用 **myow-common-*** 命名
+
+---
+
+# 三、启动项目职责
+
+启动项目：
+
+```text
+myow-overseas-app
+
+myow-firstmile-app
+```
+
+职责：
+
+* SpringBoot 启动
+* 系统配置
+* Bean 装配
+* 当前系统专属接口
+* 聚合多个业务模块能力
+
+例如：
+
+```text
+海外仓首页
+
+海外仓工作台
+
+海外仓统计
+
+海外仓聚合查询
+```
+
+如果某个接口需要同时调用：
+
+* 用户
+* 财务
+* 分销
+
+那么该接口建议放启动项目。
+
+启动项目原则：
+
+不编写核心业务逻辑。
+
+---
+
+# 四、业务模块职责
+
+业务模块按业务域拆分。
+
+## myow-user
+
+负责：
+
+* 登录
+* 用户
+* 角色
+* 权限
+* 菜单
+* Token 登录
+* 用户相关接口
+
+例如：
+
+```text
+/auth/login
+
+/auth/logout
+
+/auth/profile
+
+/user/list
+```
+
+---
+
+## myow-overseas
+
+负责：
+
+* 仓库
+* 库区/库位
+* 库存
+* 入库
+* 出库
+* 物流渠道/承运渠道
+* 海外仓业务单据
+* 海外仓相关配置
+
+提供自己的 Controller。
+
+例如：
+
+```text
+/overseas/warehouses
+
+/overseas/channels
+
+/overseas/inbounds
+
+/overseas/outbounds
+```
+
+---
+
+## myow-finance
+
+负责：
+
+* 财务
+* 对账
+* 账单
+* 扣费
+* 应收
+* 应付
+
+提供自己的 Controller。
+
+例如：
+
+```text
+/finance/bill
+
+/finance/reconcile
+```
+
+---
+
+## myow-distribution
+
+负责：
+
+* 分销商品
+* 分销库存
+* 分销订单
+* 分销关系
+
+提供自己的 Controller。
+
+---
+
+## 为什么没有仓库模块、物流模块、合同模块？
+
+当前：
+
+海外仓业务已归入：
+
+```text
+myow-overseas
+```
+
+当前海外仓领域包含：
+
+* 仓库
+* 库存
+* 入库
+* 出库
+* 合同
+* 物流
+* 索赔
+
+属于同一个业务域。
+
+因此：
+
+不继续拆多个 Module。
+
+以后如果业务规模扩大，再继续拆分。
+
+原则：
+
+> 一个业务域 = 一个业务模块
+
+而不是：
+
+一个菜单 = 一个模块。
+
+---
+
+# 五、Controller 放置原则
+
+业务模块：
+
+可以放自己的 Controller。
+
+例如：
+
+```text
+myow-user
+
+myow-overseas
+
+myow-finance
+
+myow-distribution
+```
+
+都可以提供自己的接口。
+
+启动项目：
+
+只放：
+
+* 系统专属接口
+* 聚合接口
+* 工作台接口
+* 首页接口
+
+例如：
+
+```text
+OverseasDashboardController
+
+OverseasWorkbenchController
+```
+
+这样：
+
+登录接口无需重复开发。
+
+两个启动项目引用：
+
+```text
+myow-user
+
+myow-overseas
+```
+
+即可自动拥有：
+
+```text
+/auth/login
+
+/auth/logout
+```
+
+---
+
+# 六、Common 模块职责
+
+Common 只放基础设施。
+
+禁止放业务。
+
+---
+
+## myow-common-parent
+
+packaging = pom
+
+职责：
+
+* dependencyManagement
+* pluginManagement
+* Maven 版本统一管理
+
+不生成 Jar。
+
+---
+
+## myow-common-core
+
+负责：
+
+* Result
+* Exception
+* ErrorCode
+* PageResult
+* Enum
+* 常量
+* 工具类
+
+---
+
+## myow-common-web
+
+负责：
+
+* 全局异常
+* Jackson
+* MVC
+* Swagger
+* Filter
+* Interceptor
+* Web 日志
+
+---
+
+## myow-common-security
+
+负责：
+
+* Sa-Token
+* 登录上下文
+* SecurityUtils
+* UserContext
+* Token 工具
+* 权限公共能力
+
+账号密码校验：
+
+仍然属于：
+
+```text
+myow-user
+```
+
+---
+
+## myow-common-mybatis
+
+负责：
+
+* MyBatisPlus
+* BaseDO
+* 自动填充
+* 分页插件
+* TypeHandler
+
+禁止放 Mapper。
+
+---
+
+## myow-common-redis
+
+负责：
+
+* RedisConfig
+* RedisCache
+* RedisLock
+* CacheKey
+* Redis 工具
+
+业务尽量不要直接使用 RedisTemplate。
+
+---
+
+## myow-common-excel
+
+负责：
+
+* Excel 导入
+* Excel 导出
+* Excel 工具
+
+---
+
+# 七、依赖规则
+
+允许：
+
+```text
+myow-overseas-app
+    ↓
+myow-user
+
+myow-overseas-app
+    ↓
+myow-finance
+
+myow-overseas-app
+    ↓
+myow-distribution
+
+业务模块
+    ↓
+Common
+```
+
+禁止：
+
+```text
+Common
+    ↓
+业务模块
+```
+
+禁止：
+
+```text
+业务模块
+    ↓
+启动项目
+```
+
+Common 永远不能依赖业务。
+
+---
+
+# 八、业务模块之间调用
+
+业务模块之间：
+
+禁止依赖实现类。
+
+例如：
+
+错误：
+
+```java
+@Autowired
+DistributionServiceImpl
+```
+
+正确：
+
+```java
+@Autowired
+DistributionService
+```
+
+当前阶段：
+
+不提前拆 API Module。
+
+以后真正拆微服务时，再抽：
+
+```text
+distribution-api
+```
+
+---
+
+# 九、登录设计
+
+登录接口：
+
+```text
+myow-user
+```
+
+登录流程：
+
+```text
+LoginController
+
+↓
+
+LoginService
+
+↓
+
+生成 Token
+
+↓
+
+Redis 保存 LoginUser
+
+↓
+
+返回 Token
+```
+
+后续请求：
+
+```text
+Controller
+
+↓
+
+Sa-Token
+
+↓
+
+UserContext
+
+↓
+
+业务 Service
+
+↓
+
+MyBatis 自动填充
+```
+
+业务统一通过：
+
+```java
+UserContext.getUserId()
+```
+
+获取当前用户。
+
+不得直接依赖 Sa-Token。
+
+---
+
+# 十、模块拆分原则
+
+拆分依据：
+
+**业务域（Bounded Context）**
+
+不是：
+
+* 数据库表
+* 页面
+* 菜单
+* Controller 数量
+
+只有满足下面条件之一时，才继续拆 Module：
+
+* 独立业务闭环
+* 独立团队维护
+* 独立生命周期
+* 多系统复用
+* 后续可能独立部署
+
+否则保持当前模块即可。
+
+---
+
+# 十一、总体设计原则
+
+整个项目遵循以下原则：
+
+* 高内聚
+* 低耦合
+* Common 负责基础设施
+* Business 负责业务能力
+* App 负责系统启动和聚合能力
+* Controller 可以存在于业务模块
+* 系统专属 Controller 放 App
+* 当前保持模块化单体
+* 后续可平滑演进微服务
+* 不进行过度设计
+* 不提前拆分不存在的模块
+
+最高原则：
+模块拆分以“业务域（Bounded Context）”为边界，而不是以数据库表、菜单、页面或功能点为边界。

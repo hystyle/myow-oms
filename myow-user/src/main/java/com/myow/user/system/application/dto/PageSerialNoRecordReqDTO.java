@@ -1,0 +1,17 @@
+package com.myow.user.system.application.dto;
+
+import com.myow.common.response.PageParam;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDate;
+
+/**
+ * @author yss
+ */
+@Getter
+@Setter
+public class PageSerialNoRecordReqDTO extends PageParam {
+    private Integer serialNumberId;
+    private LocalDate recordDate;
+}

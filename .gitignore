@@ -10,3 +10,5 @@ ${catalina.home}/
 logs/
 .mvn/
 .vscode/
+.agents/
+.uploads/

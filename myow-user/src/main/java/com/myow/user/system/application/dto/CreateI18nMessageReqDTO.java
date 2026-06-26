@@ -1,0 +1,16 @@
+package com.myow.user.system.application.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * @author yss
+ */
+@Getter
+@Setter
+public class CreateI18nMessageReqDTO {
+    private String keyCode;
+    private String lang;
+    private String message;
+    private Short status;
+}
