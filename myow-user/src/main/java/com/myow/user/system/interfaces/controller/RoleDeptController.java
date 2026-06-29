@@ -4,12 +4,14 @@ import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreateRoleDeptReqDTO;
 import com.myow.user.system.application.dto.PageRoleDeptReqDTO;
+import com.myow.user.system.application.dto.RoleDeptIdReqDTO;
 import com.myow.user.system.application.dto.RoleDeptRespDTO;
 import com.myow.user.system.application.dto.UpdateRoleDeptReqDTO;
 import com.myow.user.system.application.service.RoleDeptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,33 +31,29 @@ public class RoleDeptController {
         return Result.success(roleDeptService.createRoleDept(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新角色部门关联")
-    public Result<Boolean> updateRoleDept(@RequestBody UpdateRoleDeptReqDTO updateReqDTO) {
+    public Result<Boolean> updateRoleDept(@RequestBody @Validated UpdateRoleDeptReqDTO updateReqDTO) {
         roleDeptService.updateRoleDept(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{roleId}/{deptId}")
+    @PostMapping("/delete")
     @Operation(summary = "删除角色部门关联")
-    public Result<Boolean> deleteRoleDept(
-            @PathVariable("roleId") Long roleId,
-            @PathVariable("deptId") Long deptId) {
-        roleDeptService.deleteRoleDept(roleId, deptId);
+    public Result<Boolean> deleteRoleDept(@RequestBody @Validated RoleDeptIdReqDTO reqDTO) {
+        roleDeptService.deleteRoleDept(reqDTO.getRoleId(), reqDTO.getDeptId());
         return Result.success(true);
     }
 
-    @GetMapping("/get/{roleId}/{deptId}")
+    @PostMapping("/get")
     @Operation(summary = "获取角色部门关联")
-    public Result<RoleDeptRespDTO> getRoleDept(
-            @PathVariable("roleId") Long roleId,
-            @PathVariable("deptId") Long deptId) {
-        return Result.success(roleDeptService.getRoleDept(roleId, deptId));
+    public Result<RoleDeptRespDTO> getRoleDept(@RequestBody @Validated RoleDeptIdReqDTO reqDTO) {
+        return Result.success(roleDeptService.getRoleDept(reqDTO.getRoleId(), reqDTO.getDeptId()));
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "获取角色部门关联分页")
-    public Result<PageResult<RoleDeptRespDTO>> getRoleDeptPage(PageRoleDeptReqDTO pageRoleDeptReqDTO) {
+    public Result<PageResult<RoleDeptRespDTO>> getRoleDeptPage(@RequestBody PageRoleDeptReqDTO pageRoleDeptReqDTO) {
         return Result.success(roleDeptService.getRoleDeptPage(pageRoleDeptReqDTO));
     }
 }

@@ -5,6 +5,7 @@ import com.myow.common.constant.TenantConst;
 import com.myow.common.context.TenantContext;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,6 +15,9 @@ import org.springframework.stereotype.Service;
  */
 @Service("tenantLineHandler")
 public class MyTenantLineHandler implements TenantLineHandler {
+
+    @Value("${myow.tenant.enabled:false}")
+    private boolean tenantEnabled;
 
     @Override
     public Expression getTenantId() {
@@ -31,6 +35,9 @@ public class MyTenantLineHandler implements TenantLineHandler {
 
     @Override
     public boolean ignoreTable(String tableName) {
+        if (!tenantEnabled) {
+            return true;
+        }
         return TenantConst.IGNORE_TENANT_TABLES.contains(tableName);
     }
 }

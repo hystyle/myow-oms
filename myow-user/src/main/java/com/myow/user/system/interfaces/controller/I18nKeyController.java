@@ -4,12 +4,14 @@ import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreateI18nKeyReqDTO;
 import com.myow.user.system.application.dto.I18nKeyRespDTO;
+import com.myow.user.system.application.dto.IdReqDTO;
 import com.myow.user.system.application.dto.PageI18nKeyReqDTO;
 import com.myow.user.system.application.dto.UpdateI18nKeyReqDTO;
 import com.myow.user.system.application.service.I18nKeyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,29 +31,29 @@ public class I18nKeyController {
         return Result.success(i18nKeyService.createI18nKey(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新国际化键")
-    public Result<Boolean> updateI18nKey(@RequestBody UpdateI18nKeyReqDTO updateReqDTO) {
+    public Result<Boolean> updateI18nKey(@RequestBody @Validated UpdateI18nKeyReqDTO updateReqDTO) {
         i18nKeyService.updateI18nKey(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @PostMapping("/delete")
     @Operation(summary = "删除国际化键")
-    public Result<Boolean> deleteI18nKey(@PathVariable("id") Long id) {
-        i18nKeyService.deleteI18nKey(id);
+    public Result<Boolean> deleteI18nKey(@RequestBody @Validated IdReqDTO reqDTO) {
+        i18nKeyService.deleteI18nKey(reqDTO.getId());
         return Result.success(true);
     }
 
-    @GetMapping("/get/{id}")
+    @PostMapping("/get")
     @Operation(summary = "获取国际化键")
-    public Result<I18nKeyRespDTO> getI18nKey(@PathVariable("id") Long id) {
-        return Result.success(i18nKeyService.getI18nKey(id));
+    public Result<I18nKeyRespDTO> getI18nKey(@RequestBody @Validated IdReqDTO reqDTO) {
+        return Result.success(i18nKeyService.getI18nKey(reqDTO.getId()));
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "获取国际化键分页")
-    public Result<PageResult<I18nKeyRespDTO>> getI18nKeyPage(PageI18nKeyReqDTO pageI18nKeyReqDTO) {
+    public Result<PageResult<I18nKeyRespDTO>> getI18nKeyPage(@RequestBody PageI18nKeyReqDTO pageI18nKeyReqDTO) {
         return Result.success(i18nKeyService.getI18nKeyPage(pageI18nKeyReqDTO));
     }
 }

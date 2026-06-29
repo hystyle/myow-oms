@@ -23,22 +23,22 @@ public class UserPostRepository extends ServiceImpl<UserPostMapper, UserPostDO> 
         if (reqDTO.getUserId() != null) {
             queryWrapper.eq(UserPostDO::getUserId, reqDTO.getUserId());
         }
-        if (reqDTO.getPostId() != null) {
-            queryWrapper.eq(UserPostDO::getPostId, reqDTO.getPostId());
+        if (reqDTO.getPositionId() != null) {
+            queryWrapper.eq(UserPostDO::getPositionId, reqDTO.getPositionId());
         }
 
         return this.page(page, queryWrapper);
     }
 
-    public UserPostDO getByCompositeKey(Long userId, Long postId) {
+    public UserPostDO getByCompositeKey(Long userId, Long positionId) {
         return this.getOne(Wrappers.<UserPostDO>lambdaQuery()
                 .eq(UserPostDO::getUserId, userId)
-                .eq(UserPostDO::getPostId, postId));
+                .eq(UserPostDO::getPositionId, positionId));
     }
 
-    public boolean removeByCompositeKey(Long userId, Long postId) {
+    public boolean removeByCompositeKey(Long userId, Long positionId) {
         return this.remove(Wrappers.<UserPostDO>lambdaQuery()
                 .eq(UserPostDO::getUserId, userId)
-                .eq(UserPostDO::getPostId, postId));
+                .eq(UserPostDO::getPositionId, positionId));
     }
 }

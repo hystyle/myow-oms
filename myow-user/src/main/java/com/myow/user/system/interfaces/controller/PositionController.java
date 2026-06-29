@@ -1,8 +1,10 @@
 package com.myow.user.system.interfaces.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreatePositionReqDTO;
+import com.myow.user.system.application.dto.IdReqDTO;
 import com.myow.user.system.application.dto.PagePositionReqDTO;
 import com.myow.user.system.application.dto.PositionRespDTO;
 import com.myow.user.system.application.dto.UpdatePositionReqDTO;
@@ -10,6 +12,7 @@ import com.myow.user.system.application.service.PositionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -25,33 +28,38 @@ public class PositionController {
 
     @PostMapping("/create")
     @Operation(summary = "创建岗位")
-    public Result<Long> createPosition(@RequestBody CreatePositionReqDTO createReqDTO) {
+    @SaCheckPermission("system:position:add")
+    public Result<Long> createPosition(@RequestBody @Validated CreatePositionReqDTO createReqDTO) {
         return Result.success(positionService.createPosition(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新岗位")
-    public Result<Boolean> updatePosition(@RequestBody UpdatePositionReqDTO updateReqDTO) {
+    @SaCheckPermission("system:position:update")
+    public Result<Boolean> updatePosition(@RequestBody @Validated UpdatePositionReqDTO updateReqDTO) {
         positionService.updatePosition(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @PostMapping("/delete")
     @Operation(summary = "删除岗位")
-    public Result<Boolean> deletePosition(@PathVariable("id") Long id) {
-        positionService.deletePosition(id);
+    @SaCheckPermission("system:position:delete")
+    public Result<Boolean> deletePosition(@RequestBody @Validated IdReqDTO reqDTO) {
+        positionService.deletePosition(reqDTO.getId());
         return Result.success(true);
     }
 
-    @GetMapping("/get/{id}")
+    @PostMapping("/get")
     @Operation(summary = "获取岗位")
-    public Result<PositionRespDTO> getPosition(@PathVariable("id") Long id) {
-        return Result.success(positionService.getPosition(id));
+    @SaCheckPermission("system:position:query")
+    public Result<PositionRespDTO> getPosition(@RequestBody @Validated IdReqDTO reqDTO) {
+        return Result.success(positionService.getPosition(reqDTO.getId()));
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "获取岗位分页")
-    public Result<PageResult<PositionRespDTO>> getPositionPage(PagePositionReqDTO pagePositionReqDTO) {
+    @SaCheckPermission("system:position:query")
+    public Result<PageResult<PositionRespDTO>> getPositionPage(@RequestBody PagePositionReqDTO pagePositionReqDTO) {
         return Result.success(positionService.getPositionPage(pagePositionReqDTO));
     }
 }

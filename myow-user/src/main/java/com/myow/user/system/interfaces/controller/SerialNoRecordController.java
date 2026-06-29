@@ -4,16 +4,15 @@ import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreateSerialNoRecordReqDTO;
 import com.myow.user.system.application.dto.PageSerialNoRecordReqDTO;
+import com.myow.user.system.application.dto.SerialNoRecordIdReqDTO;
 import com.myow.user.system.application.dto.SerialNoRecordRespDTO;
 import com.myow.user.system.application.dto.UpdateSerialNoRecordReqDTO;
 import com.myow.user.system.application.service.SerialNoRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
 
 /**
  * @author yss
@@ -32,33 +31,29 @@ public class SerialNoRecordController {
         return Result.success(serialNoRecordService.createSerialNoRecord(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新流水号记录")
-    public Result<Boolean> updateSerialNoRecord(@RequestBody UpdateSerialNoRecordReqDTO updateReqDTO) {
+    public Result<Boolean> updateSerialNoRecord(@RequestBody @Validated UpdateSerialNoRecordReqDTO updateReqDTO) {
         serialNoRecordService.updateSerialNoRecord(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{serialNumberId}/{recordDate}")
+    @PostMapping("/delete")
     @Operation(summary = "删除流水号记录")
-    public Result<Boolean> deleteSerialNoRecord(
-            @PathVariable("serialNumberId") Integer serialNumberId,
-            @PathVariable("recordDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate recordDate) {
-        serialNoRecordService.deleteSerialNoRecord(serialNumberId, recordDate);
+    public Result<Boolean> deleteSerialNoRecord(@RequestBody @Validated SerialNoRecordIdReqDTO reqDTO) {
+        serialNoRecordService.deleteSerialNoRecord(reqDTO.getSerialNumberId(), reqDTO.getRecordDate());
         return Result.success(true);
     }
 
-    @GetMapping("/get/{serialNumberId}/{recordDate}")
+    @PostMapping("/get")
     @Operation(summary = "获取流水号记录")
-    public Result<SerialNoRecordRespDTO> getSerialNoRecord(
-            @PathVariable("serialNumberId") Integer serialNumberId,
-            @PathVariable("recordDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate recordDate) {
-        return Result.success(serialNoRecordService.getSerialNoRecord(serialNumberId, recordDate));
+    public Result<SerialNoRecordRespDTO> getSerialNoRecord(@RequestBody @Validated SerialNoRecordIdReqDTO reqDTO) {
+        return Result.success(serialNoRecordService.getSerialNoRecord(reqDTO.getSerialNumberId(), reqDTO.getRecordDate()));
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "获取流水号记录分页")
-    public Result<PageResult<SerialNoRecordRespDTO>> getSerialNoRecordPage(PageSerialNoRecordReqDTO pageSerialNoRecordReqDTO) {
+    public Result<PageResult<SerialNoRecordRespDTO>> getSerialNoRecordPage(@RequestBody PageSerialNoRecordReqDTO pageSerialNoRecordReqDTO) {
         return Result.success(serialNoRecordService.getSerialNoRecordPage(pageSerialNoRecordReqDTO));
     }
 }

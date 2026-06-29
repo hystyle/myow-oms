@@ -3,6 +3,7 @@ package com.myow.user.system.interfaces.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreateDeptReqDTO;
+import com.myow.user.system.application.dto.IdReqDTO;
 import com.myow.user.system.application.dto.UpdateDeptReqDTO;
 import com.myow.user.system.application.service.DeptService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,35 +27,37 @@ public class DeptController {
 
     @PostMapping("/create")
     @Operation(summary = "创建部门")
-    @SaCheckPermission("system:department:add")
+    @SaCheckPermission("system:dept:add")
     public Result<Long> createDept(@RequestBody @Validated CreateDeptReqDTO createReqDTO) {
         return Result.success(deptService.createDept(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新部门")
-    @SaCheckPermission("system:department:edit")
+    @SaCheckPermission("system:dept:update")
     public Result<Boolean> updateDept(@RequestBody @Validated UpdateDeptReqDTO updateReqDTO) {
         deptService.updateDept(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @PostMapping("/delete")
     @Operation(summary = "删除部门")
-    @SaCheckPermission("system:department:delete")
-    public Result<Boolean> deleteDept(@PathVariable("id") Long id) {
-        deptService.deleteDept(id);
+    @SaCheckPermission("system:dept:delete")
+    public Result<Boolean> deleteDept(@RequestBody @Validated IdReqDTO reqDTO) {
+        deptService.deleteDept(reqDTO.getId());
         return Result.success(true);
     }
 
-    @GetMapping("/tree")
+    @PostMapping("/tree")
     @Operation(summary = "获取部门树")
+    @SaCheckPermission("system:dept:query")
     public Result<List<?>> getDeptTree() {
         return Result.success(deptService.getDeptTree());
     }
 
-    @GetMapping("/list")
+    @PostMapping("/list")
     @Operation(summary = "获取部门列表")
+    @SaCheckPermission("system:dept:query")
     public Result<?> getDeptList() {
         return Result.success(deptService.listAll());
     }

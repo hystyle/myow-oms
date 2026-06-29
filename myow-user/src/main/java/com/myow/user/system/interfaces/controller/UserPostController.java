@@ -5,11 +5,13 @@ import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreateUserPostReqDTO;
 import com.myow.user.system.application.dto.PageUserPostReqDTO;
 import com.myow.user.system.application.dto.UpdateUserPostReqDTO;
+import com.myow.user.system.application.dto.UserPostIdReqDTO;
 import com.myow.user.system.application.dto.UserPostRespDTO;
 import com.myow.user.system.application.service.UserPostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,33 +31,29 @@ public class UserPostController {
         return Result.success(userPostService.createUserPost(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新用户岗位关联")
-    public Result<Boolean> updateUserPost(@RequestBody UpdateUserPostReqDTO updateReqDTO) {
+    public Result<Boolean> updateUserPost(@RequestBody @Validated UpdateUserPostReqDTO updateReqDTO) {
         userPostService.updateUserPost(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{userId}/{postId}")
+    @PostMapping("/delete")
     @Operation(summary = "删除用户岗位关联")
-    public Result<Boolean> deleteUserPost(
-            @PathVariable("userId") Long userId,
-            @PathVariable("postId") Long postId) {
-        userPostService.deleteUserPost(userId, postId);
+    public Result<Boolean> deleteUserPost(@RequestBody @Validated UserPostIdReqDTO reqDTO) {
+        userPostService.deleteUserPost(reqDTO.getUserId(), reqDTO.getPositionId());
         return Result.success(true);
     }
 
-    @GetMapping("/get/{userId}/{postId}")
+    @PostMapping("/get")
     @Operation(summary = "获取用户岗位关联")
-    public Result<UserPostRespDTO> getUserPost(
-            @PathVariable("userId") Long userId,
-            @PathVariable("postId") Long postId) {
-        return Result.success(userPostService.getUserPost(userId, postId));
+    public Result<UserPostRespDTO> getUserPost(@RequestBody @Validated UserPostIdReqDTO reqDTO) {
+        return Result.success(userPostService.getUserPost(reqDTO.getUserId(), reqDTO.getPositionId()));
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "获取用户岗位关联分页")
-    public Result<PageResult<UserPostRespDTO>> getUserPostPage(PageUserPostReqDTO pageUserPostReqDTO) {
+    public Result<PageResult<UserPostRespDTO>> getUserPostPage(@RequestBody PageUserPostReqDTO pageUserPostReqDTO) {
         return Result.success(userPostService.getUserPostPage(pageUserPostReqDTO));
     }
 }

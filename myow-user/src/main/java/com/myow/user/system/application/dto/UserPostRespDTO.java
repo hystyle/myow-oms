@@ -17,5 +17,5 @@ public class UserPostRespDTO {
     /**
      * 岗位ID
      */
-    private Long postId;
+    private Long positionId;
 }

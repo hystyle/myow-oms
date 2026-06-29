@@ -3,6 +3,7 @@ package com.myow.user.system.interfaces.controller;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreateOperLogReqDTO;
+import com.myow.user.system.application.dto.IdReqDTO;
 import com.myow.user.system.application.dto.OperLogRespDTO;
 import com.myow.user.system.application.dto.PageOperLogReqDTO;
 import com.myow.user.system.application.dto.UpdateOperLogReqDTO;
@@ -10,6 +11,7 @@ import com.myow.user.system.application.service.OperLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,29 +31,29 @@ public class OperLogController {
         return Result.success(operLogService.createOperLog(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新操作日志")
-    public Result<Boolean> updateOperLog(@RequestBody UpdateOperLogReqDTO updateReqDTO) {
+    public Result<Boolean> updateOperLog(@RequestBody @Validated UpdateOperLogReqDTO updateReqDTO) {
         operLogService.updateOperLog(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @PostMapping("/delete")
     @Operation(summary = "删除操作日志")
-    public Result<Boolean> deleteOperLog(@PathVariable("id") Long id) {
-        operLogService.deleteOperLog(id);
+    public Result<Boolean> deleteOperLog(@RequestBody @Validated IdReqDTO reqDTO) {
+        operLogService.deleteOperLog(reqDTO.getId());
         return Result.success(true);
     }
 
-    @GetMapping("/get/{id}")
+    @PostMapping("/get")
     @Operation(summary = "获取操作日志")
-    public Result<OperLogRespDTO> getOperLog(@PathVariable("id") Long id) {
-        return Result.success(operLogService.getOperLog(id));
+    public Result<OperLogRespDTO> getOperLog(@RequestBody @Validated IdReqDTO reqDTO) {
+        return Result.success(operLogService.getOperLog(reqDTO.getId()));
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "获取操作日志分页")
-    public Result<PageResult<OperLogRespDTO>> getOperLogPage(PageOperLogReqDTO pageOperLogReqDTO) {
+    public Result<PageResult<OperLogRespDTO>> getOperLogPage(@RequestBody PageOperLogReqDTO pageOperLogReqDTO) {
         return Result.success(operLogService.getOperLogPage(pageOperLogReqDTO));
     }
 }

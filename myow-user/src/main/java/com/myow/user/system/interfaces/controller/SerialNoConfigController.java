@@ -3,6 +3,7 @@ package com.myow.user.system.interfaces.controller;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreateSerialNoConfigReqDTO;
+import com.myow.user.system.application.dto.IntIdReqDTO;
 import com.myow.user.system.application.dto.PageSerialNoConfigReqDTO;
 import com.myow.user.system.application.dto.SerialNoConfigRespDTO;
 import com.myow.user.system.application.dto.UpdateSerialNoConfigReqDTO;
@@ -10,6 +11,7 @@ import com.myow.user.system.application.service.SerialNoConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,29 +31,29 @@ public class SerialNoConfigController {
         return Result.success(serialNoConfigService.createSerialNoConfig(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新流水号配置")
-    public Result<Boolean> updateSerialNoConfig(@RequestBody UpdateSerialNoConfigReqDTO updateReqDTO) {
+    public Result<Boolean> updateSerialNoConfig(@RequestBody @Validated UpdateSerialNoConfigReqDTO updateReqDTO) {
         serialNoConfigService.updateSerialNoConfig(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @PostMapping("/delete")
     @Operation(summary = "删除流水号配置")
-    public Result<Boolean> deleteSerialNoConfig(@PathVariable("id") Integer id) {
-        serialNoConfigService.deleteSerialNoConfig(id);
+    public Result<Boolean> deleteSerialNoConfig(@RequestBody @Validated IntIdReqDTO reqDTO) {
+        serialNoConfigService.deleteSerialNoConfig(reqDTO.getId());
         return Result.success(true);
     }
 
-    @GetMapping("/get/{id}")
+    @PostMapping("/get")
     @Operation(summary = "获取流水号配置")
-    public Result<SerialNoConfigRespDTO> getSerialNoConfig(@PathVariable("id") Integer id) {
-        return Result.success(serialNoConfigService.getSerialNoConfig(id));
+    public Result<SerialNoConfigRespDTO> getSerialNoConfig(@RequestBody @Validated IntIdReqDTO reqDTO) {
+        return Result.success(serialNoConfigService.getSerialNoConfig(reqDTO.getId()));
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "获取流水号配置分页")
-    public Result<PageResult<SerialNoConfigRespDTO>> getSerialNoConfigPage(PageSerialNoConfigReqDTO pageSerialNoConfigReqDTO) {
+    public Result<PageResult<SerialNoConfigRespDTO>> getSerialNoConfigPage(@RequestBody PageSerialNoConfigReqDTO pageSerialNoConfigReqDTO) {
         return Result.success(serialNoConfigService.getSerialNoConfigPage(pageSerialNoConfigReqDTO));
     }
 }

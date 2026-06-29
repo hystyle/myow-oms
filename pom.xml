@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -11,13 +11,13 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.myow.oms</groupId>
-    <artifactId>myow-oms</artifactId>
+    <groupId>com.myow.platform</groupId>
+    <artifactId>myow-platform</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>myow-oms</name>
-    <description>MYOW Order Management System</description>
+    <name>myow-platform</name>
+    <description>MYOW Platform</description>
 
     <properties>
         <java.version>17</java.version>
@@ -153,58 +153,58 @@
 
             <!-- Project Modules -->
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-common-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-common-parent</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-common-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-common-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-common-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-common-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-common-excel</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-user</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-overseas</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-finance</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.myow.oms</groupId>
+                <groupId>com.myow.platform</groupId>
                 <artifactId>myow-distribution</artifactId>
                 <version>${project.version}</version>
             </dependency>

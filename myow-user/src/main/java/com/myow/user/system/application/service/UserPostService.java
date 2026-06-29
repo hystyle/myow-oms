@@ -43,23 +43,23 @@ public class UserPostService {
 
     public void updateUserPost(UpdateUserPostReqDTO updateReqDTO) {
         validateUserPostForUpdate(updateReqDTO);
-        userPostRepository.removeByCompositeKey(updateReqDTO.getOriginalUserId(), updateReqDTO.getOriginalPostId());
+        userPostRepository.removeByCompositeKey(updateReqDTO.getOriginalUserId(), updateReqDTO.getOriginalPositionId());
         UserPost newUserPost = new UserPost();
         newUserPost.setUserId(updateReqDTO.getUserId());
-        newUserPost.setPostId(updateReqDTO.getPostId());
+        newUserPost.setPositionId(updateReqDTO.getPositionId());
         userPostRepository.save(userPostConverter.toDo(newUserPost));
     }
 
-    public void deleteUserPost(Long userId, Long postId) {
-        UserPostDO existUserPost = userPostRepository.getByCompositeKey(userId, postId);
+    public void deleteUserPost(Long userId, Long positionId) {
+        UserPostDO existUserPost = userPostRepository.getByCompositeKey(userId, positionId);
         if (Objects.isNull(existUserPost)) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "用户岗位关联不存在");
         }
-        userPostRepository.removeByCompositeKey(userId, postId);
+        userPostRepository.removeByCompositeKey(userId, positionId);
     }
 
-    public UserPostRespDTO getUserPost(Long userId, Long postId) {
-        UserPostDO userPostDO = userPostRepository.getByCompositeKey(userId, postId);
+    public UserPostRespDTO getUserPost(Long userId, Long positionId) {
+        UserPostDO userPostDO = userPostRepository.getByCompositeKey(userId, positionId);
         if (Objects.isNull(userPostDO)) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "用户岗位关联不存在");
         }
@@ -76,7 +76,7 @@ public class UserPostService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "用户ID不能为空");
         }
         
-        if (Objects.isNull(createReqDTO.getPostId())) {
+        if (Objects.isNull(createReqDTO.getPositionId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "岗位ID不能为空");
         }
         
@@ -85,12 +85,12 @@ public class UserPostService {
             throw new BusinessException(UserErrorCode.USER_NOT_EXIST);
         }
         
-        PositionDO position = positionRepository.getById(createReqDTO.getPostId());
+        PositionDO position = positionRepository.getById(createReqDTO.getPositionId());
         if (Objects.isNull(position)) {
             throw new BusinessException(UserErrorCode.POSITION_NOT_EXIST);
         }
         
-        UserPostDO existUserPost = userPostRepository.getByCompositeKey(createReqDTO.getUserId(), createReqDTO.getPostId());
+        UserPostDO existUserPost = userPostRepository.getByCompositeKey(createReqDTO.getUserId(), createReqDTO.getPositionId());
         if (Objects.nonNull(existUserPost)) {
             throw new BusinessException(UserErrorCode.ALREADY_EXIST, "该用户岗位关联已存在");
         }
@@ -101,7 +101,7 @@ public class UserPostService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "用户ID不能为空");
         }
         
-        if (Objects.isNull(updateReqDTO.getPostId())) {
+        if (Objects.isNull(updateReqDTO.getPositionId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "岗位ID不能为空");
         }
         
@@ -109,7 +109,7 @@ public class UserPostService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "原用户ID不能为空");
         }
         
-        if (Objects.isNull(updateReqDTO.getOriginalPostId())) {
+        if (Objects.isNull(updateReqDTO.getOriginalPositionId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "原岗位ID不能为空");
         }
         
@@ -118,12 +118,12 @@ public class UserPostService {
             throw new BusinessException(UserErrorCode.USER_NOT_EXIST);
         }
         
-        PositionDO position = positionRepository.getById(updateReqDTO.getPostId());
+        PositionDO position = positionRepository.getById(updateReqDTO.getPositionId());
         if (Objects.isNull(position)) {
             throw new BusinessException(UserErrorCode.POSITION_NOT_EXIST);
         }
         
-        UserPostDO existUserPost = userPostRepository.getByCompositeKey(updateReqDTO.getUserId(), updateReqDTO.getPostId());
+        UserPostDO existUserPost = userPostRepository.getByCompositeKey(updateReqDTO.getUserId(), updateReqDTO.getPositionId());
         if (Objects.nonNull(existUserPost)) {
             throw new BusinessException(UserErrorCode.ALREADY_EXIST, "该用户岗位关联已存在");
         }

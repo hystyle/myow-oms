@@ -3,6 +3,7 @@ package com.myow.user.application.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -27,6 +28,10 @@ public class UserLoginResultVO {
     private String email;
 
     private Boolean adminFlag;
+
+    private Boolean mustChangePassword;
+
+    private LocalDateTime passwordExpireTime;
 
     private List<UserMenuRespVO> menuList = List.of();
 }

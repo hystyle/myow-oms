@@ -14,6 +14,7 @@ import com.myow.common.mybatis.util.MyPageUtil;
 import com.myow.user.application.dto.CreateUserReqDTO;
 import com.myow.user.application.dto.PageUserReqDTO;
 import com.myow.user.application.dto.UpdateUserReqDTO;
+import com.myow.user.application.dto.UpdateUserStatusReqDTO;
 import com.myow.user.application.vo.UserRespVO;
 import com.myow.user.application.vo.UserRoleInfoVO;
 import com.myow.user.infrastructure.persistence.po.TenantUserDO;
@@ -41,6 +42,7 @@ public class UserManagementService {
     private final UserLoginCachePort userLoginCachePort;
     private final DeptInfoPort deptInfoPort;
     private final PositionInfoPort positionInfoPort;
+    private final SecurityPolicyService securityPolicyService;
 
     @Transactional(rollbackFor = Exception.class)
     public String createUser(CreateUserReqDTO createReqDTO) {
@@ -52,6 +54,10 @@ public class UserManagementService {
 
         String password = PasswordService.generateSaltPassword(PasswordService.randomPassword(), userCode);
         user.setPassword(PasswordService.getEncryptPwd(password));
+        user.setFailedLoginCount(0);
+        user.setMustChangePassword(true);
+        user.setPasswordUpdateTime(java.time.LocalDateTime.now());
+        user.setPasswordExpireTime(securityPolicyService.calculatePasswordExpireTime(user.getTenantId()));
 
         tenantUserRepository.save(user);
         saveUserRoles(user.getUserId(), createReqDTO.getRoleIdList());
@@ -83,6 +89,70 @@ public class UserManagementService {
         tenantUserRepository.removeById(id);
         userRoleRepository.deleteByUserId(id);
         userLoginCachePort.clearUserLoginCache(id);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserStatus(UpdateUserStatusReqDTO reqDTO) {
+        TenantUserDO existUser = tenantUserRepository.getById(reqDTO.getUserId());
+        if (Objects.isNull(existUser)) {
+            throw new BusinessException(UserErrorCode.USER_NOT_EXIST);
+        }
+
+        TenantUserDO user = new TenantUserDO();
+        user.setUserId(reqDTO.getUserId());
+        user.setStatus(reqDTO.getStatus());
+        tenantUserRepository.updateById(user);
+        userLoginCachePort.clearUserLoginCache(reqDTO.getUserId());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public String resetPassword(Long userId) {
+        TenantUserDO existUser = tenantUserRepository.getById(userId);
+        if (Objects.isNull(existUser)) {
+            throw new BusinessException(UserErrorCode.USER_NOT_EXIST);
+        }
+
+        String password = PasswordService.generateSaltPassword(PasswordService.randomPassword(), existUser.getUserCode());
+        TenantUserDO user = new TenantUserDO();
+        user.setUserId(userId);
+        user.setPassword(PasswordService.getEncryptPwd(password));
+        user.setFailedLoginCount(0);
+        user.setLockedUntil(null);
+        user.setMustChangePassword(true);
+        user.setPasswordUpdateTime(java.time.LocalDateTime.now());
+        user.setPasswordExpireTime(securityPolicyService.calculatePasswordExpireTime(existUser.getTenantId()));
+        tenantUserRepository.updateById(user);
+        userLoginCachePort.clearUserLoginCache(userId);
+        return password;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void unlockUser(Long userId) {
+        TenantUserDO existUser = tenantUserRepository.getById(userId);
+        if (Objects.isNull(existUser)) {
+            throw new BusinessException(UserErrorCode.USER_NOT_EXIST);
+        }
+
+        TenantUserDO user = new TenantUserDO();
+        user.setUserId(userId);
+        user.setFailedLoginCount(0);
+        user.setLockedUntil(null);
+        tenantUserRepository.updateById(user);
+        userLoginCachePort.clearUserLoginCache(userId);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void forceChangePassword(Long userId) {
+        TenantUserDO existUser = tenantUserRepository.getById(userId);
+        if (Objects.isNull(existUser)) {
+            throw new BusinessException(UserErrorCode.USER_NOT_EXIST);
+        }
+
+        TenantUserDO user = new TenantUserDO();
+        user.setUserId(userId);
+        user.setMustChangePassword(true);
+        tenantUserRepository.updateById(user);
+        userLoginCachePort.clearUserLoginCache(userId);
     }
 
     public UserRespVO getUser(Long id) {
@@ -204,6 +274,13 @@ public class UserManagementService {
         result.setCreateTime(user.getCreateTime());
         result.setRemark(user.getRemark());
         result.setAdminFlag(user.getAdminFlag());
+        result.setFailedLoginCount(user.getFailedLoginCount());
+        result.setLockedUntil(user.getLockedUntil());
+        result.setPasswordUpdateTime(user.getPasswordUpdateTime());
+        result.setPasswordExpireTime(user.getPasswordExpireTime());
+        result.setMustChangePassword(user.getMustChangePassword());
+        result.setLastLoginTime(user.getLastLoginTime());
+        result.setLastLoginIp(user.getLastLoginIp());
         return result;
     }
 
@@ -217,4 +294,5 @@ public class UserManagementService {
         }
         return Long.valueOf(value);
     }
+
 }

@@ -11,5 +11,5 @@ import lombok.Setter;
 @Setter
 public class PageUserPostReqDTO extends PageParam {
     private Long userId;
-    private Long postId;
+    private Long positionId;
 }

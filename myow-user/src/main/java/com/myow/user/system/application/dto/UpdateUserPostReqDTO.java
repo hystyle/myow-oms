@@ -17,7 +17,7 @@ public class UpdateUserPostReqDTO {
     /**
      * Original Post ID (for identifying the record to update)
      */
-    private Long originalPostId;
+    private Long originalPositionId;
 
     /**
      * New User ID
@@ -27,5 +27,5 @@ public class UpdateUserPostReqDTO {
     /**
      * New Post ID
      */
-    private Long postId;
+    private Long positionId;
 }

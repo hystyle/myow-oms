@@ -29,5 +29,5 @@ public class UserPostDO {
     /**
      * 岗位ID
      */
-    private Long postId;
+    private Long positionId;
 }

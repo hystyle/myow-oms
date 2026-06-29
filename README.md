@@ -580,3 +580,66 @@ UserContext.getUserId()
 
 最高原则：
 模块拆分以“业务域（Bounded Context）”为边界，而不是以数据库表、菜单、页面或功能点为边界。
+
+---
+
+# 十二、数据库迁移与 Flyway 约定
+
+项目使用 Flyway 管理数据库结构补丁，避免手工执行零散 SQL。
+
+## 1. 迁移脚本位置
+
+业务模块负责提供迁移脚本：
+
+```text
+myow-user/src/main/resources/db/migration
+```
+
+启动模块负责引入业务模块并执行迁移：
+
+```text
+myow-overseas-app
+myow-firstmile-app
+```
+
+## 2. 命名规范
+
+Flyway 版本脚本统一使用：
+
+```text
+V{版本号}__{说明}.sql
+```
+
+示例：
+
+```text
+V1__myow_user_base_schema.sql
+V2__myow_user_phase1_schema.sql
+```
+
+已发布的版本脚本不得修改、删除或复用版本号；后续变更必须新增更高版本脚本。
+
+## 3. 基线策略
+
+当前项目支持既有库接入 Flyway：
+
+```yaml
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 1
+```
+
+空库从 `V1__myow_user_base_schema.sql` 基础建表开始迁移；既有非空库可通过 `baseline-on-migrate` 将历史基础结构视为版本 1，后续阶段补丁从 `V2` 开始执行。
+
+## 4. SQL 编写要求
+
+迁移脚本应尽量保持幂等和可重复部署友好：
+
+* 新增表使用 `CREATE TABLE IF NOT EXISTS`
+* 新增字段使用 `ADD COLUMN IF NOT EXISTS`
+* 初始化数据使用 `ON CONFLICT`
+* 字段重命名使用条件判断
+* 不在业务运行代码中临时创建或修改表结构

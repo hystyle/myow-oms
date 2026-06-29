@@ -17,5 +17,5 @@ public class CreateUserPostReqDTO {
     /**
      * 岗位ID
      */
-    private Long postId;
+    private Long positionId;
 }

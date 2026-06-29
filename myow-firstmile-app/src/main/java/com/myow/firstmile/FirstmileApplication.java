@@ -19,5 +19,6 @@ public class FirstmileApplication {
         ConfigurableApplicationContext context = SpringApplication.run(FirstmileApplication.class, args);
         String contextPath = context.getEnvironment().getProperty("server.servlet.context-path");
         System.out.println("Knife4j API Docs Path: " + contextPath + "/doc.html#/home");
+        System.out.println("Firstmile Application Started Successfully!");
     }
 }

@@ -45,6 +45,20 @@ public class TenantUserDO {
 
     private Boolean adminFlag;
 
+    private Integer failedLoginCount;
+
+    private LocalDateTime lockedUntil;
+
+    private LocalDateTime passwordUpdateTime;
+
+    private LocalDateTime passwordExpireTime;
+
+    private Boolean mustChangePassword;
+
+    private LocalDateTime lastLoginTime;
+
+    private String lastLoginIp;
+
     private Boolean deletedFlag;
 
     private Long createDept;

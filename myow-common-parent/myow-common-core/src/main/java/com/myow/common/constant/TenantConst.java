@@ -21,7 +21,11 @@ public class TenantConst {
     public static final Set<String> IGNORE_TENANT_TABLES = Set.of(
             "sys_tenant",
             "sys_tenant_plans",
+            "sys_menu",
             "sys_dict",
-            "sys_dict_data"
+            "sys_dict_data",
+            "sys_config",
+            "t_i18n_key",
+            "t_i18n_message"
     );
 }

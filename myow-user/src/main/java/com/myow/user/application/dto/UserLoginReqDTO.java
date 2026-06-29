@@ -19,4 +19,10 @@ public class UserLoginReqDTO {
     @Schema(description = "Login client")
     @NotBlank(message = "Login client cannot be blank")
     private String loginClient;
+
+    @Schema(description = "Captcha uuid")
+    private String captchaUuid;
+
+    @Schema(description = "Captcha code")
+    private String captchaCode;
 }

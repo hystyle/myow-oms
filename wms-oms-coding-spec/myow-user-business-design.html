@@ -97,6 +97,7 @@
     <a href="#s4"><strong>04</strong> API 接口设计</a>
     <a href="#s5"><strong>05</strong> 业务流程设计</a>
     <a href="#s6"><strong>06</strong> 关键业务规则</a>
+    <a href="#s7"><strong>07</strong> 可实现规格补充</a>
   </div>
 </div>
 
@@ -148,7 +149,7 @@
 
 <section id="s2">
   <h2><span class="section-num">02</span> 领域模型设计</h2>
-  <p class="lead">领域模型采用 RBAC + 多租户架构，核心实体包括用户、角色、菜单、部门、岗位、租户。实体间通过关联表建立多对多关系，数据权限通过角色上的 <code>dataScope</code> 字段与 <code>sys_role_dept</code> 关联表共同实现。</p>
+  <p class="lead">领域模型采用 RBAC + 多租户架构，核心实体包括用户、角色、菜单、部门、岗位、租户。实体间通过关联表建立多对多关系，数据权限通过角色上的 <code>data_scope</code> 字段与 <code>sys_role_dept</code> 关联表共同实现。</p>
 
   <h3>2.1 实体关系图</h3>
   <figure class="diagram">
@@ -336,6 +337,22 @@ erDiagram
     </table>
   </div>
 
+  <h4>2.2.10 系统参数实体（SystemConfig）</h4>
+  <p>系统参数用于承载运行时可调整的安全策略、租户策略、会话策略和基础开关。参数可分为全局参数与租户参数，<code>tenant_id = 0</code> 表示全局参数，租户参数优先级高于全局参数。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>config_id</td><td>BIGINT</td><td>PK</td><td>参数唯一标识</td></tr>
+        <tr><td>tenant_id</td><td>BIGINT</td><td>DEFAULT 0</td><td>所属租户，0 表示全局参数</td></tr>
+        <tr><td>config_key</td><td>VARCHAR(128)</td><td>NOT NULL</td><td>参数键</td></tr>
+        <tr><td>config_value</td><td>VARCHAR(512)</td><td></td><td>参数值</td></tr>
+        <tr><td>config_type</td><td>VARCHAR(32)</td><td>DEFAULT 'STRING'</td><td>STRING/NUMBER/BOOLEAN/JSON</td></tr>
+        <tr><td>system_flag</td><td>BOOLEAN</td><td>DEFAULT FALSE</td><td>是否系统内置参数</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <h3>2.3 枚举定义</h3>
   <div class="table-wrap">
     <table>
@@ -399,12 +416,13 @@ erDiagram
         <tr><td><code>sys_role_menu</code></td><td>角色-菜单关联</td><td>千级/租户</td><td>pk: role_id + menu_id</td></tr>
         <tr><td><code>sys_role_dept</code></td><td>角色-部门关联（数据权限）</td><td>百级/租户</td><td>pk: role_id + dept_id</td></tr>
         <tr><td><code>sys_position</code></td><td>岗位</td><td>十级/租户</td><td>idx: dept_id</td></tr>
-        <tr><td><code>sys_user_post</code></td><td>用户-岗位关联</td><td>千级/租户</td><td>pk: user_id + post_id</td></tr>
+        <tr><td><code>sys_user_post</code></td><td>用户-岗位关联</td><td>千级/租户</td><td>pk: user_id + position_id</td></tr>
         <tr><td><code>sys_user_role</code></td><td>用户-角色关联</td><td>千级/租户</td><td>pk: user_id + role_id</td></tr>
         <tr><td><code>sys_tenant</code></td><td>租户</td><td>百级（全局）</td><td>uk: tenant_code</td></tr>
         <tr><td><code>sys_tenant_plans</code></td><td>租户套餐</td><td>十级（全局）</td><td>uk: plans_code</td></tr>
         <tr><td><code>sys_dict</code></td><td>字典类型</td><td>百级（全局）</td><td>uk: dict_code</td></tr>
         <tr><td><code>sys_dict_data</code></td><td>字典数据</td><td>千级（全局）</td><td>idx: dict_id, sort</td></tr>
+        <tr><td><code>sys_config</code></td><td>系统参数</td><td>百级（全局/租户）</td><td>uk: tenant_id + config_key</td></tr>
         <tr><td><code>sys_oper_log</code></td><td>操作日志</td><td>百万级/租户</td><td>idx: tenant_id, oper_time</td></tr>
         <tr><td><code>sys_login_log</code></td><td>登录日志</td><td>百万级/租户</td><td>idx: tenant_id, login_time; idx: login_name</td></tr>
         <tr><td><code>t_i18n_key</code></td><td>国际化键</td><td>千级（全局）</td><td>uk: key_code</td></tr>
@@ -542,10 +560,10 @@ COMMENT ON TABLE sys_user_role IS '用户与角色关联表';</code></pre>
   <h4>sys_user_post（用户-岗位关联表）</h4>
   <pre><code>CREATE TABLE sys_user_post (
     user_id BIGINT NOT NULL,
-    post_id BIGINT NOT NULL,
-    PRIMARY KEY (user_id, post_id)
+    position_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, position_id)
 );
-CREATE INDEX idx_sys_user_post_post ON sys_user_post(post_id);
+CREATE INDEX idx_sys_user_post_position ON sys_user_post(position_id);
 COMMENT ON TABLE sys_user_post IS '用户与岗位关联表';</code></pre>
 
   <h4>sys_position（岗位表）</h4>
@@ -645,6 +663,27 @@ COMMENT ON TABLE sys_dict IS '字典类型表';</code></pre>
 );
 CREATE INDEX idx_sys_dict_data_dict ON sys_dict_data(dict_id);
 COMMENT ON TABLE sys_dict_data IS '字典数据表';</code></pre>
+
+  <h4>sys_config（系统参数表）</h4>
+  <pre><code>CREATE TABLE sys_config (
+    config_id    BIGINT PRIMARY KEY,
+    tenant_id    BIGINT NOT NULL DEFAULT 0,
+    config_key   VARCHAR(128) NOT NULL,
+    config_value VARCHAR(512),
+    config_type  VARCHAR(32) DEFAULT 'STRING',
+    group_code   VARCHAR(64),
+    system_flag  BOOLEAN DEFAULT FALSE,
+    remark       VARCHAR(512),
+    create_by    BIGINT,
+    create_time  TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+    update_by    BIGINT,
+    update_time  TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+    deleted_flag BOOLEAN DEFAULT FALSE,
+    CONSTRAINT uk_sys_config_key UNIQUE (tenant_id, config_key)
+);
+CREATE INDEX idx_sys_config_group ON sys_config(group_code);
+COMMENT ON TABLE sys_config IS '系统参数表';
+COMMENT ON COLUMN sys_config.tenant_id IS '租户ID，0表示全局参数';</code></pre>
 
   <h4>t_i18n_key（国际化键表）</h4>
   <pre><code>CREATE TABLE t_i18n_key (
@@ -757,7 +796,7 @@ COMMENT ON TABLE sys_serial_no_record IS '流水号记录表';</code></pre>
   <ul>
     <li><strong>sys_oper_log / sys_login_log</strong>：数据量最大，建议按租户 + 时间分区（PostgreSQL 原生支持表分区），或按月归档到历史表。</li>
     <li><strong>sys_user / sys_role / sys_dept</strong>：单租户数据量有限，无需分表，通过 tenant_id 索引过滤即可。</li>
-    <li><strong>sys_tenant / sys_menu / sys_dict / sys_dict_data / sys_tenant_plans / t_i18n_key / t_i18n_message</strong>：全局共享表，数据量较小，不分区。</li>
+    <li><strong>sys_tenant / sys_menu / sys_dict / sys_dict_data / sys_config / sys_tenant_plans / t_i18n_key / t_i18n_message</strong>：全局共享表，数据量较小，不分区。</li>
   </ul>
 </section>
 
@@ -876,12 +915,12 @@ Authorization: satoken-xxxxx
         <tr><th>方法</th><th>URL</th><th>说明</th><th>权限标识</th></tr>
       </thead>
       <tbody>
-        <tr><td>POST</td><td><code>/api/system/dept/create</code></td><td>创建部门</td><td><code>system:department:add</code></td></tr>
-        <tr><td>POST</td><td><code>/api/system/dept/update</code></td><td>更新部门</td><td><code>system:department:update</code></td></tr>
-        <tr><td>POST</td><td><code>/api/system/dept/delete/{id}</code></td><td>删除部门</td><td><code>system:department:delete</code></td></tr>
-        <tr><td>POST</td><td><code>/api/system/dept/get/{id}</code></td><td>查询部门详情</td><td><code>system:department:query</code></td></tr>
-        <tr><td>POST</td><td><code>/api/system/dept/tree</code></td><td>获取部门树</td><td><code>system:department:query</code></td></tr>
-        <tr><td>POST</td><td><code>/api/system/dept/list</code></td><td>获取部门列表</td><td><code>system:department:query</code></td></tr>
+        <tr><td>POST</td><td><code>/api/system/dept/create</code></td><td>创建部门</td><td><code>system:dept:add</code></td></tr>
+        <tr><td>POST</td><td><code>/api/system/dept/update</code></td><td>更新部门</td><td><code>system:dept:update</code></td></tr>
+        <tr><td>POST</td><td><code>/api/system/dept/delete/{id}</code></td><td>删除部门</td><td><code>system:dept:delete</code></td></tr>
+        <tr><td>POST</td><td><code>/api/system/dept/get/{id}</code></td><td>查询部门详情</td><td><code>system:dept:query</code></td></tr>
+        <tr><td>POST</td><td><code>/api/system/dept/tree</code></td><td>获取部门树</td><td><code>system:dept:query</code></td></tr>
+        <tr><td>POST</td><td><code>/api/system/dept/list</code></td><td>获取部门列表</td><td><code>system:dept:query</code></td></tr>
       </tbody>
     </table>
   </div>
@@ -951,6 +990,7 @@ Authorization: satoken-xxxxx
         <tr><td>DictDataController</td><td><code>/api/system/dict-data</code></td><td>字典数据 CRUD</td></tr>
         <tr><td>I18nKeyController</td><td><code>/api/system/i18n-key</code></td><td>国际化键 CRUD</td></tr>
         <tr><td>I18nMessageController</td><td><code>/api/system/i18n-message</code></td><td>国际化消息 CRUD</td></tr>
+        <tr><td>ConfigController</td><td><code>/api/system/config</code></td><td>系统参数查询、更新、刷新缓存</td></tr>
         <tr><td>OperLogController</td><td><code>/api/system/oper-log</code></td><td>操作日志 CRUD + 分页</td></tr>
         <tr><td>LoginLogController</td><td><code>/api/system/login-log</code></td><td>登录日志查询、清理、归档</td></tr>
         <tr><td>TenantPlansController</td><td><code>/api/system/tenant-plans</code></td><td>租户套餐 CRUD</td></tr>
@@ -975,10 +1015,11 @@ Authorization: satoken-xxxxx
         <tr><td>用户</td><td><code>system:user:export</code></td><td>导出用户列表</td></tr>
         <tr><td>角色</td><td><code>system:role:add</code>, <code>system:role:update</code>, <code>system:role:delete</code>, <code>system:role:query</code></td><td>角色管理</td></tr>
         <tr><td>菜单</td><td><code>system:menu:add</code>, <code>system:menu:update</code>, <code>system:menu:delete</code>, <code>system:menu:query</code></td><td>菜单权限管理</td></tr>
-        <tr><td>部门</td><td><code>system:department:add</code>, <code>system:department:update</code>, <code>system:department:delete</code>, <code>system:department:query</code></td><td>部门管理</td></tr>
+        <tr><td>部门</td><td><code>system:dept:add</code>, <code>system:dept:update</code>, <code>system:dept:delete</code>, <code>system:dept:query</code></td><td>部门管理</td></tr>
         <tr><td>岗位</td><td><code>system:position:add</code>, <code>system:position:update</code>, <code>system:position:delete</code>, <code>system:position:query</code></td><td>岗位管理</td></tr>
         <tr><td>租户</td><td><code>system:tenant:add</code>, <code>system:tenant:update</code>, <code>system:tenant:delete</code>, <code>system:tenant:query</code></td><td>租户管理</td></tr>
         <tr><td>字典</td><td><code>system:dict:add</code>, <code>system:dict:update</code>, <code>system:dict:delete</code>, <code>system:dict:query</code></td><td>字典类型与字典数据管理</td></tr>
+        <tr><td>系统参数</td><td><code>system:config:update</code>, <code>system:config:query</code></td><td>系统参数查询、更新与缓存刷新</td></tr>
         <tr><td>国际化</td><td><code>system:i18n:add</code>, <code>system:i18n:update</code>, <code>system:i18n:delete</code>, <code>system:i18n:query</code></td><td>国际化键与消息管理</td></tr>
         <tr><td>操作日志</td><td><code>system:oper-log:query</code>, <code>system:oper-log:delete</code></td><td>操作日志查询与清理</td></tr>
         <tr><td>登录日志</td><td><code>system:login-log:query</code>, <code>system:login-log:delete</code></td><td>登录日志查询与清理</td></tr>
@@ -1099,17 +1140,17 @@ flowchart TD
     A[执行分页查询 SQL] --> B[MyBatis Plus 多租户拦截器]
     B --> C[自动追加 tenant_id = ?]
     C --> D[获取当前用户角色列表]
-    D --> E{存在 dataScope = 全部?}
+    D --> E{存在 data_scope = 全部?}
     E -->|是| F[不追加部门过滤]
     E -->|否| G[计算最小数据范围]
-    G --> H{dataScope = 仅本人?}
+    G --> H{data_scope = 仅本人?}
     H -->|是| I[追加 create_by = userId]
-    H -->|否| J{dataScope = 本部门?}
+    H -->|否| J{data_scope = 本部门?}
     J -->|是| K[追加 dept_id = 用户部门]
-    J -->|否| L{dataScope = 本部门及以下?}
+    J -->|否| L{data_scope = 本部门及以下?}
     L -->|是| M[查询本部门及所有下级 dept_id 列表]
     M --> N[追加 dept_id IN 列表]
-    L -->|否| O{dataScope = 自定义?}
+    L -->|否| O{data_scope = 自定义?}
     O -->|是| P[查询 sys_role_dept 关联部门列表]
     P --> Q[追加 dept_id IN 列表]
     O -->|否| R[默认仅本人]
@@ -1156,7 +1197,7 @@ flowchart TD
     B -->|否| C[返回角色不可用]
     B -->|是| D[校验 menuIdList 与 deptIdList 合法性]
     D --> E[覆盖写入 sys_role_menu]
-    E --> F{dataScope = 自定义?}
+    E --> F{data_scope = 自定义?}
     F -->|是| G[覆盖写入 sys_role_dept]
     F -->|否| H[清空 sys_role_dept]
     G --> I[查询该角色关联用户]
@@ -1179,7 +1220,7 @@ flowchart TD
     <li><strong>租户开关</strong>：通过 <code>myow.tenant.enabled</code> 控制租户隔离是否启用，默认可为 <code>false</code>，便于早期按单租户模式开发。</li>
     <li><strong>关闭模式</strong>：当 <code>myow.tenant.enabled=false</code> 时，不校验 <code>TenantContext</code>，MyBatis Plus 租户拦截器应忽略所有表，不追加 <code>tenant_id = ?</code> 条件；业务写入可使用默认租户值。</li>
     <li><strong>开启模式</strong>：当 <code>myow.tenant.enabled=true</code> 时，租户内业务查询通过 MyBatis Plus <code>MyTenantLineHandler</code> 自动追加 <code>tenant_id = ?</code> 条件，缺少租户上下文时必须拒绝请求。</li>
-    <li><strong>全局表例外</strong>：<code>sys_tenant</code>, <code>sys_menu</code>, <code>sys_dict</code>, <code>sys_dict_data</code>, <code>sys_tenant_plans</code>, <code>t_i18n_key</code>, <code>t_i18n_message</code> 为全局共享表，不附加租户过滤。</li>
+    <li><strong>全局表例外</strong>：<code>sys_tenant</code>, <code>sys_menu</code>, <code>sys_dict</code>, <code>sys_dict_data</code>, <code>sys_config</code>, <code>sys_tenant_plans</code>, <code>t_i18n_key</code>, <code>t_i18n_message</code> 为全局共享表，不附加租户过滤。</li>
     <li><strong>租户创建例外</strong>：创建租户时通过 <code>@InterceptorIgnore(tenantLine = "true")</code> 绕过拦截器，允许在 <code>tenant_id = null</code> 的上下文中写入。</li>
     <li><strong>跨租户唯一性</strong>：<code>login_name</code>, <code>role_code</code>, <code>dept_name</code> 等在租户内唯一，联合唯一索引须包含 <code>tenant_id</code>。</li>
   </ul>
@@ -1362,6 +1403,109 @@ flowchart TD
     <p>10. 需要数据权限的业务表是否具备 <code>dept_id</code> 或 <code>create_by</code> 字段？</p>
     <p>11. 新租户初始化是否具备事务回滚与默认授权校验？</p>
   </div>
+</section>
+
+<section id="s7">
+  <h2><span class="section-num">07</span> 可实现规格补充</h2>
+  <p class="lead">本章节用于把规则落成可编码规格，重点定义运行时配置项、初始化种子数据、核心 DTO 字段与校验规则。</p>
+
+  <h3>7.1 系统参数配置项</h3>
+  <p>系统参数优先从租户参数读取，租户未配置时回退到全局参数；高频参数应缓存到 Redis，参数更新后必须发布缓存失效事件。</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>参数键</th><th>默认值</th><th>类型</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>myow.tenant.enabled</code></td><td>false</td><td>BOOLEAN</td><td>是否启用多租户隔离</td></tr>
+        <tr><td><code>security.password.min-length</code></td><td>8</td><td>NUMBER</td><td>密码最小长度</td></tr>
+        <tr><td><code>security.password.require-letter</code></td><td>true</td><td>BOOLEAN</td><td>密码是否必须包含字母</td></tr>
+        <tr><td><code>security.password.require-number</code></td><td>true</td><td>BOOLEAN</td><td>密码是否必须包含数字</td></tr>
+        <tr><td><code>security.password.expire-days</code></td><td>90</td><td>NUMBER</td><td>密码有效天数，0 表示不过期</td></tr>
+        <tr><td><code>security.login.max-fail-count</code></td><td>5</td><td>NUMBER</td><td>连续登录失败锁定阈值</td></tr>
+        <tr><td><code>security.login.lock-minutes</code></td><td>30</td><td>NUMBER</td><td>账号锁定分钟数</td></tr>
+        <tr><td><code>security.login.captcha-enabled</code></td><td>false</td><td>BOOLEAN</td><td>是否登录必填验证码</td></tr>
+        <tr><td><code>security.login.captcha-after-fail-count</code></td><td>3</td><td>NUMBER</td><td>失败多少次后要求验证码</td></tr>
+        <tr><td><code>security.session.multi-login</code></td><td>true</td><td>BOOLEAN</td><td>是否允许同账号多端登录</td></tr>
+        <tr><td><code>security.session.token-timeout-seconds</code></td><td>7200</td><td>NUMBER</td><td>Token 有效期</td></tr>
+        <tr><td><code>security.session.refresh-window-seconds</code></td><td>1800</td><td>NUMBER</td><td>Token 到期前允许刷新窗口</td></tr>
+        <tr><td><code>audit.oper-log.retention-days</code></td><td>180</td><td>NUMBER</td><td>操作日志保留天数</td></tr>
+        <tr><td><code>audit.login-log.retention-days</code></td><td>180</td><td>NUMBER</td><td>登录日志保留天数</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.2 初始化种子数据</h3>
+  <p>系统启动或租户创建时必须具备可重复执行的初始化脚本。初始化脚本应支持幂等执行，使用自然键（如 <code>role_code</code>、<code>menu_name + parent_id</code>、<code>config_key</code>）判断是否已存在。</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>类别</th><th>种子数据</th><th>关键要求</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>全局菜单</td><td>系统管理、用户管理、角色管理、菜单管理、部门管理、岗位管理、租户管理、字典管理、参数配置、操作日志、登录日志</td><td>菜单为全局共享，按钮节点绑定权限标识</td></tr>
+        <tr><td>全局权限</td><td><code>system:user:*</code>、<code>system:role:*</code>、<code>system:menu:*</code>、<code>system:config:*</code> 等</td><td>权限标识必须与 Controller 注解一致</td></tr>
+        <tr><td>默认角色</td><td><code>tenant_admin</code>、<code>system_operator</code>、<code>readonly</code></td><td>租户管理员默认拥有当前租户内系统管理权限</td></tr>
+        <tr><td>默认部门</td><td>根部门</td><td>每个租户必须且只能有一个根部门</td></tr>
+        <tr><td>默认用户</td><td>租户管理员</td><td>强制首次登录改密，分配 <code>tenant_admin</code> 角色</td></tr>
+        <tr><td>默认字典</td><td>用户状态、性别、菜单类型、数据权限范围、操作类型、登录状态</td><td>字典编码全局唯一</td></tr>
+        <tr><td>默认参数</td><td>7.1 中全部系统参数</td><td>全局参数必须先初始化，租户参数按需覆盖</td></tr>
+        <tr><td>流水号</td><td>用户编号 <code>USER_CODE</code></td><td>默认格式 <code>U</code> + 5 位序号</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.3 核心 DTO 与校验规则</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>DTO</th><th>关键字段</th><th>校验规则</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>LoginRequest</td><td>loginName, password, loginClient, captchaCode, captchaUuid</td><td>loginName/password 必填；达到验证码策略时 captcha 必填；对外失败响应不暴露账号是否存在</td></tr>
+        <tr><td>ChangePasswordRequest</td><td>oldPassword, newPassword, confirmPassword</td><td>旧密码必须正确；新密码满足密码策略；两次输入一致；新旧密码不可相同</td></tr>
+        <tr><td>UserCreateRequest</td><td>loginName, nickName, deptId, positionId, phone, email, roleIdList</td><td>loginName 租户内唯一；phone/email 租户内唯一；角色、部门、岗位必须存在且启用</td></tr>
+        <tr><td>UserUpdateRequest</td><td>userId, nickName, deptId, positionId, phone, email, status, roleIdList</td><td>userId 必填；不可修改已删除用户；管理员保护规则必须生效</td></tr>
+        <tr><td>RoleSaveRequest</td><td>roleName, roleCode, dataScope, menuIdList, deptIdList</td><td>roleCode 租户内唯一；DTO 字段 <code>dataScope</code> 映射数据库字段 <code>data_scope</code>，自定义数据权限时 deptIdList 必填</td></tr>
+        <tr><td>MenuSaveRequest</td><td>parentId, menuName, menuType, path, component, apiPerms, sort</td><td>按钮类型必须配置 apiPerms；按钮不可有子节点；菜单路径同级唯一</td></tr>
+        <tr><td>DeptSaveRequest</td><td>parentId, deptName, managerId, sort</td><td>同级部门名称租户内唯一；不可形成循环父子关系</td></tr>
+        <tr><td>TenantRegisterRequest</td><td>tenantCode, name, plansId, adminLoginName, adminPassword</td><td>tenantCode 全局唯一；套餐必须存在且启用；管理员账号租户内唯一</td></tr>
+        <tr><td>ConfigUpdateRequest</td><td>configKey, configValue, tenantId</td><td>系统内置参数不允许删除；值必须符合 configType；更新后刷新缓存</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.4 统一响应与分页约定</h3>
+  <ul>
+    <li><strong>统一响应</strong>：所有接口返回 <code>Result&lt;T&gt;</code>，包含 <code>code</code>、<code>message</code>、<code>data</code>、<code>traceId</code>。</li>
+    <li><strong>分页请求</strong>：分页 DTO 统一包含 <code>pageNo</code>、<code>pageSize</code>、<code>sortField</code>、<code>sortOrder</code>；<code>pageSize</code> 默认 20，最大 200。</li>
+    <li><strong>分页响应</strong>：分页结果统一返回 <code>PageResult&lt;T&gt;</code>，包含 <code>records</code>、<code>total</code>、<code>pageNo</code>、<code>pageSize</code>。</li>
+    <li><strong>时间格式</strong>：接口时间字段统一使用 ISO-8601 字符串，数据库使用 <code>TIMESTAMP(3)</code>。</li>
+  </ul>
+
+  <h3>7.5 阶段范围划分</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>阶段</th><th>必须完成</th><th>可后置</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>第一阶段</td><td>登录/登出、当前用户、用户 CRUD、角色 CRUD、菜单 CRUD、部门 CRUD、岗位 CRUD、用户-角色、角色-菜单、角色-部门、数据权限、租户开关、系统参数、操作日志、登录日志、缓存失效、初始化种子</td><td>忘记密码、头像上传、批量导入导出、Token 刷新增强</td></tr>
+        <tr><td>第二阶段</td><td>租户注册、租户套餐、租户初始化模板、租户状态管理、账号数量限制、套餐菜单授权</td><td>租户自助续费、套餐计费、复杂组织权限审批</td></tr>
+        <tr><td>第三阶段</td><td>用户批量导入导出、验证码强制策略、会话列表与踢下线、日志归档任务</td><td>OAuth、MFA、SSO、第三方身份源同步</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.6 Flyway 数据库补丁约定</h3>
+  <ul>
+    <li><strong>迁移目录</strong>：用户中心数据库补丁统一放在 <code>myow-user/src/main/resources/db/migration</code>，随业务模块进入 App 运行时 classpath。</li>
+    <li><strong>文件命名</strong>：版本脚本使用 <code>V{版本号}__{说明}.sql</code>，例如 <code>V1__myow_user_base_schema.sql</code>、<code>V2__myow_user_phase1_schema.sql</code>；版本号只递增，不允许复用或改写已发布脚本。</li>
+    <li><strong>执行职责</strong>：<code>myow-user</code> 只提供 SQL 补丁；<code>myow-overseas-app</code>、<code>myow-firstmile-app</code> 等启动模块通过 Flyway 自动发现并执行补丁。</li>
+    <li><strong>基线策略</strong>：空库从 <code>V1</code> 基础建表开始迁移；既有非空环境允许开启 <code>baseline-on-migrate</code>，基线版本为 <code>1</code>，从 <code>V2</code> 开始执行阶段补丁。</li>
+    <li><strong>SQL 兼容</strong>：补丁必须优先使用幂等写法，例如 <code>IF NOT EXISTS</code>、<code>ON CONFLICT</code>、条件重命名；避免依赖人工重复执行。</li>
+    <li><strong>部署原则</strong>：应用启动时由 Flyway 记录和校验 <code>flyway_schema_history</code>；业务代码不得在运行期临时创建或修改表结构。</li>
+  </ul>
 </section>
 
 <footer>

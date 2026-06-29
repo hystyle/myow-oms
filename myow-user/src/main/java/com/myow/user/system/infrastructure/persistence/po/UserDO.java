@@ -98,6 +98,20 @@ public class UserDO {
      */
     private Boolean adminFlag;
 
+    private Integer failedLoginCount;
+
+    private LocalDateTime lockedUntil;
+
+    private LocalDateTime passwordUpdateTime;
+
+    private LocalDateTime passwordExpireTime;
+
+    private Boolean mustChangePassword;
+
+    private LocalDateTime lastLoginTime;
+
+    private String lastLoginIp;
+
     /**
      * 删除标志（0代表存在 1代表删除）
      */

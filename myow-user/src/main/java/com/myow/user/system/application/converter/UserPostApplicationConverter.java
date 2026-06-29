@@ -27,7 +27,7 @@ public interface UserPostApplicationConverter {
      * @return user post
      */
     @Mapping(source = "userId", target = "userId") // Map new userId to userId
-    @Mapping(source = "postId", target = "postId") // Map new postId to postId
+    @Mapping(source = "positionId", target = "positionId")
     UserPost convert(UpdateUserPostReqDTO bean);
 
     /**

@@ -59,7 +59,7 @@ public class PositionService {
         }
 
         Long userCount = userPostRepository.count(Wrappers.lambdaQuery(UserPostDO.class)
-                .eq(UserPostDO::getPostId, id));
+                .eq(UserPostDO::getPositionId, id));
         if (userCount > 0) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "该岗位已被用户使用，无法删除");
         }

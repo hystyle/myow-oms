@@ -4,12 +4,14 @@ import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.user.system.application.dto.CreateI18nMessageReqDTO;
 import com.myow.user.system.application.dto.I18nMessageRespDTO;
+import com.myow.user.system.application.dto.IdReqDTO;
 import com.myow.user.system.application.dto.PageI18nMessageReqDTO;
 import com.myow.user.system.application.dto.UpdateI18nMessageReqDTO;
 import com.myow.user.system.application.service.I18nMessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,29 +31,29 @@ public class I18nMessageController {
         return Result.success(i18nMessageService.createI18nMessage(createReqDTO));
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     @Operation(summary = "更新国际化消息")
-    public Result<Boolean> updateI18nMessage(@RequestBody UpdateI18nMessageReqDTO updateReqDTO) {
+    public Result<Boolean> updateI18nMessage(@RequestBody @Validated UpdateI18nMessageReqDTO updateReqDTO) {
         i18nMessageService.updateI18nMessage(updateReqDTO);
         return Result.success(true);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @PostMapping("/delete")
     @Operation(summary = "删除国际化消息")
-    public Result<Boolean> deleteI18nMessage(@PathVariable("id") Long id) {
-        i18nMessageService.deleteI18nMessage(id);
+    public Result<Boolean> deleteI18nMessage(@RequestBody @Validated IdReqDTO reqDTO) {
+        i18nMessageService.deleteI18nMessage(reqDTO.getId());
         return Result.success(true);
     }
 
-    @GetMapping("/get/{id}")
+    @PostMapping("/get")
     @Operation(summary = "获取国际化消息")
-    public Result<I18nMessageRespDTO> getI18nMessage(@PathVariable("id") Long id) {
-        return Result.success(i18nMessageService.getI18nMessage(id));
+    public Result<I18nMessageRespDTO> getI18nMessage(@RequestBody @Validated IdReqDTO reqDTO) {
+        return Result.success(i18nMessageService.getI18nMessage(reqDTO.getId()));
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "获取国际化消息分页")
-    public Result<PageResult<I18nMessageRespDTO>> getI18nMessagePage(PageI18nMessageReqDTO pageI18nMessageReqDTO) {
+    public Result<PageResult<I18nMessageRespDTO>> getI18nMessagePage(@RequestBody PageI18nMessageReqDTO pageI18nMessageReqDTO) {
         return Result.success(i18nMessageService.getI18nMessagePage(pageI18nMessageReqDTO));
     }
 }
