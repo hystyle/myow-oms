@@ -1451,6 +1451,7 @@ flowchart TD
         <tr><td>默认字典</td><td>用户状态、性别、菜单类型、数据权限范围、操作类型、登录状态</td><td>字典编码全局唯一</td></tr>
         <tr><td>默认参数</td><td>7.1 中全部系统参数</td><td>全局参数必须先初始化，租户参数按需覆盖</td></tr>
         <tr><td>流水号</td><td>用户编号 <code>USER_CODE</code></td><td>默认格式 <code>U</code> + 5 位序号</td></tr>
+        <tr><td>当前开发种子</td><td><code>V3__myow_user_default_seed.sql</code></td><td>初始化默认租户、部门、岗位、角色、管理员用户、系统菜单和基础授权；默认账号仅用于本地开发和部署验证</td></tr>
       </tbody>
     </table>
   </div>
@@ -1478,8 +1479,8 @@ flowchart TD
   <h3>7.4 统一响应与分页约定</h3>
   <ul>
     <li><strong>统一响应</strong>：所有接口返回 <code>Result&lt;T&gt;</code>，包含 <code>code</code>、<code>message</code>、<code>data</code>、<code>traceId</code>。</li>
-    <li><strong>分页请求</strong>：分页 DTO 统一包含 <code>pageNo</code>、<code>pageSize</code>、<code>sortField</code>、<code>sortOrder</code>；<code>pageSize</code> 默认 20，最大 200。</li>
-    <li><strong>分页响应</strong>：分页结果统一返回 <code>PageResult&lt;T&gt;</code>，包含 <code>records</code>、<code>total</code>、<code>pageNo</code>、<code>pageSize</code>。</li>
+    <li><strong>分页请求</strong>：分页 DTO 统一继承 <code>PageParam</code>，包含 <code>pageNum</code>、<code>pageSize</code>、<code>sortItemList</code>；<code>pageSize</code> 最大 500。</li>
+    <li><strong>分页响应</strong>：分页结果统一返回 <code>PageResult&lt;T&gt;</code>，包含 <code>list</code>、<code>total</code>、<code>pages</code>、<code>pageNum</code>、<code>pageSize</code>、<code>emptyFlag</code>。</li>
     <li><strong>时间格式</strong>：接口时间字段统一使用 ISO-8601 字符串，数据库使用 <code>TIMESTAMP(3)</code>。</li>
   </ul>
 
@@ -1500,10 +1501,11 @@ flowchart TD
   <h3>7.6 Flyway 数据库补丁约定</h3>
   <ul>
     <li><strong>迁移目录</strong>：用户中心数据库补丁统一放在 <code>myow-user/src/main/resources/db/migration</code>，随业务模块进入 App 运行时 classpath。</li>
-    <li><strong>文件命名</strong>：版本脚本使用 <code>V{版本号}__{说明}.sql</code>，例如 <code>V1__myow_user_base_schema.sql</code>、<code>V2__myow_user_phase1_schema.sql</code>；版本号只递增，不允许复用或改写已发布脚本。</li>
+    <li><strong>文件命名</strong>：版本脚本使用 <code>V{版本号}__{说明}.sql</code>，例如 <code>V1__myow_user_base_schema.sql</code>、<code>V2__myow_user_phase1_schema.sql</code>、<code>V3__myow_user_default_seed.sql</code>；版本号只递增，不允许复用或改写已发布脚本。</li>
     <li><strong>执行职责</strong>：<code>myow-user</code> 只提供 SQL 补丁；<code>myow-overseas-app</code>、<code>myow-firstmile-app</code> 等启动模块通过 Flyway 自动发现并执行补丁。</li>
     <li><strong>基线策略</strong>：空库从 <code>V1</code> 基础建表开始迁移；既有非空环境允许开启 <code>baseline-on-migrate</code>，基线版本为 <code>1</code>，从 <code>V2</code> 开始执行阶段补丁。</li>
     <li><strong>SQL 兼容</strong>：补丁必须优先使用幂等写法，例如 <code>IF NOT EXISTS</code>、<code>ON CONFLICT</code>、条件重命名；避免依赖人工重复执行。</li>
+    <li><strong>默认账号</strong>：当前开发种子提供 <code>admin / MyowAdmin2026!</code> 用于本地启动和接口验证；生产环境必须在部署后立即修改默认密码，或按环境替换初始化策略。</li>
     <li><strong>部署原则</strong>：应用启动时由 Flyway 记录和校验 <code>flyway_schema_history</code>；业务代码不得在运行期临时创建或修改表结构。</li>
   </ul>
 </section>

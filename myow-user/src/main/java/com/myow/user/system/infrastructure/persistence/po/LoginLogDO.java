@@ -1,5 +1,6 @@
 package com.myow.user.system.infrastructure.persistence.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @TableName("sys_login_log")
 public class LoginLogDO {
-    @TableId("login_log_id")
+    @TableId(value = "login_log_id", type = IdType.ASSIGN_ID)
     private Long loginLogId;
     private Long tenantId;
     private Long userId;

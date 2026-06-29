@@ -57,7 +57,7 @@ public class UserController {
     @PostMapping("/page")
     @Operation(summary = "Page users")
     @SaCheckPermission("system:user:query")
-    public Result<PageResult<UserRespVO>> getUserPage(@RequestBody PageUserReqDTO pageUserReqDTO) {
+    public Result<PageResult<UserRespVO>> getUserPage(@RequestBody @Validated PageUserReqDTO pageUserReqDTO) {
         return Result.success(userManagementService.getUserPage(pageUserReqDTO));
     }
 

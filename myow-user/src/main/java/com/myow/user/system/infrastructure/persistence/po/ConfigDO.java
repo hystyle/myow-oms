@@ -1,5 +1,6 @@
 package com.myow.user.system.infrastructure.persistence.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @TableName("sys_config")
 public class ConfigDO {
-    @TableId("config_id")
+    @TableId(value = "config_id", type = IdType.ASSIGN_ID)
     private Long configId;
     private Long tenantId;
     private String configKey;

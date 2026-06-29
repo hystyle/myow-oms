@@ -15,7 +15,7 @@ public interface UserRolePermissionMapper {
             FROM sys_user_role ur
             LEFT JOIN sys_role r ON r.role_id = ur.role_id
             WHERE ur.user_id = #{userId}
-              AND (r.deleted_flag = false OR r.deleted_flag = 0)
+              AND r.deleted_flag = false
             """)
     List<RoleDO> selectRolesByUserId(@Param("userId") Long userId);
 
@@ -39,7 +39,7 @@ public interface UserRolePermissionMapper {
             <if test="adminFlag == null or adminFlag == false">
                 LEFT JOIN sys_role_menu rm ON rm.menu_id = m.menu_id
             </if>
-            WHERE (m.deleted_flag = false OR m.deleted_flag = 0)
+            WHERE m.deleted_flag = false
             <if test="adminFlag == null or adminFlag == false">
                 AND rm.role_id IN
                 <foreach item="roleId" collection="roleIdList" open="(" separator="," close=")">

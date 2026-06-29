@@ -43,7 +43,7 @@ class UserPostServiceTest extends BaseServiceTest {
     void createUserPost_Success() {
         CreateUserPostReqDTO createReqDTO = new CreateUserPostReqDTO();
         createReqDTO.setUserId(1L);
-        createReqDTO.setPostId(2L);
+        createReqDTO.setPositionId(2L);
 
         UserDO mockUserDO = new UserDO();
         mockUserDO.setUserId(1L);
@@ -51,7 +51,7 @@ class UserPostServiceTest extends BaseServiceTest {
         mockPositionDO.setPositionId(2L);
         UserPostDO mockUserPostDO = new UserPostDO();
         mockUserPostDO.setUserId(1L);
-        mockUserPostDO.setPostId(2L);
+        mockUserPostDO.setPositionId(2L);
 
         when(userRepository.getById(1L)).thenReturn(mockUserDO);
         when(positionRepository.getById(2L)).thenReturn(mockPositionDO);
@@ -68,7 +68,7 @@ class UserPostServiceTest extends BaseServiceTest {
     void createUserPost_UserIdNull() {
         CreateUserPostReqDTO createReqDTO = new CreateUserPostReqDTO();
         createReqDTO.setUserId(null);
-        createReqDTO.setPostId(2L);
+        createReqDTO.setPositionId(2L);
 
         assertThatThrownBy(() -> userPostService.createUserPost(createReqDTO))
             .isInstanceOf(BusinessException.class)
@@ -80,7 +80,7 @@ class UserPostServiceTest extends BaseServiceTest {
     void createUserPost_PostIdNull() {
         CreateUserPostReqDTO createReqDTO = new CreateUserPostReqDTO();
         createReqDTO.setUserId(1L);
-        createReqDTO.setPostId(null);
+        createReqDTO.setPositionId(null);
 
         assertThatThrownBy(() -> userPostService.createUserPost(createReqDTO))
             .isInstanceOf(BusinessException.class)
@@ -92,7 +92,7 @@ class UserPostServiceTest extends BaseServiceTest {
     void createUserPost_UserNotExist() {
         CreateUserPostReqDTO createReqDTO = new CreateUserPostReqDTO();
         createReqDTO.setUserId(999L);
-        createReqDTO.setPostId(2L);
+        createReqDTO.setPositionId(2L);
 
         when(userRepository.getById(999L)).thenReturn(null);
 
@@ -106,7 +106,7 @@ class UserPostServiceTest extends BaseServiceTest {
     void createUserPost_PostNotExist() {
         CreateUserPostReqDTO createReqDTO = new CreateUserPostReqDTO();
         createReqDTO.setUserId(1L);
-        createReqDTO.setPostId(999L);
+        createReqDTO.setPositionId(999L);
 
         UserDO mockUserDO = new UserDO();
         mockUserDO.setUserId(1L);
@@ -123,7 +123,7 @@ class UserPostServiceTest extends BaseServiceTest {
     void createUserPost_AlreadyExist() {
         CreateUserPostReqDTO createReqDTO = new CreateUserPostReqDTO();
         createReqDTO.setUserId(1L);
-        createReqDTO.setPostId(2L);
+        createReqDTO.setPositionId(2L);
 
         UserDO mockUserDO = new UserDO();
         mockUserDO.setUserId(1L);
@@ -131,7 +131,7 @@ class UserPostServiceTest extends BaseServiceTest {
         mockPositionDO.setPositionId(2L);
         UserPostDO mockUserPostDO = new UserPostDO();
         mockUserPostDO.setUserId(1L);
-        mockUserPostDO.setPostId(2L);
+        mockUserPostDO.setPositionId(2L);
 
         when(userRepository.getById(1L)).thenReturn(mockUserDO);
         when(positionRepository.getById(2L)).thenReturn(mockPositionDO);
@@ -147,9 +147,9 @@ class UserPostServiceTest extends BaseServiceTest {
     void updateUserPost_Success() {
         UpdateUserPostReqDTO updateReqDTO = new UpdateUserPostReqDTO();
         updateReqDTO.setUserId(1L);
-        updateReqDTO.setPostId(2L);
+        updateReqDTO.setPositionId(2L);
         updateReqDTO.setOriginalUserId(3L);
-        updateReqDTO.setOriginalPostId(4L);
+        updateReqDTO.setOriginalPositionId(4L);
 
         UserDO mockUserDO = new UserDO();
         mockUserDO.setUserId(1L);
@@ -171,7 +171,7 @@ class UserPostServiceTest extends BaseServiceTest {
     void deleteUserPost_Success() {
         UserPostDO mockUserPostDO = new UserPostDO();
         mockUserPostDO.setUserId(1L);
-        mockUserPostDO.setPostId(2L);
+        mockUserPostDO.setPositionId(2L);
 
         when(userPostRepository.getByCompositeKey(1L, 2L)).thenReturn(mockUserPostDO);
         when(userPostRepository.removeByCompositeKey(1L, 2L)).thenReturn(true);
@@ -196,7 +196,7 @@ class UserPostServiceTest extends BaseServiceTest {
     void getUserPost_Success() {
         UserPostDO mockUserPostDO = new UserPostDO();
         mockUserPostDO.setUserId(1L);
-        mockUserPostDO.setPostId(2L);
+        mockUserPostDO.setPositionId(2L);
 
         when(userPostRepository.getByCompositeKey(1L, 2L)).thenReturn(mockUserPostDO);
 
