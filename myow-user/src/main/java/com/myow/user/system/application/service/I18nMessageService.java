@@ -39,8 +39,9 @@ public class I18nMessageService {
     public Long createI18nMessage(CreateI18nMessageReqDTO createReqDTO) {
         validateI18nMessageForCreate(createReqDTO);
         I18nMessage i18nMessage = i18nMessageApplicationConverter.convert(createReqDTO);
-        i18nMessageRepository.save(i18nMessageConverter.toDo(i18nMessage));
-        return i18nMessage.getId();
+        I18nMessageDO i18nMessageDO = i18nMessageConverter.toDo(i18nMessage);
+        i18nMessageRepository.save(i18nMessageDO);
+        return i18nMessageDO.getId();
     }
 
     public void updateI18nMessage(UpdateI18nMessageReqDTO updateReqDTO) {

@@ -30,8 +30,9 @@ public class OperLogService {
 
     public Long createOperLog(CreateOperLogReqDTO createReqDTO) {
         OperLog operLog = operLogApplicationConverter.convert(createReqDTO);
-        operLogRepository.save(operLogConverter.toDo(operLog));
-        return operLog.getOperId();
+        OperLogDO operLogDO = operLogConverter.toDo(operLog);
+        operLogRepository.save(operLogDO);
+        return operLogDO.getOperId();
     }
 
     public void updateOperLog(UpdateOperLogReqDTO updateReqDTO) {

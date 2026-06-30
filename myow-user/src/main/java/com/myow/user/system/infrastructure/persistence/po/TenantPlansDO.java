@@ -1,5 +1,6 @@
 package com.myow.user.system.infrastructure.persistence.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
@@ -24,7 +25,7 @@ public class TenantPlansDO {
     /**
      * 租户套餐id
      */
-    @TableId("plans_id")
+    @TableId(value = "plans_id", type = IdType.ASSIGN_ID)
     private Long plansId;
 
     /**

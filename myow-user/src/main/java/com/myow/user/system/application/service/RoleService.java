@@ -38,8 +38,9 @@ public class RoleService {
     public Long createRole(CreateRoleReqDTO createReqDTO) {
         validateRoleForCreate(createReqDTO);
         Role role = roleApplicationConverter.convert(createReqDTO);
-        roleRepository.save(roleConverter.toDo(role));
-        return role.getRoleId();
+        RoleDO roleDO = roleConverter.toDo(role);
+        roleRepository.save(roleDO);
+        return roleDO.getRoleId();
     }
 
     public void updateRole(UpdateRoleReqDTO updateReqDTO) {

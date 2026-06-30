@@ -45,7 +45,6 @@
         <module>myow-user</module>
         <module>myow-overseas</module>
         <module>myow-finance</module>
-        <module>myow-distribution</module>
     </modules>
 
     <dependencyManagement>
@@ -201,11 +200,6 @@
             <dependency>
                 <groupId>com.myow.platform</groupId>
                 <artifactId>myow-finance</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.myow.platform</groupId>
-                <artifactId>myow-distribution</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

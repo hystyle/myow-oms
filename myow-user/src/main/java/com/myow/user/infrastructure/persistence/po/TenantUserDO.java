@@ -1,5 +1,6 @@
 package com.myow.user.infrastructure.persistence.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @TableName("sys_user")
 public class TenantUserDO {
 
-    @TableId("user_id")
+    @TableId(value = "user_id", type = IdType.ASSIGN_ID)
     private Long userId;
 
     private String tenantId;

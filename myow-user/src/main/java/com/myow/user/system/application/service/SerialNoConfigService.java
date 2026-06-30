@@ -37,8 +37,12 @@ public class SerialNoConfigService {
     public Integer createSerialNoConfig(CreateSerialNoConfigReqDTO createReqDTO) {
         validateSerialNoConfigForCreate(createReqDTO);
         SerialNoConfig serialNoConfig = serialNoConfigApplicationConverter.convert(createReqDTO);
-        serialNoConfigRepository.save(serialNoConfigConverter.toDo(serialNoConfig));
-        return serialNoConfig.getSerialNumberId();
+        SerialNoConfigDO serialNoConfigDO = serialNoConfigConverter.toDo(serialNoConfig);
+        if (serialNoConfigDO.getSerialNumberId() == null) {
+            serialNoConfigDO.setSerialNumberId(nextSerialNumberId());
+        }
+        serialNoConfigRepository.save(serialNoConfigDO);
+        return serialNoConfigDO.getSerialNumberId();
     }
 
     public void updateSerialNoConfig(UpdateSerialNoConfigReqDTO updateReqDTO) {
@@ -105,6 +109,14 @@ public class SerialNoConfigService {
         if (countByBusinessName > 0) {
             throw new BusinessException(UserErrorCode.ALREADY_EXIST, "业务名称已存在");
         }
+    }
+
+    private Integer nextSerialNumberId() {
+        SerialNoConfigDO latest = serialNoConfigRepository.getOne(
+                Wrappers.lambdaQuery(SerialNoConfigDO.class)
+                        .orderByDesc(SerialNoConfigDO::getSerialNumberId)
+                        .last("LIMIT 1"));
+        return latest == null || latest.getSerialNumberId() == null ? 1 : latest.getSerialNumberId() + 1;
     }
 
     private void validateSerialNoConfigForUpdate(UpdateSerialNoConfigReqDTO updateReqDTO) {

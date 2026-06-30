@@ -1,5 +1,6 @@
 package com.myow.user.system.infrastructure.persistence.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
@@ -25,7 +26,7 @@ public class DeptDO {
     /**
      * 部门ID
      */
-    @TableId("dept_id")
+    @TableId(value = "dept_id", type = IdType.ASSIGN_ID)
     private Long deptId;
 
     /**

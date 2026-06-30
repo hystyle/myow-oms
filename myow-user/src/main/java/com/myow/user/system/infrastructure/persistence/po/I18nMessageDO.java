@@ -23,7 +23,7 @@ import lombok.experimental.Accessors;
 @TableName("t_i18n_message")
 public class I18nMessageDO {
 
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
     private Long id;
 
     private String keyCode;

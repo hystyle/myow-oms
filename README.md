@@ -616,6 +616,8 @@ V{版本号}__{说明}.sql
 V1__myow_user_base_schema.sql
 V2__myow_user_phase1_schema.sql
 V3__myow_user_default_seed.sql
+V4__myow_user_management_permissions.sql
+V5__myow_user_remaining_management_menus.sql
 ```
 
 已发布的版本脚本不得修改、删除或复用版本号；后续变更必须新增更高版本脚本。
@@ -654,6 +656,19 @@ spring:
 * 默认管理员账号
 * 系统管理菜单、用户管理菜单与基础按钮权限
 * 角色菜单授权、用户角色授权
+
+`V4__myow_user_management_permissions.sql` 补齐第一阶段系统管理权限：
+
+* 角色、菜单、部门、岗位、字典、配置的新增/修改/删除按钮权限
+* 字典管理菜单
+* 默认超级管理员角色的菜单权限授权
+
+`V5__myow_user_remaining_management_menus.sql` 补齐剩余用户中心管理菜单：
+
+* 租户、租户套餐、登录日志、操作日志
+* I18n Key、I18n Message
+* 流水号配置、流水号记录
+* 默认超级管理员角色的菜单权限授权
 
 本地默认账号为：
 

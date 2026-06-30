@@ -37,8 +37,9 @@ public class TenantPlansService {
     public Long createTenantPlans(CreateTenantPlansReqDTO createReqDTO) {
         validateTenantPlansForCreate(createReqDTO);
         TenantPlans tenantPlans = tenantPlansApplicationConverter.convert(createReqDTO);
-        tenantPlansRepository.save(tenantPlansConverter.toDo(tenantPlans));
-        return tenantPlans.getPlansId();
+        TenantPlansDO tenantPlansDO = tenantPlansConverter.toDo(tenantPlans);
+        tenantPlansRepository.save(tenantPlansDO);
+        return tenantPlansDO.getPlansId();
     }
 
     public void updateTenantPlans(UpdateTenantPlansReqDTO updateReqDTO) {

@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 @TableName("sys_dict")
 public class DictDO {
 
-    @TableId(value = "dict_id", type = IdType.AUTO)
+    @TableId(value = "dict_id", type = IdType.ASSIGN_ID)
     private Long dictId;
 
     private String dictName;

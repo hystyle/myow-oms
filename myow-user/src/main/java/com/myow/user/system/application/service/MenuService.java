@@ -43,8 +43,9 @@ public class MenuService {
     public Long createMenu(CreateMenuReqDTO createReqDTO) {
         validateMenuForCreate(createReqDTO);
         Menu menu = menuApplicationConverter.convert(createReqDTO);
-        menuRepository.save(menuConverter.toDo(menu));
-        return menu.getMenuId();
+        MenuDO menuDO = menuConverter.toDo(menu);
+        menuRepository.save(menuDO);
+        return menuDO.getMenuId();
     }
 
     public void updateMenu(UpdateMenuReqDTO updateReqDTO) {

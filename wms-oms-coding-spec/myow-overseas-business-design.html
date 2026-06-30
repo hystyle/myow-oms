@@ -79,7 +79,7 @@
   <div class="hero-inner">
     <div class="hero-badge">Business Design</div>
     <h1>MYOW-Overseas 业务设计文档</h1>
-    <p class="hero-subtitle">myow-overseas 模块完整业务设计 — 覆盖仓库、库位、入库、出库、库存、波次、物流渠道等海外仓核心域</p>
+    <p class="hero-subtitle">myow-overseas 模块业务设计 — 面向 OMS 平台，覆盖客户仓配配置、订单编排、库存同步、入出库指令、物流渠道与外部 ERP/WMS/打单系统对接</p>
     <div class="hero-meta">
       <span>版本 v1.0</span>
       <span>2026年6月</span>
@@ -104,39 +104,39 @@
 
 <section id="s1">
   <h2><span class="section-num">01</span> 概述与业务边界</h2>
-  <p class="lead">myow-overseas 模块是 MYOW-OMS 系统的海外仓业务中枢，承担仓库基础设施管理、入库执行、出库执行、库存管控、波次优化、物流渠道配置等核心职责。该模块被 myow-overseas-app 启动项目依赖，提供海外仓全链路履约所需的领域能力与 REST API。</p>
+  <p class="lead">myow-overseas 模块是 MYOW Platform 的海外仓 OMS 业务中枢，负责客户仓配配置、入库/出库指令编排、库存快照与库存预占、物流渠道选择、面单系统对接、履约状态跟踪和外部 ERP/WMS 状态同步。当前阶段不设计自研 WMS 的库内作业执行能力，库内收货、上架、拣货、复核、打包等动作由外部 WMS 或未来独立 WMS 域承接。</p>
 
   <h3>1.1 核心职责</h3>
   <div class="card-grid">
     <div class="card">
       <div class="card-icon">W</div>
-      <h4>仓库基础设施</h4>
-      <p>仓库档案、库区/库位管理、库位编码体系、仓库作业区域划分。</p>
+      <h4>仓配资源配置</h4>
+      <p>仓库档案、客户仓库授权、服务能力、时区、国家/地区、外部仓库编码映射。</p>
     </div>
     <div class="card">
       <div class="card-icon">I</div>
-      <h4>入库管理</h4>
-      <p>入库预报（ASN）、到货登记、卸货清点、质检（QC）、收货确认、上架指令生成。</p>
+      <h4>入库指令</h4>
+      <p>入库预报（ASN）创建、推送外部 WMS、接收入库状态、收货差异与上架完成回传。</p>
     </div>
     <div class="card">
       <div class="card-icon">O</div>
-      <h4>出库管理</h4>
-      <p>出库单接收、波次创建、拣货任务分配、复核打包、称重贴单、发货确认。</p>
+      <h4>出库履约</h4>
+      <p>订单接收、仓库选择、库存预占、出库指令下发、打单系统对接、发货状态跟踪。</p>
     </div>
     <div class="card">
       <div class="card-icon">S</div>
-      <h4>库存管理</h4>
-      <p>实时库存查询、库存冻结/释放、库内移库、盘点（全盘/循环盘/动碰盘）、批次追溯。</p>
+      <h4>库存中心</h4>
+      <p>库存快照、可用库存、预占库存、冻结库存、在途库存、库存流水与外部 WMS 库存同步。</p>
     </div>
     <div class="card">
       <div class="card-icon">L</div>
-      <h4>物流渠道</h4>
-      <p>承运商配置、物流产品定义、渠道分配规则、面单格式、不可达邮编管理。</p>
+      <h4>物流与打单</h4>
+      <p>承运商、物流产品、渠道规则、面单模板、打单系统对接、轨迹回传与不可达规则。</p>
     </div>
     <div class="card">
       <div class="card-icon">V</div>
-      <h4>增值服务</h4>
-      <p>贴标换标、组装加工、质检、销毁、退件处理等库内增值服务工单。</p>
+      <h4>外部系统对接</h4>
+      <p>ERP、WMS、打单系统、承运商 API 的账号配置、接口映射、推送记录与异常重试。</p>
     </div>
   </div>
 
@@ -151,13 +151,15 @@ flowchart TB
     subgraph BIZ["业务模块"]
         OS["myow-overseas"]
         US["myow-user"]
+        CU["myow-customer"]
         FI["myow-finance"]
-        DI["myow-distribution"]
     end
 
-    OA --> OS & US & FI & DI
-    OS --> US & FI
-    DI --> OS
+    OA --> OS & US & CU & FI
+    OS --> US & CU & FI
+    OS --> ERP["外部 ERP"]
+    OS --> WMS["外部 WMS"]
+    OS --> LP["打单/物流系统"]
 
     style OS fill:#dbeafe,stroke:#2563eb
     </pre>
@@ -166,20 +168,21 @@ flowchart TB
 
   <h3>1.3 业务边界划分</h3>
   <ul>
-    <li><strong>OMS 职责（myow-distribution / 外部）</strong>：订单编排、智能分仓、库存预占、履约状态跟踪、客户门户。OMS 不直接操作库内实物。</li>
-    <li><strong>WMS 职责（myow-overseas）</strong>：库内实物作业执行，包括收货、上架、盘点、拣货、打包、发货。WMS 接收 OMS 下发的入库/出库指令，执行完成后回传状态与结果。</li>
-    <li><strong>TMS 职责（myow-overseas 内物流渠道域）</strong>：尾程物流渠道配置、承运商对接、面单生成、轨迹跟踪。实际运单状态由外部 TMS 服务或承运商 API 提供。</li>
-    <li><strong>FMS 职责（myow-finance）</strong>：计费规则、账单生成、费用核销。FMS 读取 WMS 的作业数据（入库件数、出库单量、仓储体积等）进行计费。</li>
+    <li><strong>客户中心（myow-customer）</strong>：维护客商主体、客户档案、联系人、地址、结算偏好与客户门户账号。海外仓业务表直接使用 <code>customer_id</code> 关联客户，保持查询与报表口径简单稳定。</li>
+    <li><strong>海外仓 OMS（myow-overseas）</strong>：负责客户仓库授权、海外仓商品 SKU、订单编排、仓库选择、库存预占、入出库指令、物流渠道选择、打单请求、履约状态跟踪和外部系统同步。该模块不直接执行库内实物作业。</li>
+    <li><strong>外部 WMS / ERP</strong>：负责实际收货、上架、拣货、复核、打包、盘点、库内移库等执行动作，并通过接口向平台回传状态、库存和异常。</li>
+    <li><strong>打单/物流系统</strong>：负责面单生成、承运商下单、轨迹回传和物流异常同步；myow-overseas 维护渠道规则与调用记录。</li>
+    <li><strong>财务中心（myow-finance）</strong>：负责计费规则、账单生成、费用核销，读取入库、出库、仓储、渠道与外部系统回传数据生成费用。</li>
   </ul>
 
   <div class="callout callout-warn">
-    <p><strong>边界原则</strong>：WMS 只负责 "执行"，不直接对接电商平台或客户系统；OMS 负责 "编排"，不直接操作库内实物。两域通过事件机制协作，避免职责耦合。</p>
+    <p><strong>边界原则</strong>：当前阶段优先建设平台 OMS 能力，myow-overseas 负责业务编排和外部系统集成，不实现波次、拣货、复核、打包等库内 WMS 执行逻辑。未来自研 WMS 时再独立补充库内执行域。</p>
   </div>
 </section>
 
 <section id="s2">
   <h2><span class="section-num">02</span> 领域模型设计</h2>
-  <p class="lead">领域模型按限界上下文划分为仓库基础设施、入库管理、出库管理、库存管理、物流渠道五大子域。每个子域内定义聚合根、实体与值对象，采用 DDD 分层编码规范落地。</p>
+  <p class="lead">领域模型按限界上下文划分为客户仓配配置、商品资料、库存中心、入库指令、出库履约、物流渠道、海外仓合同与费用规则、外部系统集成八个子域。当前文档只设计 OMS 平台能力，库内 WMS 执行模型作为未来扩展。</p>
 
   <h3>2.1 子域与聚合划分</h3>
   <div class="table-wrap">
@@ -188,11 +191,14 @@ flowchart TB
         <tr><th>子域</th><th>聚合根</th><th>核心实体</th><th>值对象</th></tr>
       </thead>
       <tbody>
-        <tr><td>仓库基础设施</td><td><code>Warehouse</code></td><td>Zone, Location, Aisle, Bin</td><td>LocationCode, WarehouseAddress</td></tr>
-        <tr><td>入库管理</td><td><code>InboundOrder</code></td><td>InboundItem, ReceivingRecord, PutawayTask, QualityCheckRecord</td><td>InboundStatus, QCResult</td></tr>
-        <tr><td>出库管理</td><td><code>OutboundOrder</code></td><td>OutboundItem, Wave, PickTask, PackRecord, ShipRecord</td><td>OutboundStatus, WaveStatus, PickType</td></tr>
-        <tr><td>库存管理</td><td><code>Stock</code></td><td>StockBatch, StockFlow, InventoryCheck, MoveRecord</td><td>StockStatus, BatchCode</td></tr>
-        <tr><td>物流渠道</td><td><code>LogisticsChannel</code></td><td>Carrier, ChannelZone, ChannelProduct, LabelTemplate</td><td>ChannelCode, ZoneCode</td></tr>
+        <tr><td>客户仓配配置</td><td><code>Warehouse</code></td><td>CustomerWarehouse, WarehouseService, ExternalWarehouseMapping</td><td>WarehouseCode, WarehouseAddress</td></tr>
+        <tr><td>商品资料</td><td><code>Sku</code></td><td>SkuAlias, SkuPackage, SkuBarcode</td><td>SkuCode, PackageSpec</td></tr>
+        <tr><td>库存中心</td><td><code>Inventory</code></td><td>InventorySnapshot, InventoryFlow, InventorySyncRecord</td><td>InventoryStatus, SyncSource</td></tr>
+        <tr><td>入库指令</td><td><code>InboundOrder</code></td><td>InboundItem, InboundPushRecord, InboundStatusEvent</td><td>InboundStatus, ExternalOrderNo</td></tr>
+        <tr><td>出库履约</td><td><code>OutboundOrder</code></td><td>OutboundItem, StockReservation, FulfillmentEvent</td><td>OutboundStatus, ReservationStatus</td></tr>
+        <tr><td>物流渠道</td><td><code>LogisticsChannel</code></td><td>Carrier, ChannelProduct, ChannelRule, LabelOrder</td><td>ChannelCode, LabelStatus</td></tr>
+        <tr><td>海外仓合同与费用规则</td><td><code>OverseasContract</code></td><td>OverseasFeeRule, OverseasContractAttachment</td><td>FeeCode, ChargeModel</td></tr>
+        <tr><td>外部系统集成</td><td><code>ExternalSystem</code></td><td>ApiCredential, PushRecord, CallbackRecord, RetryTask</td><td>SystemType, PushStatus</td></tr>
       </tbody>
     </table>
   </div>
@@ -201,37 +207,34 @@ flowchart TB
   <figure class="diagram">
     <pre class="mermaid">
 erDiagram
-    WAREHOUSE ||--o{ ZONE : contains
-    ZONE ||--o{ AISLE : contains
-    AISLE ||--o{ BIN : contains
-    WAREHOUSE ||--o{ INBOUND_ORDER : receives
-    WAREHOUSE ||--o{ OUTBOUND_ORDER : ships
-    WAREHOUSE ||--o{ STOCK : stores
+    CUSTOMER ||--o{ CUSTOMER_WAREHOUSE : authorizes
+    WAREHOUSE ||--o{ CUSTOMER_WAREHOUSE : serves
+    EXTERNAL_SYSTEM ||--o{ EXTERNAL_WAREHOUSE_MAPPING : maps
+    WAREHOUSE ||--o{ EXTERNAL_WAREHOUSE_MAPPING : maps
 
+    CUSTOMER ||--o{ SKU : owns
     SKU ||--o{ INBOUND_ITEM : inbound
     SKU ||--o{ OUTBOUND_ITEM : outbound
-    SKU ||--o{ STOCK : stock
-    SKU ||--o{ STOCK_BATCH : batch
+    SKU ||--o{ INVENTORY : balance
 
     INBOUND_ORDER ||--|{ INBOUND_ITEM : items
-    INBOUND_ITEM ||--o{ RECEIVING_RECORD : receipts
-    INBOUND_ITEM ||--o{ PUTAWAY_TASK : putaway
-    INBOUND_ITEM ||--o{ QUALITY_CHECK_RECORD : qc
+    INBOUND_ORDER ||--o{ INBOUND_PUSH_RECORD : pushes
+    INBOUND_ORDER ||--o{ INBOUND_STATUS_EVENT : callbacks
 
     OUTBOUND_ORDER ||--|{ OUTBOUND_ITEM : items
-    OUTBOUND_ORDER ||--o{ WAVE : waves
-    WAVE ||--o{ PICK_TASK : picks
-    OUTBOUND_ORDER ||--o{ PACK_RECORD : packs
-    OUTBOUND_ORDER ||--o{ SHIP_RECORD : ships
+    OUTBOUND_ORDER ||--o{ STOCK_RESERVATION : reserves
+    OUTBOUND_ORDER ||--o{ LABEL_ORDER : labels
+    OUTBOUND_ORDER ||--o{ FULFILLMENT_EVENT : callbacks
 
-    STOCK ||--o{ STOCK_BATCH : batches
-    STOCK ||--o{ STOCK_FLOW : flows
-    STOCK ||--o{ INVENTORY_CHECK : checks
-    STOCK ||--o{ MOVE_RECORD : moves
+    CUSTOMER ||--o{ OVERSEAS_CONTRACT : signs
+    OVERSEAS_CONTRACT ||--o{ OVERSEAS_FEE_RULE : contains
+
+    INVENTORY ||--o{ INVENTORY_FLOW : flows
+    INVENTORY ||--o{ INVENTORY_SYNC_RECORD : syncs
 
     CARRIER ||--o{ LOGISTICS_CHANNEL : channels
-    LOGISTICS_CHANNEL ||--o{ CHANNEL_ZONE : zones
-    LOGISTICS_CHANNEL ||--o{ CHANNEL_PRODUCT : products
+    LOGISTICS_CHANNEL ||--o{ CHANNEL_RULE : rules
+    LOGISTICS_CHANNEL ||--o{ LABEL_ORDER : labels
     </pre>
     <figcaption>图 2-1：核心实体关系（省略字段，仅展示关联）</figcaption>
   </figure>
@@ -239,7 +242,7 @@ erDiagram
   <h3>2.3 核心实体定义</h3>
 
   <h4>2.3.1 仓库（Warehouse）</h4>
-  <p>仓库是海外仓运营的物理载体，聚合根为 <code>Warehouse</code>，内部包含区域（Zone）、通道（Aisle）、库位（Bin）四级树形结构。</p>
+  <p>仓库是海外仓履约资源的载体，聚合根为 <code>Warehouse</code>，描述仓库基础信息、服务能力、时区、国家/地区和外部系统映射。库区、库位等库内执行结构暂不进入当前 OMS 平台设计。</p>
   <div class="table-wrap">
     <table>
       <thead>
@@ -258,23 +261,21 @@ erDiagram
     </table>
   </div>
 
-  <h4>2.3.2 库位（Location / Bin）</h4>
-  <p>库位是库存存放的最小单元，采用四级编码体系：<code>{仓库}-{区域}-{通道}-{层}-{列}-{位}</code>。</p>
+  <h4>2.3.2 客户仓库授权（CustomerWarehouse）</h4>
+  <p>客户仓库授权定义客户可使用哪些仓库、支持哪些服务、默认外部 WMS 账号以及启停状态。海外仓业务表保留 <code>customer_id</code>，不额外引入货主命名。</p>
   <div class="table-wrap">
     <table>
       <thead>
         <tr><th>字段</th><th>类型</th><th>约束</th><th>说明</th></tr>
       </thead>
       <tbody>
-        <tr><td>location_id</td><td>BIGINT</td><td>PK</td><td>库位唯一标识</td></tr>
-        <tr><td>warehouse_id</td><td>BIGINT</td><td>FK, NOT NULL</td><td>所属仓库</td></tr>
-        <tr><td>zone_code</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>区域编码（A=存储区, B=拣货区, C=收货区, D=发货区, E=增值区）</td></tr>
-        <tr><td>aisle_code</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>通道编码</td></tr>
-        <tr><td>location_code</td><td>VARCHAR(32)</td><td>NOT NULL</td><td>完整库位编码</td></tr>
-        <tr><td>location_type</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>库位类型：SHELF=货架, FLOOR=地堆, COLD=冷库, DANGER=危险品</td></tr>
-        <tr><td>max_weight</td><td>INT</td><td></td><td>最大承重（克）</td></tr>
-        <tr><td>max_volume</td><td>INT</td><td></td><td>最大容积（立方厘米）</td></tr>
-        <tr><td>status</td><td>SMALLINT</td><td>DEFAULT 1</td><td>0=禁用, 1=可用, 2=占用</td></tr>
+        <tr><td>customer_warehouse_id</td><td>BIGINT</td><td>PK</td><td>客户仓库授权ID</td></tr>
+        <tr><td>customer_id</td><td>BIGINT</td><td>NOT NULL</td><td>客户ID</td></tr>
+        <tr><td>warehouse_id</td><td>BIGINT</td><td>NOT NULL</td><td>仓库ID</td></tr>
+        <tr><td>external_system_id</td><td>BIGINT</td><td></td><td>默认外部 WMS 系统</td></tr>
+        <tr><td>service_flags</td><td>VARCHAR(128)</td><td></td><td>支持服务：INBOUND/OUTBOUND/RETURN/STORAGE/LABEL</td></tr>
+        <tr><td>priority</td><td>SMALLINT</td><td>DEFAULT 0</td><td>分仓优先级</td></tr>
+        <tr><td>status</td><td>SMALLINT</td><td>DEFAULT 1</td><td>0=停用, 1=启用</td></tr>
       </tbody>
     </table>
   </div>
@@ -305,7 +306,7 @@ erDiagram
   </div>
 
   <h4>2.3.4 出库单（OutboundOrder）</h4>
-  <p>出库单由 OMS 下发至 WMS，WMS 创建波次后执行拣货、复核、打包、发货全流程。</p>
+  <p>出库单是 OMS 平台的履约指令实体，负责库存预占、仓库确认、物流渠道选择、打单请求和外部 WMS 状态跟踪。拣货、复核、打包等库内执行动作由外部 WMS 回传履约事件。</p>
   <div class="table-wrap">
     <table>
       <thead>
@@ -317,7 +318,7 @@ erDiagram
         <tr><td>warehouse_id</td><td>BIGINT</td><td>FK, NOT NULL</td><td>发货仓库</td></tr>
         <tr><td>customer_id</td><td>BIGINT</td><td>FK, NOT NULL</td><td>客户ID</td></tr>
         <tr><td>outbound_type</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>出库类型：SALE=销售出库, RETURN=退件出库, TRANSFER=调拨出库</td></tr>
-        <tr><td>status</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>PENDING/WAVED/PICKING/PICKED/PACKED/SHIPPED/CANCELLED</td></tr>
+        <tr><td>status</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>PENDING/ALLOCATED/PUSHED/ACCEPTED/PROCESSING/SHIPPED/CANCELLED/EXCEPTION</td></tr>
         <tr><td>channel_id</td><td>BIGINT</td><td>FK</td><td>指定物流渠道</td></tr>
         <tr><td>recipient_name</td><td>VARCHAR(64)</td><td></td><td>收件人姓名</td></tr>
         <tr><td>recipient_phone</td><td>VARCHAR(32)</td><td></td><td>收件人电话</td></tr>
@@ -330,45 +331,43 @@ erDiagram
     </table>
   </div>
 
-  <h4>2.3.5 库存（Stock）</h4>
-  <p>库存按仓库 + SKU + 库位 + 批次四维度管理，支持可用、冻结、预占、在途四种状态。</p>
+  <h4>2.3.5 库存余额（Inventory）</h4>
+  <p>库存按租户 + 客户 + 仓库 + SKU + 批次维度管理，平台维护可用、预占、冻结、在库与在途数量，并接收外部 WMS 库存同步。</p>
   <div class="table-wrap">
     <table>
       <thead>
         <tr><th>字段</th><th>类型</th><th>约束</th><th>说明</th></tr>
       </thead>
       <tbody>
-        <tr><td>stock_id</td><td>BIGINT</td><td>PK</td><td>库存唯一标识</td></tr>
+        <tr><td>inventory_id</td><td>BIGINT</td><td>PK</td><td>库存余额唯一标识</td></tr>
+        <tr><td>customer_id</td><td>BIGINT</td><td>NOT NULL</td><td>客户ID</td></tr>
         <tr><td>warehouse_id</td><td>BIGINT</td><td>FK, NOT NULL</td><td>仓库</td></tr>
         <tr><td>sku_id</td><td>BIGINT</td><td>FK, NOT NULL</td><td>SKU</td></tr>
-        <tr><td>location_id</td><td>BIGINT</td><td>FK, NOT NULL</td><td>库位</td></tr>
-        <tr><td>batch_id</td><td>BIGINT</td><td>FK</td><td>批次ID</td></tr>
+        <tr><td>batch_no</td><td>VARCHAR(64)</td><td></td><td>批次号</td></tr>
+        <tr><td>on_hand_qty</td><td>INT</td><td>DEFAULT 0</td><td>在库实物数量</td></tr>
         <tr><td>available_qty</td><td>INT</td><td>DEFAULT 0</td><td>可用数量</td></tr>
+        <tr><td>reserved_qty</td><td>INT</td><td>DEFAULT 0</td><td>预占数量</td></tr>
         <tr><td>frozen_qty</td><td>INT</td><td>DEFAULT 0</td><td>冻结数量</td></tr>
-        <tr><td>preoccupied_qty</td><td>INT</td><td>DEFAULT 0</td><td>预占数量</td></tr>
         <tr><td>in_transit_qty</td><td>INT</td><td>DEFAULT 0</td><td>在途数量</td></tr>
         <tr><td>quality_status</td><td>VARCHAR(16)</td><td>DEFAULT 'GOOD'</td><td>品质状态：GOOD=良品, DAMAGED=破损, EXPIRED=过期, QUARANTINE=隔离</td></tr>
       </tbody>
     </table>
   </div>
 
-  <h4>2.3.6 波次（Wave）</h4>
-  <p>波次是提升出库效率的核心机制，将多个出库单按策略合并为一次拣货作业。</p>
+  <h4>2.3.6 外部系统（ExternalSystem）</h4>
+  <p>外部系统聚合维护 ERP、WMS、打单系统和承运商 API 的连接配置、账号凭证、接口能力、推送策略与回调验签规则。</p>
   <div class="table-wrap">
     <table>
       <thead>
         <tr><th>字段</th><th>类型</th><th>约束</th><th>说明</th></tr>
       </thead>
       <tbody>
-        <tr><td>wave_id</td><td>BIGINT</td><td>PK</td><td>波次唯一标识</td></tr>
-        <tr><td>wave_no</td><td>VARCHAR(32)</td><td>NOT NULL, UK</td><td>波次号（如 WV-20260626-001）</td></tr>
-        <tr><td>warehouse_id</td><td>BIGINT</td><td>FK, NOT NULL</td><td>仓库</td></tr>
-        <tr><td>wave_type</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>SINGLE=按单波次, BATCH=批量波次, ZONE=分区波次</td></tr>
-        <tr><td>status</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>CREATED/PICKING/PICKED/PACKED/SHIPPED/CANCELLED</td></tr>
-        <tr><td>order_count</td><td>INT</td><td>DEFAULT 0</td><td>包含订单数</td></tr>
-        <tr><td>sku_count</td><td>INT</td><td>DEFAULT 0</td><td>包含 SKU 数</td></tr>
-        <tr><td>total_qty</td><td>INT</td><td>DEFAULT 0</td><td>总件数</td></tr>
-        <tr><td>picked_qty</td><td>INT</td><td>DEFAULT 0</td><td>已拣件数</td></tr>
+        <tr><td>external_system_id</td><td>BIGINT</td><td>PK</td><td>外部系统ID</td></tr>
+        <tr><td>system_code</td><td>VARCHAR(32)</td><td>NOT NULL, UK</td><td>系统编码</td></tr>
+        <tr><td>system_type</td><td>VARCHAR(16)</td><td>NOT NULL</td><td>ERP/WMS/LABEL/CARRIER</td></tr>
+        <tr><td>base_url</td><td>VARCHAR(256)</td><td></td><td>接口地址</td></tr>
+        <tr><td>auth_type</td><td>VARCHAR(16)</td><td></td><td>认证方式</td></tr>
+        <tr><td>status</td><td>SMALLINT</td><td>DEFAULT 1</td><td>0=停用, 1=启用</td></tr>
       </tbody>
     </table>
   </div>
@@ -400,28 +399,29 @@ erDiagram
         <tr><th>枚举</th><th>值</th><th>说明</th></tr>
       </thead>
       <tbody>
-        <tr><td rowspan="6">InboundStatusEnum</td><td>PENDING</td><td>待收货</td></tr>
-        <tr><td>RECEIVING</td><td>收货中</td></tr>
-        <tr><td>RECEIVED</td><td>收货完成</td></tr>
-        <tr><td>QC_DONE</td><td>质检完成</td></tr>
-        <tr><td>PUTAWAY_DONE</td><td>上架完成</td></tr>
+        <tr><td rowspan="7">InboundStatusEnum</td><td>PENDING</td><td>待提交</td></tr>
+        <tr><td>PUSHED</td><td>已推送外部 WMS</td></tr>
+        <tr><td>ACCEPTED</td><td>外部 WMS 已接收</td></tr>
+        <tr><td>RECEIVING</td><td>外部 WMS 收货中</td></tr>
+        <tr><td>RECEIVED</td><td>外部 WMS 收货完成</td></tr>
+        <tr><td>EXCEPTION</td><td>异常</td></tr>
         <tr><td>CANCELLED</td><td>已取消</td></tr>
-        <tr><td rowspan="7">OutboundStatusEnum</td><td>PENDING</td><td>待处理</td></tr>
-        <tr><td>WAVED</td><td>已波次</td></tr>
-        <tr><td>PICKING</td><td>拣货中</td></tr>
-        <tr><td>PICKED</td><td>拣货完成</td></tr>
-        <tr><td>PACKED</td><td>打包完成</td></tr>
+        <tr><td rowspan="8">OutboundStatusEnum</td><td>PENDING</td><td>待处理</td></tr>
+        <tr><td>ALLOCATED</td><td>已预占库存</td></tr>
+        <tr><td>PUSHED</td><td>已推送外部 WMS</td></tr>
+        <tr><td>ACCEPTED</td><td>外部 WMS 已接收</td></tr>
+        <tr><td>PROCESSING</td><td>外部 WMS 执行中</td></tr>
         <tr><td>SHIPPED</td><td>已发货</td></tr>
+        <tr><td>EXCEPTION</td><td>异常</td></tr>
         <tr><td>CANCELLED</td><td>已取消</td></tr>
-        <tr><td rowspan="5">WaveTypeEnum</td><td>SINGLE</td><td>按单波次</td></tr>
-        <tr><td>BATCH</td><td>批量波次</td></tr>
-        <tr><td>ZONE</td><td>分区波次</td></tr>
-        <tr><td>TIMED</td><td>定时波次</td></tr>
-        <tr><td>QUANTITY</td><td>定量波次</td></tr>
-        <tr><td rowspan="4">PickTypeEnum</td><td>ORDER_PICK</td><td>按单拣</td></tr>
-        <tr><td>BATCH_PICK</td><td>批量拣</td></tr>
-        <tr><td>PICK_TO_CART</td><td>边拣边分</td></tr>
-        <tr><td>ZONE_PICK</td><td>分区拣</td></tr>
+        <tr><td rowspan="4">ExternalSystemTypeEnum</td><td>ERP</td><td>ERP 系统</td></tr>
+        <tr><td>WMS</td><td>WMS 系统</td></tr>
+        <tr><td>LABEL</td><td>打单系统</td></tr>
+        <tr><td>CARRIER</td><td>承运商 API</td></tr>
+        <tr><td rowspan="4">ReservationStatusEnum</td><td>RESERVED</td><td>已预占</td></tr>
+        <tr><td>RELEASED</td><td>已释放</td></tr>
+        <tr><td>DEDUCTED</td><td>已扣减</td></tr>
+        <tr><td>FAILED</td><td>预占失败</td></tr>
         <tr><td rowspan="4">QualityStatusEnum</td><td>GOOD</td><td>良品</td></tr>
         <tr><td>DAMAGED</td><td>破损</td></tr>
         <tr><td>EXPIRED</td><td>过期</td></tr>
@@ -434,7 +434,7 @@ erDiagram
 
 <section id="s3">
   <h2><span class="section-num">03</span> 数据库表结构设计</h2>
-  <p class="lead">所有表统一使用 PostgreSQL，字符集 UTF-8。业务表均包含 <code>tenant_id</code> 实现多租户隔离，包含 <code>deleted_flag</code> 实现逻辑删除，包含 <code>create_time/update_time</code> 实现自动审计。</p>
+  <p class="lead">所有表统一使用 PostgreSQL，字符集 UTF-8。业务表均包含 <code>tenant_id BIGINT</code> 实现多租户隔离，包含 <code>deleted_flag BOOLEAN DEFAULT FALSE</code> 实现逻辑删除，包含 <code>create_by/update_by/create_time/update_time</code> 实现审计。需要并发更新的余额类表必须包含 <code>version BIGINT DEFAULT 0</code>。</p>
 
   <h3>3.1 核心表清单</h3>
   <div class="table-wrap">
@@ -443,27 +443,31 @@ erDiagram
         <tr><th>表名</th><th>说明</th><th>数据量预估</th><th>核心索引</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>owh_warehouse</code></td><td>仓库</td><td>十级</td><td>uk: warehouse_code</td></tr>
-        <tr><td><code>owh_location</code></td><td>库位</td><td>万级/仓库</td><td>uk: warehouse_id + location_code; idx: zone_code</td></tr>
-        <tr><td><code>owh_sku</code></td><td>SKU 主数据</td><td>万级/租户</td><td>uk: tenant_id + sku_code</td></tr>
-        <tr><td><code>owh_inbound_order</code></td><td>入库单</td><td>万级/月</td><td>uk: inbound_no; idx: warehouse_id + status</td></tr>
+        <tr><td><code>owh_warehouse</code></td><td>仓库档案</td><td>十级</td><td>uk: tenant_id + warehouse_code</td></tr>
+        <tr><td><code>owh_customer_warehouse</code></td><td>客户仓库授权</td><td>百级/租户</td><td>uk: tenant_id + customer_id + warehouse_id</td></tr>
+        <tr><td><code>owh_external_warehouse_mapping</code></td><td>外部仓库编码映射</td><td>百级/租户</td><td>idx: tenant_id + external_system_id</td></tr>
+        <tr><td><code>owh_sku</code></td><td>SKU 主数据</td><td>万级/租户</td><td>uk: tenant_id + customer_id + sku_code</td></tr>
+        <tr><td><code>owh_inbound_order</code></td><td>入库指令</td><td>万级/月</td><td>uk: tenant_id + inbound_no; idx: warehouse_id + status</td></tr>
         <tr><td><code>owh_inbound_item</code></td><td>入库明细</td><td>十万级/月</td><td>idx: inbound_id + sku_id</td></tr>
-        <tr><td><code>owh_receiving_record</code></td><td>收货记录</td><td>十万级/月</td><td>idx: inbound_id + sku_id</td></tr>
-        <tr><td><code>owh_putaway_task</code></td><td>上架任务</td><td>十万级/月</td><td>idx: inbound_item_id + status</td></tr>
-        <tr><td><code>owh_outbound_order</code></td><td>出库单</td><td>万级/月</td><td>uk: outbound_no; idx: warehouse_id + status</td></tr>
+        <tr><td><code>owh_inbound_push_record</code></td><td>入库指令推送记录</td><td>十万级/月</td><td>idx: inbound_id + push_status</td></tr>
+        <tr><td><code>owh_inbound_status_event</code></td><td>入库状态回传事件</td><td>十万级/月</td><td>idx: inbound_id + event_time</td></tr>
+        <tr><td><code>owh_outbound_order</code></td><td>出库履约单</td><td>万级/月</td><td>uk: tenant_id + outbound_no; idx: warehouse_id + status</td></tr>
         <tr><td><code>owh_outbound_item</code></td><td>出库明细</td><td>十万级/月</td><td>idx: outbound_id + sku_id</td></tr>
-        <tr><td><code>owh_wave</code></td><td>波次</td><td>千级/月</td><td>uk: wave_no; idx: warehouse_id + status</td></tr>
-        <tr><td><code>owh_wave_order</code></td><td>波次-订单关联</td><td>万级/月</td><td>pk: wave_id + outbound_id</td></tr>
-        <tr><td><code>owh_pick_task</code></td><td>拣货任务</td><td>十万级/月</td><td>idx: wave_id + status; idx: picker_id</td></tr>
-        <tr><td><code>owh_stock</code></td><td>库存余量</td><td>百万级</td><td>uk: warehouse_id + sku_id + location_id + batch_id; idx: sku_id</td></tr>
-        <tr><td><code>owh_stock_flow</code></td><td>库存流水</td><td>千万级/月</td><td>idx: stock_id + create_time; idx: biz_type + biz_id</td></tr>
+        <tr><td><code>owh_stock_reservation</code></td><td>库存预占记录</td><td>十万级/月</td><td>idx: outbound_id + status</td></tr>
+        <tr><td><code>owh_fulfillment_event</code></td><td>履约状态事件</td><td>百万级/月</td><td>idx: outbound_id + event_time</td></tr>
+        <tr><td><code>owh_inventory</code></td><td>库存余额</td><td>百万级</td><td>uk: tenant_id + customer_id + warehouse_id + sku_id + batch_id</td></tr>
+        <tr><td><code>owh_inventory_flow</code></td><td>库存流水</td><td>千万级/月</td><td>idx: inventory_id + create_time; idx: biz_type + biz_id</td></tr>
         <tr><td><code>owh_stock_batch</code></td><td>库存批次</td><td>十万级</td><td>uk: batch_no</td></tr>
-        <tr><td><code>owh_inventory_check</code></td><td>盘点单</td><td>千级/月</td><td>idx: warehouse_id + status</td></tr>
-        <tr><td><code>owh_inventory_check_item</code></td><td>盘点明细</td><td>十万级/月</td><td>idx: check_id + sku_id</td></tr>
+        <tr><td><code>owh_inventory_sync_record</code></td><td>外部库存同步记录</td><td>百万级/月</td><td>idx: external_system_id + sync_time</td></tr>
         <tr><td><code>owh_carrier</code></td><td>承运商</td><td>十级（全局）</td><td>uk: carrier_code</td></tr>
         <tr><td><code>owh_logistics_channel</code></td><td>物流渠道</td><td>百级（全局）</td><td>uk: channel_code</td></tr>
         <tr><td><code>owh_channel_zone</code></td><td>渠道分区</td><td>千级（全局）</td><td>idx: channel_id + zone_code</td></tr>
         <tr><td><code>owh_channel_rate</code></td><td>渠道费率</td><td>万级（全局）</td><td>idx: channel_id + zone_code + weight_range</td></tr>
+        <tr><td><code>owh_label_order</code></td><td>打单请求</td><td>万级/月</td><td>idx: outbound_id + label_status</td></tr>
+        <tr><td><code>owh_overseas_contract</code></td><td>海外仓服务合同</td><td>千级/租户</td><td>uk: tenant_id + contract_no; idx: customer_id + status</td></tr>
+        <tr><td><code>owh_overseas_fee_rule</code></td><td>海外仓费用规则</td><td>万级/租户</td><td>idx: contract_id + fee_code; idx: warehouse_id + sku_id</td></tr>
+        <tr><td><code>owh_external_system</code></td><td>外部系统配置</td><td>十级/租户</td><td>uk: tenant_id + system_code</td></tr>
+        <tr><td><code>owh_external_push_record</code></td><td>外部推送记录</td><td>百万级/月</td><td>idx: biz_type + biz_id; idx: push_status</td></tr>
       </tbody>
     </table>
   </div>
@@ -488,33 +492,31 @@ erDiagram
     create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
     update_by       BIGINT,
     update_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag    SMALLINT DEFAULT 0
+    deleted_flag    BOOLEAN DEFAULT FALSE
 );
 COMMENT ON TABLE owh_warehouse IS '仓库表';
-COMMENT ON COLUMN owh_warehouse.timezone IS '仓库所在时区，用于波次定时任务触发';</code></pre>
+COMMENT ON COLUMN owh_warehouse.timezone IS '仓库所在时区，用于订单截单、履约 SLA 与状态回传时间换算';</code></pre>
 
-  <h4>owh_location（库位表）</h4>
-  <pre><code>CREATE TABLE owh_location (
-    location_id     BIGINT PRIMARY KEY,
+  <h4>owh_customer_warehouse（客户仓库授权表）</h4>
+  <pre><code>CREATE TABLE owh_customer_warehouse (
+    customer_warehouse_id BIGINT PRIMARY KEY,
+    tenant_id       BIGINT NOT NULL,
+    customer_id     BIGINT NOT NULL,
     warehouse_id    BIGINT NOT NULL,
-    zone_code       VARCHAR(16) NOT NULL,
-    aisle_code      VARCHAR(16) NOT NULL,
-    location_code   VARCHAR(32) NOT NULL,
-    location_type   VARCHAR(16) NOT NULL DEFAULT 'SHELF',
-    max_weight      INT,
-    max_volume      INT,
-    abc_class       CHAR(1) DEFAULT 'C',
+    external_system_id BIGINT,
+    service_flags   VARCHAR(128),
+    priority        SMALLINT DEFAULT 0,
     status          SMALLINT DEFAULT 1,
     remark          VARCHAR(512),
+    create_by       BIGINT,
     create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+    update_by       BIGINT,
     update_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag    SMALLINT DEFAULT 0,
-    CONSTRAINT uk_location_code UNIQUE (warehouse_id, location_code)
+    deleted_flag    BOOLEAN DEFAULT FALSE,
+    CONSTRAINT uk_customer_warehouse UNIQUE (tenant_id, customer_id, warehouse_id)
 );
-CREATE INDEX idx_location_zone ON owh_location(warehouse_id, zone_code);
-CREATE INDEX idx_location_aisle ON owh_location(warehouse_id, aisle_code);
-COMMENT ON TABLE owh_location IS '库位表';
-COMMENT ON COLUMN owh_location.abc_class IS 'ABC分类: A=高频, B=中频, C=低频';</code></pre>
+CREATE INDEX idx_customer_warehouse_customer ON owh_customer_warehouse(tenant_id, customer_id);
+COMMENT ON TABLE owh_customer_warehouse IS '客户仓库授权表';</code></pre>
 
   <h4>owh_inbound_order（入库单表）</h4>
   <pre><code>CREATE TABLE owh_inbound_order (
@@ -536,7 +538,7 @@ COMMENT ON COLUMN owh_location.abc_class IS 'ABC分类: A=高频, B=中频, C=�
     create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
     update_by       BIGINT,
     update_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag    SMALLINT DEFAULT 0
+    deleted_flag    BOOLEAN DEFAULT FALSE
 );
 CREATE INDEX idx_inbound_wh_status ON owh_inbound_order(warehouse_id, status);
 CREATE INDEX idx_inbound_customer ON owh_inbound_order(customer_id, create_time);
@@ -563,47 +565,57 @@ CREATE INDEX idx_inbound_item_inbound ON owh_inbound_item(inbound_id);
 CREATE INDEX idx_inbound_item_sku ON owh_inbound_item(sku_id);
 COMMENT ON TABLE owh_inbound_item IS '入库明细表';</code></pre>
 
-  <h4>owh_stock（库存表）</h4>
-  <pre><code>CREATE TABLE owh_stock (
-    stock_id        BIGINT PRIMARY KEY,
+  <h4>owh_inventory（库存余额表）</h4>
+  <pre><code>CREATE TABLE owh_inventory (
+    inventory_id    BIGINT PRIMARY KEY,
     tenant_id       BIGINT NOT NULL,
+    customer_id     BIGINT NOT NULL,
     warehouse_id    BIGINT NOT NULL,
     sku_id          BIGINT NOT NULL,
-    location_id     BIGINT NOT NULL,
-    batch_id        BIGINT,
+    batch_no        VARCHAR(64),
+    on_hand_qty     INT DEFAULT 0,
     available_qty   INT DEFAULT 0,
+    reserved_qty    INT DEFAULT 0,
     frozen_qty      INT DEFAULT 0,
-    preoccupied_qty INT DEFAULT 0,
     in_transit_qty  INT DEFAULT 0,
-    quality_status  VARCHAR(16) DEFAULT 'GOOD',
     version         BIGINT DEFAULT 0,
+    create_by       BIGINT,
     create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+    update_by       BIGINT,
     update_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    CONSTRAINT uk_stock UNIQUE (warehouse_id, sku_id, location_id, COALESCE(batch_id, 0))
+    deleted_flag    BOOLEAN DEFAULT FALSE
 );
-CREATE INDEX idx_stock_sku ON owh_stock(sku_id);
-CREATE INDEX idx_stock_location ON owh_stock(location_id);
-COMMENT ON TABLE owh_stock IS '库存余量表';
-COMMENT ON COLUMN owh_stock.version IS '乐观锁版本号，用于并发扣减库存';</code></pre>
+CREATE UNIQUE INDEX uk_inventory_balance ON owh_inventory(tenant_id, customer_id, warehouse_id, sku_id, COALESCE(batch_no, ''));
+CREATE INDEX idx_inventory_sku ON owh_inventory(tenant_id, customer_id, sku_id);
+CREATE INDEX idx_inventory_warehouse ON owh_inventory(warehouse_id, sku_id);
+COMMENT ON TABLE owh_inventory IS '库存余额表';
+COMMENT ON COLUMN owh_inventory.on_hand_qty IS '外部 WMS 回传或平台确认的在库实物数量';
+COMMENT ON COLUMN owh_inventory.in_transit_qty IS '在途数量，不计入 on_hand_qty';</code></pre>
 
-  <h4>owh_stock_flow（库存流水表）</h4>
-  <pre><code>CREATE TABLE owh_stock_flow (
+  <h4>owh_inventory_flow（库存流水表）</h4>
+  <pre><code>CREATE TABLE owh_inventory_flow (
     flow_id         BIGINT PRIMARY KEY,
-    stock_id        BIGINT NOT NULL,
-    biz_type        VARCHAR(16) NOT NULL,
-    biz_id          BIGINT NOT NULL,
-    biz_no          VARCHAR(32) NOT NULL,
+    tenant_id       BIGINT NOT NULL,
+    customer_id     BIGINT NOT NULL,
+    inventory_id    BIGINT,
+    warehouse_id    BIGINT NOT NULL,
+    sku_id          BIGINT NOT NULL,
+    biz_type        VARCHAR(32) NOT NULL,
+    biz_id          BIGINT,
+    biz_no          VARCHAR(64),
+    quantity_type   VARCHAR(32) NOT NULL,
     before_qty      INT NOT NULL,
     change_qty      INT NOT NULL,
     after_qty       INT NOT NULL,
-    flow_type       VARCHAR(16) NOT NULL,
+    source_type     VARCHAR(32) NOT NULL,
     remark          VARCHAR(512),
+    create_by       BIGINT,
     create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3)
 );
-CREATE INDEX idx_flow_stock ON owh_stock_flow(stock_id, create_time);
-CREATE INDEX idx_flow_biz ON owh_stock_flow(biz_type, biz_id);
-COMMENT ON TABLE owh_stock_flow IS '库存流水表';
-COMMENT ON COLUMN owh_stock_flow.flow_type IS 'IN=入库, OUT=出库, MOVE=移库, FREEZE=冻结, RELEASE=释放';</code></pre>
+CREATE INDEX idx_inventory_flow_inventory ON owh_inventory_flow(inventory_id, create_time);
+CREATE INDEX idx_inventory_flow_biz ON owh_inventory_flow(biz_type, biz_id);
+COMMENT ON TABLE owh_inventory_flow IS '库存流水表';
+COMMENT ON COLUMN owh_inventory_flow.quantity_type IS 'ON_HAND/AVAILABLE/RESERVED/FROZEN/IN_TRANSIT';</code></pre>
 
   <h4>owh_outbound_order（出库单表）</h4>
   <pre><code>CREATE TABLE owh_outbound_order (
@@ -623,7 +635,6 @@ COMMENT ON COLUMN owh_stock_flow.flow_type IS 'IN=入库, OUT=出库, MOVE=移�
     total_weight    INT DEFAULT 0,
     total_volume    INT DEFAULT 0,
     priority        SMALLINT DEFAULT 0,
-    wave_id         BIGINT,
     tracking_no     VARCHAR(64),
     shipped_time    TIMESTAMP,
     remark          VARCHAR(512),
@@ -631,38 +642,81 @@ COMMENT ON COLUMN owh_stock_flow.flow_type IS 'IN=入库, OUT=出库, MOVE=移�
     create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
     update_by       BIGINT,
     update_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag    SMALLINT DEFAULT 0
+    deleted_flag    BOOLEAN DEFAULT FALSE
 );
 CREATE INDEX idx_outbound_wh_status ON owh_outbound_order(warehouse_id, status);
-CREATE INDEX idx_outbound_wave ON owh_outbound_order(wave_id);
 CREATE INDEX idx_outbound_customer ON owh_outbound_order(customer_id, create_time);
 COMMENT ON TABLE owh_outbound_order IS '出库单表';</code></pre>
 
-  <h4>owh_wave（波次表）</h4>
-  <pre><code>CREATE TABLE owh_wave (
-    wave_id         BIGINT PRIMARY KEY,
-    wave_no         VARCHAR(32) NOT NULL UNIQUE,
-    warehouse_id    BIGINT NOT NULL,
-    wave_type       VARCHAR(16) NOT NULL,
-    status          VARCHAR(16) NOT NULL DEFAULT 'CREATED',
-    order_count     INT DEFAULT 0,
-    sku_count       INT DEFAULT 0,
-    total_qty       INT DEFAULT 0,
-    picked_qty      INT DEFAULT 0,
-    packed_qty      INT DEFAULT 0,
-    shipped_qty     INT DEFAULT 0,
-    picker_id       BIGINT,
-    start_time      TIMESTAMP,
-    end_time        TIMESTAMP,
+  <h4>owh_fulfillment_event（履约事件表）</h4>
+  <pre><code>CREATE TABLE owh_fulfillment_event (
+    event_id        BIGINT PRIMARY KEY,
+    tenant_id       BIGINT NOT NULL,
+    customer_id     BIGINT NOT NULL,
+    outbound_id     BIGINT NOT NULL,
+    event_type      VARCHAR(32) NOT NULL,
+    event_status    VARCHAR(32),
+    event_time      TIMESTAMP(3) NOT NULL,
+    external_system_id BIGINT,
+    external_order_no VARCHAR(64),
+    payload         TEXT,
+    remark          VARCHAR(512),
+    create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3)
+);
+CREATE INDEX idx_fulfillment_event_order ON owh_fulfillment_event(outbound_id, event_time);
+COMMENT ON TABLE owh_fulfillment_event IS '出库履约状态事件表';</code></pre>
+
+  <h4>owh_overseas_contract（海外仓服务合同表）</h4>
+  <pre><code>CREATE TABLE owh_overseas_contract (
+    contract_id     BIGINT PRIMARY KEY,
+    tenant_id       BIGINT NOT NULL,
+    contract_no     VARCHAR(64) NOT NULL,
+    customer_id     BIGINT NOT NULL,
+    contract_name   VARCHAR(128) NOT NULL,
+    contract_status VARCHAR(16) DEFAULT 'DRAFT',
+    start_date      DATE NOT NULL,
+    end_date        DATE NOT NULL,
+    settlement_type VARCHAR(16),
+    currency        VARCHAR(8) DEFAULT 'USD',
+    attachment_url  VARCHAR(512),
     remark          VARCHAR(512),
     create_by       BIGINT,
     create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
     update_by       BIGINT,
     update_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag    SMALLINT DEFAULT 0
+    deleted_flag    BOOLEAN DEFAULT FALSE,
+    CONSTRAINT uk_owh_contract_no UNIQUE (tenant_id, contract_no)
 );
-CREATE INDEX idx_wave_wh_status ON owh_wave(warehouse_id, status);
-COMMENT ON TABLE owh_wave IS '波次表';</code></pre>
+CREATE INDEX idx_owh_contract_customer ON owh_overseas_contract(tenant_id, customer_id, contract_status);
+COMMENT ON TABLE owh_overseas_contract IS '海外仓服务合同表';</code></pre>
+
+  <h4>owh_overseas_fee_rule（海外仓费用规则表）</h4>
+  <pre><code>CREATE TABLE owh_overseas_fee_rule (
+    rule_id         BIGINT PRIMARY KEY,
+    tenant_id       BIGINT NOT NULL,
+    contract_id     BIGINT NOT NULL,
+    customer_id     BIGINT NOT NULL,
+    fee_code        VARCHAR(50) NOT NULL,
+    warehouse_id    BIGINT,
+    sku_id          BIGINT,
+    charge_model    VARCHAR(32) NOT NULL,
+    billing_unit    VARCHAR(32),
+    unit_price      DECIMAL(18,6) NOT NULL DEFAULT 0,
+    min_charge      DECIMAL(18,2) DEFAULT 0,
+    currency        VARCHAR(8) DEFAULT 'USD',
+    effective_date  DATE NOT NULL,
+    expiry_date     DATE,
+    status          SMALLINT DEFAULT 1,
+    remark          VARCHAR(512),
+    create_by       BIGINT,
+    create_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+    update_by       BIGINT,
+    update_time     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+    deleted_flag    BOOLEAN DEFAULT FALSE
+);
+CREATE INDEX idx_owh_fee_rule_contract ON owh_overseas_fee_rule(contract_id, fee_code);
+CREATE INDEX idx_owh_fee_rule_dimension ON owh_overseas_fee_rule(tenant_id, customer_id, warehouse_id, sku_id);
+COMMENT ON TABLE owh_overseas_fee_rule IS '海外仓费用规则表，fee_code 引用 fin_fee_item';</code></pre>
 
   <h4>owh_logistics_channel（物流渠道表）</h4>
   <pre><code>CREATE TABLE owh_logistics_channel (
@@ -685,9 +739,9 @@ COMMENT ON TABLE owh_logistics_channel IS '物流渠道表';</code></pre>
 
   <h3>3.3 分表与归档策略</h3>
   <ul>
-    <li><strong>owh_stock_flow</strong>：数据量最大，建议按 <code>create_time</code> 按月分区（PostgreSQL 原生表分区），或归档到历史库。</li>
+    <li><strong>owh_inventory_flow / owh_external_push_record</strong>：数据量最大，建议按 <code>create_time</code> 按月分区（PostgreSQL 原生表分区），或归档到历史库。</li>
     <li><strong>owh_inbound_order / owh_outbound_order</strong>：单租户月万级，按 tenant_id + 时间索引即可，无需分表。</li>
-    <li><strong>owh_stock</strong>：实时库存数据量百万级，按 warehouse_id + sku_id 联合索引，支持快速库存查询。</li>
+    <li><strong>owh_inventory</strong>：实时库存数据量百万级，按 tenant_id + customer_id + warehouse_id + sku_id 联合索引，支持快速库存查询。</li>
     <li><strong>owh_channel_rate</strong>：全局配置表，数据量极小，不分区。</li>
   </ul>
 </section>
@@ -696,7 +750,7 @@ COMMENT ON TABLE owh_logistics_channel IS '物流渠道表';</code></pre>
 <!-- ==================== 04 API 接口设计 ==================== -->
 <section id="s4">
   <h2><span class="section-num">04</span> API 接口设计</h2>
-  <p class="lead">本章节定义 myow-overseas 模块对外暴露的 RESTful API，遵循编码规范中的接口命名与版本约定。所有接口统一以 <code>/api/v1/overseas</code> 为前缀，由网关层统一鉴权并注入当前租户上下文。</p>
+  <p class="lead">本章节定义 myow-overseas 模块对外暴露的命令式 POST API，遵循当前平台接口风格。所有接口统一以 <code>/api/v1/overseas</code> 为前缀，由网关层统一鉴权并注入当前租户上下文。</p>
 
   <h3>4.1 接口通用约定</h3>
   <ul>
@@ -704,6 +758,7 @@ COMMENT ON TABLE owh_logistics_channel IS '物流渠道表';</code></pre>
     <li><strong>Content-Type</strong>：<code>application/json</code></li>
     <li><strong>认证</strong>：Header 携带 <code>Authorization: Bearer {token}</code>（Sa-Token）</li>
     <li><strong>租户隔离</strong>：通过 Sa-Token 登录上下文自动注入 <code>tenant_id</code>，MyBatis Plus 拦截器完成数据过滤</li>
+    <li><strong>接口风格</strong>：写操作统一使用命令式 POST，例如 <code>/warehouse/create</code>、<code>/outbound-order/allocate-stock</code>；查询接口也使用 POST 承载复杂查询条件</li>
     <li><strong>幂等</strong>：写操作接口支持 <code>Idempotency-Key</code> 请求头，防止重复提交</li>
     <li><strong>统一响应</strong>：<code>{"code":0,"msg":"ok","data":{}}</code>，业务异常 code &gt; 0</li>
   </ul>
@@ -715,17 +770,14 @@ COMMENT ON TABLE owh_logistics_channel IS '物流渠道表';</code></pre>
         <tr><th>Method</th><th>Path</th><th>说明</th><th>主要 Query / Body</th></tr>
       </thead>
       <tbody>
-        <tr><td>POST</td><td>/warehouses</td><td>创建仓库</td><td>Body: WarehouseCreateDTO</td></tr>
-        <tr><td>PUT</td><td>/warehouses/{id}</td><td>更新仓库</td><td>Body: WarehouseUpdateDTO</td></tr>
-        <tr><td>GET</td><td>/warehouses/{id}</td><td>仓库详情</td><td>Path: id</td></tr>
-        <tr><td>GET</td><td>/warehouses</td><td>仓库列表</td><td>Query: warehouseCode, warehouseName, status, page, size</td></tr>
-        <tr><td>DELETE</td><td>/warehouses/{id}</td><td>删除仓库（逻辑删）</td><td>Path: id</td></tr>
-        <tr><td>POST</td><td>/zones</td><td>创建库区</td><td>Body: ZoneCreateDTO</td></tr>
-        <tr><td>GET</td><td>/zones</td><td>库区列表</td><td>Query: warehouseId, zoneCode</td></tr>
-        <tr><td>POST</td><td>/bins</td><td>创建库位</td><td>Body: BinCreateDTO（含编码规则校验）</td></tr>
-        <tr><td>GET</td><td>/bins</td><td>库位列表</td><td>Query: warehouseId, zoneId, aisleCode, binType, status</td></tr>
-        <tr><td>PUT</td><td>/bins/{id}/status</td><td>更新库位状态</td><td>Body: {status: "ENABLED|DISABLED|LOCKED"}</td></tr>
-        <tr><td>GET</td><td>/bins/empties</td><td>查询空库位</td><td>Query: warehouseId, zoneId, binType</td></tr>
+        <tr><td>POST</td><td>/warehouse/create</td><td>创建仓库档案</td><td>Body: WarehouseCreateCommand</td></tr>
+        <tr><td>POST</td><td>/warehouse/update</td><td>更新仓库档案</td><td>Body: WarehouseUpdateCommand</td></tr>
+        <tr><td>POST</td><td>/warehouse/delete</td><td>删除仓库档案（逻辑删）</td><td>Body: {warehouseId}</td></tr>
+        <tr><td>POST</td><td>/warehouse/detail</td><td>仓库详情</td><td>Body: {warehouseId}</td></tr>
+        <tr><td>POST</td><td>/warehouse/page</td><td>仓库分页</td><td>Body: warehouseCode, warehouseName, country, status, pageNum, pageSize</td></tr>
+        <tr><td>POST</td><td>/customer-warehouse/bind</td><td>绑定客户可用仓库</td><td>Body: customerId, warehouseId, serviceConfig</td></tr>
+        <tr><td>POST</td><td>/customer-warehouse/page</td><td>客户仓库授权分页</td><td>Body: customerId, warehouseId, status, pageNum, pageSize</td></tr>
+        <tr><td>POST</td><td>/external-warehouse-mapping/save</td><td>保存外部仓库编码映射</td><td>Body: warehouseId, externalSystemId, externalWarehouseCode</td></tr>
       </tbody>
     </table>
   </div>
@@ -737,15 +789,13 @@ COMMENT ON TABLE owh_logistics_channel IS '物流渠道表';</code></pre>
         <tr><th>Method</th><th>Path</th><th>说明</th><th>主要 Query / Body</th></tr>
       </thead>
       <tbody>
-        <tr><td>POST</td><td>/inbound-orders</td><td>创建入库单（ASN）</td><td>Body: InboundOrderCreateDTO（含 items 列表）</td></tr>
-        <tr><td>PUT</td><td>/inbound-orders/{id}</td><td>更新入库单（待收货前可改）</td><td>Body: InboundOrderUpdateDTO</td></tr>
-        <tr><td>GET</td><td>/inbound-orders/{id}</td><td>入库单详情</td><td>Path: id（含 items、收货记录）</td></tr>
-        <tr><td>GET</td><td>/inbound-orders</td><td>入库单列表</td><td>Query: inboundNo, status, warehouseId, supplierId, dateRange, page, size</td></tr>
-        <tr><td>POST</td><td>/inbound-orders/{id}/receive</td><td>收货确认</td><td>Body: ReceiveConfirmDTO（实际到货 SKU/数量/批次）</td></tr>
-        <tr><td>POST</td><td>/inbound-orders/{id}/qc</td><td>质检结果录入</td><td>Body: QcResultDTO（passQty, rejectQty, reason）</td></tr>
-        <tr><td>POST</td><td>/inbound-orders/{id}/putaway</td><td>确认上架（按推荐库位）</td><td>Body: PutawayConfirmDTO（itemId -> locationId 映射）</td></tr>
-        <tr><td>POST</td><td>/inbound-orders/{id}/cancel</td><td>取消入库单</td><td>Path: id（仅 PENDING 状态）</td></tr>
-        <tr><td>GET</td><td>/inbound-orders/{id}/tasks</td><td>查询上架任务</td><td>Path: id</td></tr>
+        <tr><td>POST</td><td>/inbound-order/create</td><td>创建入库指令（ASN）</td><td>Body: InboundOrderCreateCommand（含 items）</td></tr>
+        <tr><td>POST</td><td>/inbound-order/update</td><td>更新入库指令（未推送前可改）</td><td>Body: InboundOrderUpdateCommand</td></tr>
+        <tr><td>POST</td><td>/inbound-order/detail</td><td>入库指令详情</td><td>Body: {inboundId}</td></tr>
+        <tr><td>POST</td><td>/inbound-order/page</td><td>入库指令分页</td><td>Body: inboundNo, status, warehouseId, customerId, dateRange, pageNum, pageSize</td></tr>
+        <tr><td>POST</td><td>/inbound-order/push</td><td>推送入库指令至外部 WMS</td><td>Body: {inboundId, externalSystemId}</td></tr>
+        <tr><td>POST</td><td>/inbound-order/cancel</td><td>取消入库指令</td><td>Body: {inboundId, reason}</td></tr>
+        <tr><td>POST</td><td>/inbound-order/status-callback</td><td>接收入库状态回传</td><td>Body: externalOrderNo, status, receivedQty, differenceDetail</td></tr>
       </tbody>
     </table>
   </div>
@@ -757,70 +807,51 @@ COMMENT ON TABLE owh_logistics_channel IS '物流渠道表';</code></pre>
         <tr><th>Method</th><th>Path</th><th>说明</th><th>主要 Query / Body</th></tr>
       </thead>
       <tbody>
-        <tr><td>POST</td><td>/outbound-orders</td><td>创建出库单</td><td>Body: OutboundOrderCreateDTO（含收件人、items、渠道）</td></tr>
-        <tr><td>PUT</td><td>/outbound-orders/{id}</td><td>更新出库单（PENDING 可改）</td><td>Body: OutboundOrderUpdateDTO</td></tr>
-        <tr><td>GET</td><td>/outbound-orders/{id}</td><td>出库单详情</td><td>Path: id</td></tr>
-        <tr><td>GET</td><td>/outbound-orders</td><td>出库单列表</td><td>Query: outboundNo, status, warehouseId, customerId, waveId, page, size</td></tr>
-        <tr><td>POST</td><td>/outbound-orders/{id}/cancel</td><td>取消出库单</td><td>Path: id（未分配波次/未拣货）</td></tr>
-        <tr><td>POST</td><td>/outbound-orders/{id}/lock-stock</td><td>手动锁库存（预占）</td><td>Path: id</td></tr>
-        <tr><td>POST</td><td>/outbound-orders/{id}/unlock-stock</td><td>释放预占</td><td>Path: id</td></tr>
+        <tr><td>POST</td><td>/outbound-order/create</td><td>创建出库履约单</td><td>Body: OutboundOrderCreateCommand（含收件人、items、渠道偏好）</td></tr>
+        <tr><td>POST</td><td>/outbound-order/update</td><td>更新出库履约单（未推送前可改）</td><td>Body: OutboundOrderUpdateCommand</td></tr>
+        <tr><td>POST</td><td>/outbound-order/detail</td><td>出库履约单详情</td><td>Body: {outboundId}</td></tr>
+        <tr><td>POST</td><td>/outbound-order/page</td><td>出库履约单分页</td><td>Body: outboundNo, status, warehouseId, customerId, pageNum, pageSize</td></tr>
+        <tr><td>POST</td><td>/outbound-order/allocate-stock</td><td>库存预占</td><td>Body: {outboundId, allocateMode}</td></tr>
+        <tr><td>POST</td><td>/outbound-order/release-stock</td><td>释放预占</td><td>Body: {outboundId, reason}</td></tr>
+        <tr><td>POST</td><td>/outbound-order/push</td><td>推送出库指令至外部 WMS</td><td>Body: {outboundId, externalSystemId}</td></tr>
+        <tr><td>POST</td><td>/outbound-order/status-callback</td><td>接收履约状态回传</td><td>Body: externalOrderNo, status, trackingNo, shippedTime, exceptionDetail</td></tr>
       </tbody>
     </table>
   </div>
 
-  <h3>4.5 波次与拣货</h3>
+  <h3>4.5 库存管理</h3>
   <div class="table-wrap">
     <table>
       <thead>
         <tr><th>Method</th><th>Path</th><th>说明</th><th>主要 Query / Body</th></tr>
       </thead>
       <tbody>
-        <tr><td>POST</td><td>/waves</td><td>创建波次</td><td>Body: WaveCreateDTO（strategy, orderIds）</td></tr>
-        <tr><td>GET</td><td>/waves/{id}</td><td>波次详情</td><td>Path: id（含 orderCount, skuCount, 进度）</td></tr>
-        <tr><td>GET</td><td>/waves</td><td>波次列表</td><td>Query: warehouseId, status, waveType, dateRange, page, size</td></tr>
-        <tr><td>POST</td><td>/waves/{id}/start</td><td>开始拣货</td><td>Body: {pickerId}</td></tr>
-        <tr><td>POST</td><td>/waves/{id}/pick</td><td>拣货结果回传</td><td>Body: PickResultDTO（item, actualQty, locationId）</td></tr>
-        <tr><td>POST</td><td>/waves/{id}/complete</td><td>完成拣货</td><td>Path: id</td></tr>
-        <tr><td>POST</td><td>/waves/{id}/abort</td><td>中止波次（释放订单）</td><td>Path: id</td></tr>
+        <tr><td>POST</td><td>/inventory/page</td><td>库存查询（多维度）</td><td>Body: customerId, warehouseId, skuId, batchNo, pageNum, pageSize</td></tr>
+        <tr><td>POST</td><td>/inventory/summary</td><td>库存汇总（按 SKU/仓库）</td><td>Body: customerId, warehouseId, skuId</td></tr>
+        <tr><td>POST</td><td>/inventory/sync</td><td>从外部 WMS 同步库存</td><td>Body: externalSystemId, warehouseId, syncMode</td></tr>
+        <tr><td>POST</td><td>/inventory/adjust</td><td>平台库存调整</td><td>Body: inventoryId, quantityType, adjustQty, reason</td></tr>
+        <tr><td>POST</td><td>/inventory/freeze</td><td>冻结库存</td><td>Body: inventoryId, freezeQty, reason</td></tr>
+        <tr><td>POST</td><td>/inventory/release</td><td>释放冻结</td><td>Body: inventoryId, releaseQty, reason</td></tr>
+        <tr><td>POST</td><td>/inventory-flow/page</td><td>库存流水分页</td><td>Body: inventoryId, bizType, dateRange, pageNum, pageSize</td></tr>
       </tbody>
     </table>
   </div>
 
-  <h3>4.6 库存管理</h3>
+  <h3>4.6 物流渠道与打单</h3>
   <div class="table-wrap">
     <table>
       <thead>
         <tr><th>Method</th><th>Path</th><th>说明</th><th>主要 Query / Body</th></tr>
       </thead>
       <tbody>
-        <tr><td>GET</td><td>/stocks</td><td>库存查询（多维度）</td><td>Query: warehouseId, skuId, locationId, batchId, qualityStatus</td></tr>
-        <tr><td>GET</td><td>/stocks/summary</td><td>库存汇总（按 SKU）</td><td>Query: warehouseId, skuId</td></tr>
-        <tr><td>POST</td><td>/stocks/adjust</td><td>库存调整（盘盈盘亏）</td><td>Body: StockAdjustDTO（stockId, adjustQty, reason）</td></tr>
-        <tr><td>POST</td><td>/stocks/move</td><td>库位移库</td><td>Body: StockMoveDTO（fromStockId, toLocationId, moveQty）</td></tr>
-        <tr><td>POST</td><td>/stocks/freeze</td><td>冻结库存</td><td>Body: StockFreezeDTO（stockId, freezeQty, reason）</td></tr>
-        <tr><td>POST</td><td>/stocks/release</td><td>释放冻结</td><td>Body: StockReleaseDTO（stockId, releaseQty）</td></tr>
-        <tr><td>GET</td><td>/stocks/flows</td><td>库存流水</td><td>Query: stockId, bizType, dateRange, page, size</td></tr>
-        <tr><td>POST</td><td>/stock-checks</td><td>创建盘点单</td><td>Body: StockCheckCreateDTO（scope: FULL|ZONE|SKU|LOCATION）</td></tr>
-        <tr><td>POST</td><td>/stock-checks/{id}/count</td><td>盘点录入</td><td>Body: CheckCountDTO（locationId, skuId, actualQty）</td></tr>
-        <tr><td>POST</td><td>/stock-checks/{id}/confirm</td><td>盘点确认（生成差异调整）</td><td>Path: id</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h3>4.7 物流渠道</h3>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>Method</th><th>Path</th><th>说明</th><th>主要 Query / Body</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>POST</td><td>/logistics-channels</td><td>创建物流渠道</td><td>Body: LogisticsChannelCreateDTO</td></tr>
-        <tr><td>PUT</td><td>/logistics-channels/{id}</td><td>更新渠道</td><td>Body: LogisticsChannelUpdateDTO</td></tr>
-        <tr><td>GET</td><td>/logistics-channels/{id}</td><td>渠道详情</td><td>Path: id</td></tr>
-        <tr><td>GET</td><td>/logistics-channels</td><td>渠道列表</td><td>Query: carrierId, serviceType, status</td></tr>
-        <tr><td>POST</td><td>/logistics-channels/{id}/toggle</td><td>启用/停用</td><td>Path: id</td></tr>
-        <tr><td>GET</td><td>/logistics-channels/rates</td><td>查询运费试算</td><td>Query: channelId, weight, destinationCountry</td></tr>
-        <tr><td>POST</td><td>/logistics-channels/{id}/label</td><td>获取运单标签</td><td>Path: id, Body: {orderId}</td></tr>
+        <tr><td>POST</td><td>/logistics-channel/create</td><td>创建物流渠道</td><td>Body: LogisticsChannelCreateCommand</td></tr>
+        <tr><td>POST</td><td>/logistics-channel/update</td><td>更新物流渠道</td><td>Body: LogisticsChannelUpdateCommand</td></tr>
+        <tr><td>POST</td><td>/logistics-channel/detail</td><td>渠道详情</td><td>Body: {channelId}</td></tr>
+        <tr><td>POST</td><td>/logistics-channel/page</td><td>渠道分页</td><td>Body: carrierId, serviceType, status, pageNum, pageSize</td></tr>
+        <tr><td>POST</td><td>/logistics-channel/change-status</td><td>启用/停用渠道</td><td>Body: {channelId, status}</td></tr>
+        <tr><td>POST</td><td>/logistics-channel/rate-estimate</td><td>运费试算</td><td>Body: channelId, weight, destinationCountry, destinationZip</td></tr>
+        <tr><td>POST</td><td>/label-order/create</td><td>创建打单请求</td><td>Body: outboundId, channelId, packageInfo</td></tr>
+        <tr><td>POST</td><td>/label-order/callback</td><td>接收打单结果回传</td><td>Body: labelOrderNo, labelStatus, trackingNo, labelUrl, errorMessage</td></tr>
       </tbody>
     </table>
   </div>
@@ -852,86 +883,72 @@ COMMENT ON TABLE owh_logistics_channel IS '物流渠道表';</code></pre>
 <!-- ==================== 05 业务流程设计 ==================== -->
 <section id="s5">
   <h2><span class="section-num">05</span> 业务流程设计</h2>
-  <p class="lead">本章节以流程图形式呈现海外仓四大核心业务流程：收货上架、波次拣货出库、库存盘点、以及库存冻结/释放。流程节点对应系统中的单据状态与关键操作。</p>
+  <p class="lead">本章节以流程图形式呈现海外仓 OMS 平台核心流程：入库指令同步、出库履约编排、库存同步与预占释放、物流打单与状态回传。库内收货、上架、拣货、复核、打包等动作由外部 WMS 执行并回传结果。</p>
 
-  <h3>5.1 收货上架流程</h3>
-  <p>供应商/客户预约送货后，仓库根据 ASN（入库通知单）进行收货、质检、上架。整个过程涉及入库单状态流转、库位推荐、库存初次写入。</p>
+  <h3>5.1 入库指令同步流程</h3>
+  <p>客户或 ERP 创建入库预报后，平台生成 ASN 并推送至外部 WMS。外部 WMS 完成收货、质检、上架后回传状态与差异，平台更新入库单和库存。</p>
   <figure class="diagram">
     <pre class="mermaid">
 flowchart TD
-    A[创建 ASN<br/>status=PENDING] --> B[司机到货登记]
-    B --> C[开始收货<br/>status=RECEIVING]
-    C --> D[扫描 SKU/批次<br/>录入实收数量]
-    D --> E{质检?}
-    E -->|需要| F[质检环节<br/>PASS / REJECT]
-    F --> G[收货完成<br/>status=RECEIVED]
-    E -->|免检| G
-    G --> H[生成上架任务<br/>推荐库位]
-    H --> I[执行上架<br/>扫描目标库位]
-    I --> J[上架确认<br/>status=PUTAWAYED]
-    J --> K[更新库存<br/>available_qty +=]
-    K --> L[ASN 关闭]
+    A[创建 ASN<br/>status=PENDING] --> B[校验客户/仓库/SKU]
+    B --> C[推送外部 WMS<br/>status=PUSHED]
+    C --> D{外部 WMS 接收?}
+    D -->|成功| E[status=ACCEPTED]
+    D -->|失败| F[记录推送异常<br/>等待重试]
+    E --> G[外部 WMS 执行收货/质检/上架]
+    G --> H[接收入库状态回传]
+    H --> I{是否存在差异?}
+    I -->|否| J[更新入库完成<br/>status=RECEIVED]
+    I -->|是| K[记录差异明细<br/>status=EXCEPTION]
+    J --> L[更新库存余额与流水]
     </pre>
     <figcaption>图 5-1：收货上架全流程（ASN -> 收货 -> 质检 -> 上架 -> 库存更新）</figcaption>
   </figure>
 
   <div class="callout callout-tip">
-    <p><strong>库位推荐规则</strong>：系统根据 SKU 属性（品类、周转率、温区要求）与库位属性（类型、承重、体积）计算推荐度，优先推荐同品集中存放、空库位、以及靠近出库暂存区的库位。</p>
+    <p><strong>外部执行原则</strong>：平台只维护入库指令、状态和差异，不设计库位推荐和上架任务。外部 WMS 回传的库内明细可作为扩展字段或原始 payload 保存。</p>
   </div>
 
-  <h3>5.2 波次拣货出库流程</h3>
-  <p>出库单达到可发状态后，由系统或人工创建波次，按策略聚合订单，经过拣货、复核、打包、称重、贴标，最终交接承运商。</p>
+  <h3>5.2 出库履约编排流程</h3>
+  <p>出库单创建后，平台完成仓库校验、库存预占、渠道选择、打单请求和出库指令推送；外部 WMS 执行库内作业后回传发货状态。</p>
   <figure class="diagram">
     <pre class="mermaid">
 flowchart TD
-    A[出库单创建<br/>status=PENDING] --> B[库存预占<br/>preoccupied_qty +=]
-    B --> C[加入波次池]
-    C --> D[创建波次<br/>wave_status=CREATED]
-    D --> E[开始拣货<br/>wave_status=PICKING]
-    E --> F{拣货策略}
-    F -->|单件单订单| G1[摘果式拣货]
-    F -->|多品多订单| G2[播种式拣货]
-    F -->|分区拣货| G3[按库区拆分任务]
-    G1 --> H[拣货完成<br/>wave_status=PICKED]
-    G2 --> H
-    G3 --> H
-    H --> I[复核<br/>扫描 SKU + 数量]
-    I --> J{复核通过?}
-    J -->|否| K[异常处理<br/>缺货/错拣]
-    K --> L[生成补拣任务]
-    L --> E
-    J -->|是| M[打包<br/>选择包材]
-    M --> N[称重 + 测量体积]
-    N --> O[获取运单号<br/>调用物流渠道接口]
-    O --> P[贴标 + 发货确认<br/>status=SHIPPED]
-    P --> Q[扣减库存<br/>available_qty -=]
-    Q --> R[交接承运商<br/>status=HANDED_OVER]
+    A[创建出库单<br/>status=PENDING] --> B[校验客户/仓库/SKU/地址]
+    B --> C{库存是否足够?}
+    C -->|足够| D[预占库存<br/>reserved_qty +=]
+    C -->|不足| E[进入欠货<br/>status=EXCEPTION]
+    D --> F[选择物流渠道]
+    F --> G[创建打单请求]
+    G --> H{打单成功?}
+    H -->|成功| I[获取 tracking_no/label_url]
+    H -->|失败| J[记录打单异常]
+    I --> K[推送出库指令至外部 WMS<br/>status=PUSHED]
+    K --> L[外部 WMS 接收/执行]
+    L --> M[接收发货回传<br/>status=SHIPPED]
+    M --> N[扣减 on_hand/reserved<br/>写库存流水]
     </pre>
-    <figcaption>图 5-2：波次拣货出库全流程（波次创建 -> 拣货 -> 复核 -> 打包 -> 发货）</figcaption>
+    <figcaption>图 5-2：出库履约编排流程（预占 -> 打单 -> 推送 WMS -> 发货回传）</figcaption>
   </figure>
 
-  <h3>5.3 库存盘点流程</h3>
-  <p>盘点用于校验实物库存与系统库存的一致性，支持全仓盘点、库区盘点、指定 SKU 盘点、指定库位盘点四种范围。</p>
+  <h3>5.3 库存同步差异处理流程</h3>
+  <p>当前阶段不设计平台盘点任务。外部 WMS 完成盘点或库存校准后，将库存快照同步到平台；平台负责识别差异、生成库存流水、更新库存余额并记录差异来源。</p>
   <figure class="diagram">
     <pre class="mermaid">
 flowchart TD
-    A[创建盘点单<br/>scope=FULL/ZONE/SKU/LOCATION] --> B[冻结盘点范围库存<br/>禁止出入库]
-    B --> C[分配盘点任务]
-    C --> D[盘点员扫码计数]
-    D --> E[录入实盘数量]
-    E --> F{是否存在差异?}
-    F -->|否| G[盘点无差异<br/>直接确认]
-    F -->|是| H[生成差异明细<br/>系统 qty vs 实盘 qty]
-    H --> I[审核差异]
-    I --> J{审核结果}
-    J -->|确认调整| K[生成库存调整单<br/>盘盈/盘亏]
-    K --> L[更新库存<br/>并记流水]
-    J -->|驳回| M[重新盘点]
-    M --> D
-    G --> N[释放冻结<br/>盘点单关闭]
-    L --> N
+    A[外部 WMS 推送库存快照] --> B[校验客户/仓库/SKU/批次]
+    B --> C[读取平台当前库存余额]
+    C --> D{是否存在差异?}
+    D -->|否| E[记录同步成功]
+    D -->|是| F[生成库存差异记录]
+    F --> G{差异是否自动处理?}
+    G -->|是| H[更新 on_hand/available/frozen/reserved]
+    H --> I[写库存流水]
+    G -->|否| J[进入人工审核]
+    J --> K[审核通过后调整库存]
+    K --> I
     </pre>
-    <figcaption>图 5-3：库存盘点流程（创建 -> 冻结 -> 计数 -> 差异处理 -> 确认）</figcaption>
+    <figcaption>图 5-3：库存同步差异处理流程（同步 -> 对比 -> 差异 -> 调整）</figcaption>
   </figure>
 
   <h3>5.4 库存冻结与释放流程</h3>
@@ -953,94 +970,93 @@ flowchart TD
     <figcaption>图 5-4：库存冻结/释放状态流转</figcaption>
   </figure>
 
-  <h3>5.5 波次生命周期状态机</h3>
-  <p>波次作为出库作业的调度单元，其状态机直接驱动下游拣货、复核、打包等任务的执行。</p>
+  <h3>5.5 出库履约状态机</h3>
+  <p>出库履约状态机描述平台订单从创建、预占、推送外部 WMS 到发货完成的生命周期。</p>
   <figure class="diagram">
     <pre class="mermaid">
 stateDiagram-v2
-    [*] --> CREATED : 创建波次
-    CREATED --> PICKING : 开始拣货
-    PICKING --> PICKED : 拣货完成
-    PICKED --> CHECKING : 开始复核
-    CHECKING --> PACKING : 复核通过
-    CHECKING --> EXCEPTION : 异常（缺货/错拣）
-    EXCEPTION --> PICKING : 补拣
-    PACKING --> WEIGHED : 称重完成
-    WEIGHED --> SHIPPED : 获取运单/发货
-    SHIPPED --> [*] : 波次关闭
-    CREATED --> CANCELLED : 取消波次
-    PICKING --> ABORTED : 中止波次
+    [*] --> PENDING : 创建出库单
+    PENDING --> ALLOCATED : 库存预占成功
+    PENDING --> EXCEPTION : 库存不足/校验失败
+    ALLOCATED --> PUSHED : 推送外部 WMS
+    PUSHED --> ACCEPTED : 外部 WMS 接收
+    ACCEPTED --> PROCESSING : 外部 WMS 执行
+    PROCESSING --> SHIPPED : 发货回传
+    SHIPPED --> [*] : 履约完成
+    PENDING --> CANCELLED : 取消
+    ALLOCATED --> CANCELLED : 取消并释放预占
+    PUSHED --> EXCEPTION : 外部拒单/推送失败
     </pre>
-    <figcaption>图 5-5：波次状态机（从创建到关闭的完整生命周期）</figcaption>
+    <figcaption>图 5-5：出库履约状态机</figcaption>
   </figure>
 </section>
 
 <!-- ==================== 06 关键业务规则 ==================== -->
 <section id="s6">
   <h2><span class="section-num">06</span> 关键业务规则</h2>
-  <p class="lead">本章节梳理海外仓运营中必须强制执行的业务规则与约束，涵盖库存一致性、库位编码、波次策略、先进先出、安全库存及超卖防控等方面。</p>
+  <p class="lead">本章节梳理海外仓 OMS 平台必须强制执行的业务规则与约束，涵盖库存一致性、库存预占、外部系统幂等、渠道选择、安全库存及超卖防控等方面。</p>
 
   <h3>6.1 库存一致性规则</h3>
   <div class="callout callout-warn">
-    <p><strong>核心公式</strong>：对于任意库存记录，<code>available_qty + frozen_qty + preoccupied_qty + in_transit_qty = physical_qty</code>（实物库存）。系统在任何事务提交前必须通过此校验。</p>
+    <p><strong>核心公式</strong>：对于任意库存余额，<code>on_hand_qty = available_qty + reserved_qty + frozen_qty</code>。<code>in_transit_qty</code> 表示在途库存，不计入在库实物数量。系统在任何库存事务提交前必须校验该公式。</p>
   </div>
   <ul>
-    <li><strong>非负约束</strong>：所有库存数量字段（available, frozen, preoccupied, in_transit）必须 ≥ 0；任一字段为负时事务必须回滚并触发告警。</li>
-    <li><strong>预占扣减一致性</strong>：出库单发货确认时，扣减 <code>available_qty</code> 的同时必须扣减等量 <code>preoccupied_qty</code>；取消出库单时，<code>preoccupied_qty</code> 回滚至 <code>available_qty</code>。</li>
-    <li><strong>流水对账</strong>：每次库存变动必须同步写入 <code>owh_stock_flow</code>，流水汇总数量必须与库存净变动相等；每日凌晨定时任务对账差异。</li>
-    <li><strong>乐观锁防并发</strong>：<code>owh_stock</code> 表使用 <code>version</code> 字段实现乐观锁；更新时 <code>WHERE version = #{oldVersion}</code>，失败则重试或抛并发冲突异常。</li>
+    <li><strong>非负约束</strong>：所有库存数量字段（on_hand, available, reserved, frozen, in_transit）必须 ≥ 0；任一字段为负时事务必须回滚并触发告警。</li>
+    <li><strong>预占一致性</strong>：出库单预占时 <code>available_qty -= qty</code> 且 <code>reserved_qty += qty</code>；取消出库单时反向释放；发货确认时 <code>on_hand_qty -= qty</code> 且 <code>reserved_qty -= qty</code>。</li>
+    <li><strong>在途独立</strong>：在途库存只受采购、调拨、入库预报或外部系统同步影响，不参与出库预占，不计入可售库存。</li>
+    <li><strong>流水对账</strong>：每次库存变动必须同步写入 <code>owh_inventory_flow</code>，流水汇总数量必须与库存净变动相等；每日定时任务对账差异。</li>
+    <li><strong>乐观锁防并发</strong>：<code>owh_inventory</code> 表使用 <code>version</code> 字段实现乐观锁；更新时 <code>WHERE version = #{oldVersion}</code>，失败则重试或抛并发冲突异常。</li>
   </ul>
 
-  <h3>6.2 库位编码规则</h3>
-  <p>库位编码采用四级结构化编码，全局唯一，格式：<code>{warehouse_code}-{zone_code}-{aisle_code}-{layer}{column}{position}</code>。</p>
+  <h3>6.2 外部仓库编码规则</h3>
+  <p>平台仓库编码和外部仓库编码必须分离维护。平台使用 <code>warehouse_code</code> 作为内部稳定编码，外部 ERP/WMS 使用 <code>owh_external_warehouse_mapping</code> 维护映射。</p>
   <ul>
-    <li><strong>warehouse_code</strong>：仓库编码，3 位大写字母（如 LAX、NYC）。</li>
-    <li><strong>zone_code</strong>：库区编码，2 位大写字母（如 A1、B2、COLD）。</li>
-    <li><strong>aisle_code</strong>：通道/货架编码，3 位数字（如 001、012）。</li>
-    <li><strong>layer</strong>：层，2 位数字（01 表示地面层）。</li>
-    <li><strong>column</strong>：列，2 位数字。</li>
-    <li><strong>position</strong>：位，2 位数字（同一列内的细分位置）。</li>
+    <li><strong>warehouse_code</strong>：平台仓库编码，租户内唯一，建议格式 <code>WH-{COUNTRY}-{CITY}-{SEQ}</code>。</li>
+    <li><strong>external_warehouse_code</strong>：外部系统仓库编码，同一外部系统内唯一。</li>
+    <li><strong>映射唯一性</strong>：同一租户、同一外部系统、同一平台仓库只允许一个有效外部仓库编码。</li>
+    <li><strong>状态隔离</strong>：停用外部映射不影响平台仓库档案，但禁止继续向该外部系统推送入库/出库指令。</li>
   </ul>
-  <p>示例：<code>LAX-A1-001-02-03-01</code> 表示 LAX 仓库 A1 库区 001 通道第 2 层第 3 列第 1 位。</p>
   <div class="callout callout-tip">
-    <p><strong>编码校验</strong>：创建库位时，接口层通过正则 <code>^[A-Z]{3}-[A-Z0-9]{2,4}-\d{3}-\d{2}-\d{2}-\d{2}$</code> 校验格式；同一仓库内不允许重复。</p>
+    <p><strong>编码校验</strong>：平台不校验外部仓库编码格式，只校验非空、长度和唯一性，避免不同 WMS 厂商编码规则冲突。</p>
   </div>
 
-  <h3>6.3 波次拆分与合并规则</h3>
+  <h3>6.3 外部系统推送与回传规则</h3>
   <ul>
-    <li><strong>波次上限</strong>：单个波次包含订单数上限默认 50 单，SKU 种类上限默认 100 种；超出则自动拆分为多个波次。</li>
-    <li><strong>合并条件</strong>：相同仓库、相同物流渠道、相同优先级、且均为 PENDING 状态的出库单可被合并到同一波次。</li>
-    <li><strong>拆分策略</strong>：
-      <ul>
-        <li><strong>按渠道拆分</strong>：不同物流渠道的订单不允许混入同一波次。</li>
-        <li><strong>按温区分拆</strong>：常温品与冷链品必须分波次处理。</li>
-        <li><strong>按大件拆分</strong>：单品体积超过阈值（如 0.1 m³）的订单单独成波次，避免与普通小件混拣。</li>
-      </ul>
-    </li>
-    <li><strong>优先级插队</strong>：高优先级（priority ≥ 90）订单可触发紧急波次，绕过常规合并逻辑，单独成波次并优先分配拣货员。</li>
+    <li><strong>幂等键</strong>：入库、出库、打单推送必须生成业务幂等键，建议使用 <code>tenant_id + biz_type + biz_no + target_system</code>。</li>
+    <li><strong>推送记录</strong>：每次外部调用必须写入 <code>owh_external_push_record</code>，记录请求、响应、状态、重试次数和下一次重试时间。</li>
+    <li><strong>回调验签</strong>：外部系统回调必须校验来源、签名、时间戳和幂等键，重复回调只允许更新最后回调时间，不重复扣减库存。</li>
+    <li><strong>异常重试</strong>：网络失败和 5xx 可按退避策略重试；业务拒单、参数错误、签名错误不自动重试，进入人工处理。</li>
   </ul>
 
-  <h3>6.4 拣货策略规则</h3>
+  <h3>6.4 海外仓合同与费用规则</h3>
+  <ul>
+    <li><strong>合同归属</strong>：海外仓服务合同归属 myow-overseas，覆盖仓储、入库、出库、退件、贴标、换标、打包、耗材等海外仓服务。</li>
+    <li><strong>费用项引用</strong>：费用规则必须引用 myow-finance 的 <code>fee_code</code>，例如 OWH_STORAGE_FEE、OWH_INBOUND_FEE、OWH_OUTBOUND_FEE、OWH_LABEL_FEE。</li>
+    <li><strong>价格维度</strong>：海外仓费用规则可按 customer_id、warehouse_id、sku_id、服务类型、重量段、体积段、件数、天数等维度配置。</li>
+    <li><strong>计费事件</strong>：作业完成或外部 WMS 回传状态后，myow-overseas 负责匹配合同费用规则，并向 myow-finance 推送计费事件。</li>
+  </ul>
+
+  <h3>6.5 渠道选择规则</h3>
   <div class="card-grid">
     <div class="card">
       <div class="card-icon">1</div>
-      <h4>摘果式（Order Picking）</h4>
-      <p>一单一拣，拣货员持订单逐个 SKU 拣取。适合订单结构简单、SKU 重合度低的场景。系统按库位路径最优排序（S 型或 Z 型路径）生成拣货单。</p>
+      <h4>客户优先</h4>
+      <p>客户指定渠道或渠道偏好优先级最高；若指定渠道不可用，则根据客户授权规则选择备选渠道。</p>
     </div>
     <div class="card">
       <div class="card-icon">2</div>
-      <h4>播种式（Batch Picking）</h4>
-      <p>先批量拣出多个订单共用 SKU，再在分拨墙/播种车按订单二次分拣。适合 SKU 重合度高、单量大的场景。波次内订单数建议 10~30 单。</p>
+      <h4>可达校验</h4>
+      <p>根据国家、邮编、地址、重量、体积、商品属性过滤不可达或超限制渠道。</p>
     </div>
     <div class="card">
       <div class="card-icon">3</div>
-      <h4>分区拣货（Zone Picking）</h4>
-      <p>将仓库划分为多个拣货区，每个拣货员只负责固定区域；拣货容器在各区间流转，最终汇合到复核台。适合大型仓库、SKU 分布广的场景。</p>
+      <h4>成本与时效</h4>
+      <p>在满足客户规则的前提下，按运费、时效、服务等级和渠道稳定性综合排序。</p>
     </div>
     <div class="card">
       <div class="card-icon">4</div>
-      <h4>边拣边分（Pick-to-Cart）</h4>
-      <p>拣货员推带有多个格口（对应不同订单）的拣货车，在行进过程中直接将商品放入对应格口，省去二次分拣。适合 SKU 种类适中、体积小的商品。</p>
+      <h4>打单约束</h4>
+      <p>渠道选择必须校验对应打单系统配置可用，打单失败时可按规则切换备选渠道或进入异常处理。</p>
     </div>
   </div>
 
@@ -1068,16 +1084,16 @@ stateDiagram-v2
   <h3>6.7 超卖与欠货防控规则</h3>
   <ul>
     <li><strong>强预占模式</strong>：出库单创建即预占库存；若可用库存不足，创建失败并返回缺货 SKU 列表。适用于自营仓、库存可信场景。</li>
-    <li><strong>弱预占模式</strong>：出库单创建允许缺货，进入 <code>BACKORDER</code> 状态，待库存补足后自动触发波次。适用于预售或供应商代发场景。</li>
+    <li><strong>弱预占模式</strong>：出库单创建允许缺货，进入 <code>BACKORDER</code> 或 <code>EXCEPTION</code> 状态，待库存补足后重新触发预占。适用于预售或供应商代发场景。</li>
     <li><strong>缺货分配</strong>：当多个出库单竞争同一 SKU 最后库存时，按优先级（priority DESC）+ 创建时间（create_time ASC）排序分配。</li>
-    <li><strong>欠货释放</strong>：波次拣货过程中发现实物缺货（短拣），系统立即释放该订单的预占，订单回退至 <code>PENDING</code> 等待下次分配；同时生成盘亏差异记录。</li>
-    <li><strong>重复出库拦截</strong>：同一出库单在任一环节（已分配波次/已拣货/已复核）禁止再次进入新波次；通过 <code>status</code> 与 <code>wave_id</code> 联合校验。</li>
+    <li><strong>欠货释放</strong>：外部 WMS 回传缺货或拒单时，平台立即释放该订单预占，订单进入 <code>EXCEPTION</code>，并记录履约异常事件。</li>
+    <li><strong>重复推送拦截</strong>：同一出库单已推送外部 WMS 后，禁止重复创建新推送任务；通过 <code>status</code>、推送记录和幂等键联合校验。</li>
   </ul>
 
   <h3>6.8 退货入库规则（扩展）</h3>
   <ul>
     <li><strong>退货单来源</strong>：由 OMS 或客服系统发起，生成 RMA（Return Merchandise Authorization）单号，同步至 WMS 创建退货入库单。</li>
-    <li><strong>退货质检</strong>：退货商品必须经质检判定为 <code>GOOD</code>（可二次销售）、<code>DAMAGED</code>（损坏）、<code>DISPOSE</code>（报废）三类，分别上架至对应库位或触发报损流程。</li>
+    <li><strong>退货质检</strong>：退货商品由外部 WMS 质检并回传 <code>GOOD</code>（可二次销售）、<code>DAMAGED</code>（损坏）、<code>DISPOSE</code>（报废）等结果；平台记录结果并同步库存与退款/财务流程。</li>
     <li><strong>退款联动</strong>：退货入库完成且质检为 GOOD 后，回调 OMS/财务系统触发退款；若为 DAMAGED，进入客诉定责流程。</li>
   </ul>
 </section>

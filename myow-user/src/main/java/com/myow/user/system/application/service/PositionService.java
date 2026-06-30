@@ -41,8 +41,9 @@ public class PositionService {
     public Long createPosition(CreatePositionReqDTO createReqDTO) {
         validatePositionForCreate(createReqDTO);
         Position position = positionApplicationConverter.convert(createReqDTO);
-        positionRepository.save(positionConverter.toDo(position));
-        return position.getPositionId();
+        PositionDO positionDO = positionConverter.toDo(position);
+        positionRepository.save(positionDO);
+        return positionDO.getPositionId();
     }
 
     public void updatePosition(UpdatePositionReqDTO updateReqDTO) {

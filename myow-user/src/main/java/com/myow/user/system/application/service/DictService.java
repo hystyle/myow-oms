@@ -37,8 +37,9 @@ public class DictService {
     public Long createDict(CreateDictReqDTO createReqDTO) {
         validateDictForCreate(createReqDTO);
         Dict dict = dictApplicationConverter.convert(createReqDTO);
-        dictRepository.save(dictConverter.toDo(dict));
-        return dict.getDictId();
+        DictDO dictDO = dictConverter.toDo(dict);
+        dictRepository.save(dictDO);
+        return dictDO.getDictId();
     }
 
     public void updateDict(UpdateDictReqDTO updateReqDTO) {

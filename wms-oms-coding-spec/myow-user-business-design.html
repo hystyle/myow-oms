@@ -1452,6 +1452,8 @@ flowchart TD
         <tr><td>默认参数</td><td>7.1 中全部系统参数</td><td>全局参数必须先初始化，租户参数按需覆盖</td></tr>
         <tr><td>流水号</td><td>用户编号 <code>USER_CODE</code></td><td>默认格式 <code>U</code> + 5 位序号</td></tr>
         <tr><td>当前开发种子</td><td><code>V3__myow_user_default_seed.sql</code></td><td>初始化默认租户、部门、岗位、角色、管理员用户、系统菜单和基础授权；默认账号仅用于本地开发和部署验证</td></tr>
+        <tr><td>管理权限补丁</td><td><code>V4__myow_user_management_permissions.sql</code></td><td>补齐角色、菜单、部门、岗位、字典、配置的新增、修改、删除权限按钮，并授权给默认超级管理员角色</td></tr>
+        <tr><td>剩余菜单补丁</td><td><code>V5__myow_user_remaining_management_menus.sql</code></td><td>补齐租户、套餐、日志、I18n、流水号等剩余管理菜单，并授权给默认超级管理员角色</td></tr>
       </tbody>
     </table>
   </div>
@@ -1501,7 +1503,7 @@ flowchart TD
   <h3>7.6 Flyway 数据库补丁约定</h3>
   <ul>
     <li><strong>迁移目录</strong>：用户中心数据库补丁统一放在 <code>myow-user/src/main/resources/db/migration</code>，随业务模块进入 App 运行时 classpath。</li>
-    <li><strong>文件命名</strong>：版本脚本使用 <code>V{版本号}__{说明}.sql</code>，例如 <code>V1__myow_user_base_schema.sql</code>、<code>V2__myow_user_phase1_schema.sql</code>、<code>V3__myow_user_default_seed.sql</code>；版本号只递增，不允许复用或改写已发布脚本。</li>
+    <li><strong>文件命名</strong>：版本脚本使用 <code>V{版本号}__{说明}.sql</code>，例如 <code>V1__myow_user_base_schema.sql</code>、<code>V2__myow_user_phase1_schema.sql</code>、<code>V3__myow_user_default_seed.sql</code>、<code>V4__myow_user_management_permissions.sql</code>、<code>V5__myow_user_remaining_management_menus.sql</code>；版本号只递增，不允许复用或改写已发布脚本。</li>
     <li><strong>执行职责</strong>：<code>myow-user</code> 只提供 SQL 补丁；<code>myow-overseas-app</code>、<code>myow-firstmile-app</code> 等启动模块通过 Flyway 自动发现并执行补丁。</li>
     <li><strong>基线策略</strong>：空库从 <code>V1</code> 基础建表开始迁移；既有非空环境允许开启 <code>baseline-on-migrate</code>，基线版本为 <code>1</code>，从 <code>V2</code> 开始执行阶段补丁。</li>
     <li><strong>SQL 兼容</strong>：补丁必须优先使用幂等写法，例如 <code>IF NOT EXISTS</code>、<code>ON CONFLICT</code>、条件重命名；避免依赖人工重复执行。</li>

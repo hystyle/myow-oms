@@ -1,5 +1,6 @@
 package com.myow.user.system.infrastructure.persistence.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
@@ -25,7 +26,7 @@ public class TenantDO {
     /**
      * 主键ID
      */
-    @TableId("tenant_id")
+    @TableId(value = "tenant_id", type = IdType.ASSIGN_ID)
     private Long tenantId;
 
     /**

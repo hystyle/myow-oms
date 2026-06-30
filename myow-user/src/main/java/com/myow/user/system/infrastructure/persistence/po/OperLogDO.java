@@ -1,5 +1,6 @@
 package com.myow.user.system.infrastructure.persistence.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
@@ -24,7 +25,7 @@ public class OperLogDO {
     /**
      * 日志主键
      */
-    @TableId("oper_id")
+    @TableId(value = "oper_id", type = IdType.ASSIGN_ID)
     private Long operId;
 
     /**

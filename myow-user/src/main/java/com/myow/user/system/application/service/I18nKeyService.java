@@ -37,8 +37,9 @@ public class I18nKeyService {
     public Long createI18nKey(CreateI18nKeyReqDTO createReqDTO) {
         validateI18nKeyForCreate(createReqDTO);
         I18nKey i18nKey = i18nKeyApplicationConverter.convert(createReqDTO);
-        i18nKeyRepository.save(i18nKeyConverter.toDo(i18nKey));
-        return i18nKey.getId();
+        I18nKeyDO i18nKeyDO = i18nKeyConverter.toDo(i18nKey);
+        i18nKeyRepository.save(i18nKeyDO);
+        return i18nKeyDO.getId();
     }
 
     public void updateI18nKey(UpdateI18nKeyReqDTO updateReqDTO) {
