@@ -908,6 +908,105 @@ public interface UserApplicationConverter {
     <li>使用 Sa-Token 的 Token 机制或自定义 <code>Idempotency-Key</code> 请求头</li>
     <li>服务端使用 Redis 缓存幂等键，TTL 24 小时</li>
   </ul>
+  <h3>5.5 Springdoc / OpenAPI 注解规范</h3>
+  <p>所有对外 HTTP 接口必须补充 Springdoc 相关注解，接口文档需要能直接支撑后续 UI 页面生成、前端联调和测试用例编写。禁止只写路径和方法而不描述业务含义、请求字段、响应字段和异常场景。</p>
+
+  <h4>5.5.1 Controller 注解要求</h4>
+  <ul>
+    <li><strong>Controller 类</strong>：必须使用 <code>@Tag</code> 描述接口分组，<code>name</code> 使用业务模块 + 资源名称，<code>description</code> 说明该 Controller 覆盖的业务范围。</li>
+    <li><strong>接口方法</strong>：必须使用 <code>@Operation</code>，<code>summary</code> 写清楚接口功能，<code>description</code> 说明业务规则、状态约束、幂等要求、主要副作用。</li>
+    <li><strong>请求参数</strong>：路径参数、查询参数、请求体字段必须通过 <code>@Parameter</code>、<code>@RequestBody</code>、<code>@Schema</code> 描述清楚含义、是否必填、示例值。</li>
+    <li><strong>响应对象</strong>：返回 VO / RespDTO 必须使用 <code>@Schema</code> 描述字段含义，枚举字段必须说明可选值。</li>
+    <li><strong>响应码</strong>：重要接口应使用 <code>@ApiResponses</code> / <code>@ApiResponse</code> 标明成功、参数错误、业务错误、无权限等典型结果。</li>
+    <li><strong>隐藏接口</strong>：内部调试、临时接口、仅供系统内部调用且不希望出现在 OpenAPI 文档中的接口，必须显式使用 <code>@Hidden</code>，并说明原因。</li>
+  </ul>
+
+  <h4>5.5.2 DTO / VO 字段注解要求</h4>
+  <ul>
+    <li><strong>请求 DTO</strong>：每个对前端可见字段必须添加 <code>@Schema(description = "...", requiredMode = ...)</code>；必填字段同时使用 Bean Validation 注解，例如 <code>@NotNull</code>、<code>@NotBlank</code>、<code>@Size</code>。</li>
+    <li><strong>响应 VO</strong>：每个字段必须添加 <code>@Schema(description = "...", example = "...")</code>，方便前端自动生成表格列、详情字段和表单回显。</li>
+    <li><strong>枚举字段</strong>：必须在字段说明中列出枚举值含义，或在枚举类上使用 <code>@Schema</code> 补充说明。</li>
+    <li><strong>金额、数量、时间</strong>：必须说明单位、精度和时区，例如金额币种、重量单位、ISO-8601 时间格式。</li>
+    <li><strong>敏感字段</strong>：密码、密钥、Token、AppSecret 等字段不得作为普通响应字段暴露；如请求中需要出现，必须在 <code>description</code> 中说明安全用途。</li>
+  </ul>
+
+  <h4>5.5.3 示例代码</h4>
+  <pre><code>import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+
+@Tag(name = "海外仓-仓群管理", description = "维护仓群基础信息、仓群启停和仓群绑定物理仓")
+@RestController
+@RequestMapping("/api/v1/overseas/base/warehouse-cluster")
+public class WarehouseClusterController {
+
+    @Operation(
+        summary = "创建仓群",
+        description = "创建面向报价、客户选择和 ERP 对接的逻辑仓库容器。仓群代码在租户内唯一，创建后默认为 DRAFT 状态。"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(responseCode = "OWH_BASE_001", description = "仓群编码已存在"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误")
+    })
+    @PostMapping("/create")
+    public Result&lt;Long&gt; create(@Valid @RequestBody CreateWarehouseClusterReqDTO req) {
+        return Result.success(appService.create(req));
+    }
+
+    @Operation(summary = "查询仓群详情", description = "根据仓群 ID 查询仓群基础信息和当前状态。")
+    @PostMapping("/detail")
+    public Result&lt;WarehouseClusterRespVO&gt; detail(
+        @Parameter(description = "仓群 ID", required = true, example = "10001")
+        @RequestBody @Valid DetailReqDTO req
+    ) {
+        return Result.success(appService.detail(req.getId()));
+    }
+}
+
+@Schema(description = "创建仓群请求")
+public class CreateWarehouseClusterReqDTO {
+    @Schema(description = "仓群代码，租户内唯一，例如 US_WEST_CLUSTER", requiredMode = Schema.RequiredMode.REQUIRED, example = "US_WEST_CLUSTER")
+    @NotBlank
+    private String clusterCode;
+
+    @Schema(description = "仓群名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "美国西部仓群")
+    @NotBlank
+    private String clusterName;
+
+    @Schema(description = "所属国家 ISO Alpha-2 编码", requiredMode = Schema.RequiredMode.REQUIRED, example = "US")
+    @NotBlank
+    private String countryCode;
+
+    @Schema(description = "结算币种 ISO 4217 编码", requiredMode = Schema.RequiredMode.REQUIRED, example = "USD")
+    @NotBlank
+    private String currencyCode;
+}
+
+@Schema(description = "仓群响应")
+public class WarehouseClusterRespVO {
+    @Schema(description = "仓群 ID", example = "10001")
+    private Long clusterId;
+
+    @Schema(description = "仓群代码", example = "US_WEST_CLUSTER")
+    private String clusterCode;
+
+    @Schema(description = "状态：DRAFT=草稿，ENABLED=启用，DISABLED=停用，ARCHIVED=归档", example = "ENABLED")
+    private String status;
+}</code></pre>
+
+  <h4>5.5.4 文档质量要求</h4>
+  <ul>
+    <li><strong>可读</strong>：前端不看后端代码，仅通过 OpenAPI 文档应能理解接口用途、字段含义和错误场景。</li>
+    <li><strong>可生成</strong>：接口分组、字段描述、示例值、必填信息必须足够完整，支持后续生成 UI 表单、表格列和 TypeScript 类型。</li>
+    <li><strong>可测试</strong>：每个接口应提供典型示例值，便于 Swagger UI、Apifox、Postman 或自动化测试快速构造请求。</li>
+    <li><strong>同步维护</strong>：修改接口入参、响应字段、状态枚举、错误码时，必须同步更新 Springdoc 注解，不允许代码与文档不一致。</li>
+  </ul>
 </section>
 
 <section id="s6">

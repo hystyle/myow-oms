@@ -43,6 +43,7 @@
         <module>myow-firstmile-app</module>
         <module>myow-common-parent</module>
         <module>myow-user</module>
+        <module>myow-system</module>
         <module>myow-overseas</module>
         <module>myow-finance</module>
     </modules>
@@ -190,6 +191,11 @@
             <dependency>
                 <groupId>com.myow.platform</groupId>
                 <artifactId>myow-user</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.myow.platform</groupId>
+                <artifactId>myow-system</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
