@@ -9,7 +9,7 @@
         <template v-for="group in menuGroups" :key="group.title">
           <span class="admin-menu-title">{{ group.title }}</span>
           <router-link v-for="menu in group.items" :key="menu.menuId" :to="normalizePath(menu.path)">
-            {{ menu.menuName }}
+            {{ menuDisplayName(menu.menuName, menu.menuId) }}
           </router-link>
         </template>
       </nav>
@@ -98,21 +98,68 @@ function menu(menuId: number, menuName: string, path: string): MenuItem {
   return { menuId, menuName, path };
 }
 
+const menuNameMap: Record<string, string> = {
+  System: '系统中心',
+  User: '用户账号',
+  Role: '角色权限',
+  Menu: '菜单权限',
+  Dept: '部门组织',
+  Dict: '字典管理',
+  'Login Log': '登录日志',
+  'System Support': '系统运维',
+  'Scheduled Job': '定时任务',
+  Notice: '通知公告',
+  File: '文件管理',
+  'Site Config': '站点配置',
+  'Sensitive Word': '敏感词',
+  'Message Template': '消息模板',
+  'Export Task': '导出任务',
+  Monitor: '系统监控',
+  'Online User': '在线用户'
+};
+
+const menuIdNameMap: Record<number, string> = {
+  1000: '系统中心',
+  1100: '用户账号',
+  1200: '角色权限',
+  1300: '菜单权限',
+  1400: '部门组织',
+  1700: '字典管理',
+  1820: '登录日志',
+  1900: '系统运维',
+  1910: '定时任务',
+  1920: '通知公告',
+  1930: '文件管理',
+  1940: '站点配置',
+  1950: '敏感词',
+  1960: '消息模板',
+  1970: '导出任务',
+  1980: '系统监控',
+  1990: '在线用户'
+};
+
+function menuDisplayName(name?: string, menuId?: number) {
+  if (menuId && menuIdNameMap[menuId]) return menuIdNameMap[menuId];
+  if (!name) return '';
+  return menuNameMap[name] ?? name;
+}
+
 function groupBackendMenus(menus: MenuItem[]) {
   const parentById = new Map(menus.map((item) => [item.menuId, item]));
-  const groups = new Map<string, MenuItem[]>();
+  const groups = new Map<string, MenuGroup>();
   menus.forEach((item) => {
     if (!item.path || item.path === '/dashboard') {
       return;
     }
     const parent = item.parentId == null ? undefined : parentById.get(item.parentId);
-    const title = parent && parent.menuId !== item.menuId ? parent.menuName : inferGroupTitle(item.path);
-    if (!groups.has(title)) {
-      groups.set(title, []);
+    const title = parent && parent.menuId !== item.menuId ? menuDisplayName(parent.menuName, parent.menuId) : inferGroupTitle(item.path);
+    const key = String(parent?.menuId ?? title);
+    if (!groups.has(key)) {
+      groups.set(key, { title, items: [] });
     }
-    groups.get(title)?.push(item);
+    groups.get(key)?.items.push(item);
   });
-  return Array.from(groups.entries()).map(([title, items]) => ({ title, items }));
+  return Array.from(groups.values());
 }
 
 function inferGroupTitle(path?: string) {

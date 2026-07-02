@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
-const textColumn = (key: string, label: string, code = false) => ({ key, label, code });
+const textColumn = (key: string, label: string, code = false, aliases: string[] = []) => ({ key, label, code, aliases });
 const textField = (
   key: string,
   label: string,
@@ -9,6 +9,14 @@ const textField = (
   options?: Array<{ label: string; value: string | number }>,
   extra: Record<string, unknown> = {}
 ) => ({ key, label, type, options, ...extra });
+const aliasField = (
+  key: string,
+  label: string,
+  aliases: string[],
+  type: 'text' | 'number' | 'textarea' | 'select' | 'datetime' = 'text',
+  options?: Array<{ label: string; value: string | number }>,
+  extra: Record<string, unknown> = {}
+) => textField(key, label, type, options, { ...extra, aliases });
 const idField = (key: string, label: string = 'ID') => textField(key, label, 'number', undefined, { hideOnCreate: true, readonly: true });
 const normalDisableOptions = [{ label: '正常', value: '0' }, { label: '停用', value: '1' }];
 const systemStatusOptions = [{ label: '启用', value: 1 }, { label: '停用', value: 0 }];
@@ -176,16 +184,16 @@ export const router = createRouter({
             statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '任务 ID'),
-              textColumn('jobName', '任务名称'),
-              textColumn('jobGroup', '任务组', true),
+              textColumn('jobName', '任务名称', false, ['code']),
+              textColumn('jobGroup', '任务组', true, ['name']),
               textColumn('cronExpression', 'Cron', true),
               textColumn('handlerName', '处理器', true),
               textColumn('status', '状态')
             ],
             formFields: [
               idField('id', '任务 ID'),
-              textField('jobName', '任务名称'),
-              textField('jobGroup', '任务组'),
+              aliasField('jobName', '任务名称', ['code']),
+              aliasField('jobGroup', '任务组', ['name']),
               textField('cronExpression', 'Cron 表达式'),
               textField('handlerName', '处理器 Bean'),
               textField('status', '状态', 'select', systemStatusOptions)
@@ -214,7 +222,7 @@ export const router = createRouter({
             statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '公告 ID'),
-              textColumn('title', '标题'),
+              textColumn('title', '标题', false, ['code']),
               textColumn('noticeType', '类型'),
               textColumn('status', '状态'),
               textColumn('expireTime', '有效期'),
@@ -222,7 +230,7 @@ export const router = createRouter({
             ],
             formFields: [
               idField('id', '公告 ID'),
-              textField('title', '标题'),
+              aliasField('title', '标题', ['code']),
               textField('noticeType', '公告类型'),
               textField('expireTime', '有效期', 'datetime'),
               textField('content', '公告内容', 'textarea')
@@ -250,16 +258,16 @@ export const router = createRouter({
             statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', 'ID'),
-              textColumn('siteCode', '站点', true),
-              textColumn('configKey', '配置键', true),
+              textColumn('siteCode', '站点', true, ['name']),
+              textColumn('configKey', '配置键', true, ['code']),
               textColumn('configValue', '配置值'),
               textColumn('status', '状态'),
               textColumn('updateTime', '更新时间')
             ],
             formFields: [
               idField('id', '配置 ID'),
-              textField('siteCode', '站点编码'),
-              textField('configKey', '配置键'),
+              aliasField('siteCode', '站点编码', ['name']),
+              aliasField('configKey', '配置键', ['code']),
               textField('configValue', '配置值', 'textarea'),
               textField('configType', '配置类型'),
               textField('remark', '备注', 'textarea')
@@ -286,8 +294,8 @@ export const router = createRouter({
             statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '文件 ID'),
-              textColumn('fileName', '文件名'),
-              textColumn('moduleCode', '模块', true),
+              textColumn('fileName', '文件名', false, ['code']),
+              textColumn('moduleCode', '模块', true, ['name']),
               textColumn('fileSize', '大小'),
               textColumn('status', '状态'),
               textColumn('createTime', '上传时间')
@@ -340,16 +348,16 @@ export const router = createRouter({
             statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', 'ID'),
-              textColumn('word', '敏感词'),
-              textColumn('wordType', '类型'),
+              textColumn('word', '敏感词', false, ['code']),
+              textColumn('category', '分类', false, ['name']),
+              textColumn('level', '等级'),
               textColumn('status', '状态'),
-              textColumn('remark', '备注'),
               textColumn('updateTime', '更新时间')
             ],
             formFields: [
               idField('id', '敏感词 ID'),
-              textField('word', '敏感词'),
-              textField('category', '分类'),
+              aliasField('word', '敏感词', ['code']),
+              aliasField('category', '分类', ['name']),
               textField('level', '等级', 'number'),
               textField('replacement', '替换文本'),
               textField('status', '状态', 'select', systemStatusOptions)
@@ -373,17 +381,17 @@ export const router = createRouter({
             statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '模板 ID'),
-              textColumn('templateCode', '模板编码', true),
-              textColumn('templateName', '模板名称'),
-              textColumn('channelType', '渠道'),
+              textColumn('templateCode', '模板编码', true, ['code']),
+              textColumn('templateName', '模板名称', false, ['name']),
+              textColumn('channel', '渠道'),
               textColumn('status', '状态'),
               textColumn('updateTime', '更新时间')
             ],
             formFields: [
               idField('id', '模板 ID'),
-              textField('templateCode', '模板编码'),
+              aliasField('templateCode', '模板编码', ['code']),
               textField('channel', '消息渠道'),
-              textField('title', '标题'),
+              aliasField('title', '标题', ['name']),
               textField('content', '内容', 'textarea'),
               textField('variables', '变量定义', 'textarea'),
               textField('status', '状态', 'select', systemStatusOptions)
@@ -410,8 +418,8 @@ export const router = createRouter({
             statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '任务 ID'),
-              textColumn('taskName', '任务名称'),
-              textColumn('moduleCode', '模块', true),
+              textColumn('moduleName', '模块名称', true, ['code']),
+              textColumn('exportType', '导出类型', false, ['name']),
               textColumn('status', '状态'),
               textColumn('fileId', '文件 ID'),
               textColumn('createTime', '创建时间')

@@ -49,11 +49,11 @@
         <tbody>
           <tr v-for="(row, index) in rows" :key="rowKey(row, index)">
             <td v-for="column in columns" :key="column.key">
-              <span v-if="column.key === 'status'" class="status-tag" :data-tone="statusTone(readValue(row, column.key))">
-                {{ statusText(readValue(row, column.key)) }}
+              <span v-if="column.key === 'status'" class="status-tag" :data-tone="statusTone(readColumnValue(row, column))">
+                {{ statusText(readColumnValue(row, column)) }}
               </span>
-              <code v-else-if="column.code">{{ formatValue(readValue(row, column.key)) }}</code>
-              <span v-else>{{ formatValue(readValue(row, column.key)) }}</span>
+              <code v-else-if="column.code">{{ formatValue(readColumnValue(row, column)) }}</code>
+              <span v-else>{{ formatValue(readColumnValue(row, column)) }}</span>
             </td>
             <td v-if="hasRowActions" class="table-actions">
               <button v-if="canDetail" type="button" @click="openDetail(row)">详情</button>
@@ -157,6 +157,7 @@ interface TableColumn {
   key: string;
   label: string;
   code?: boolean;
+  aliases?: string[];
 }
 
 interface FormOption {
@@ -171,6 +172,7 @@ interface FormField {
   readonly?: boolean;
   hideOnCreate?: boolean;
   json?: boolean;
+  aliases?: string[];
   options?: FormOption[];
 }
 
@@ -454,7 +456,7 @@ function fillForm(record: AdminRecord) {
   Object.keys(formModel).forEach((key) => delete formModel[key]);
   const flat = flattenRecord(record);
   configuredFormFields.value.forEach((field) => {
-    formModel[field.key] = toFormValue(flat[field.key]);
+    formModel[field.key] = toFormValue(readByAliases(flat, field.key, field.aliases));
   });
   const id = readValue(record, idKey.value);
   if (mode.value !== 'create' && id != null) {
@@ -533,6 +535,24 @@ function readValue(row: AdminRecord, key: string) {
     return (attrs as Record<string, unknown>)[key];
   }
   return undefined;
+}
+
+function readColumnValue(row: AdminRecord, column: TableColumn) {
+  return readByAliases(row, column.key, column.aliases);
+}
+
+function readByAliases(row: AdminRecord, key: string, aliases: string[] = []) {
+  const value = readValue(row, key);
+  if (value != null && value !== '') {
+    return value;
+  }
+  for (const alias of aliases) {
+    const aliasValue = readValue(row, alias);
+    if (aliasValue != null && aliasValue !== '') {
+      return aliasValue;
+    }
+  }
+  return value;
 }
 
 function flattenRecord(row: AdminRecord) {
