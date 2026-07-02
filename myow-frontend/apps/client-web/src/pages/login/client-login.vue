@@ -2,8 +2,15 @@
   <main class="login-page">
     <section class="login-copy">
       <div class="portal-mark">MYOW</div>
+      <span class="login-copy__eyebrow">CUSTOMER OPERATIONS PORTAL</span>
       <h1>客户自助门户</h1>
       <p>面向货主客户的订单、库存、账单和 API 对接入口。管理端与客户端分离，权限边界独立。</p>
+      <div class="portal-route" aria-label="客户门户链路">
+        <span>ASN</span>
+        <span>ORDER</span>
+        <span>INVENTORY</span>
+        <span>BILLING</span>
+      </div>
       <div class="login-proof">
         <span>订单履约</span>
         <span>库存同步</span>

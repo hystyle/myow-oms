@@ -2,8 +2,15 @@
   <main class="login-page">
     <section class="login-brand">
       <div class="login-brand__mark">MYOW</div>
+      <span class="login-brand__eyebrow">OVERSEAS WAREHOUSE CONTROL TOWER</span>
       <h1>MYOW Platform</h1>
-      <p>统一管理用户、权限、系统配置和业务模块的内部工作台。</p>
+      <p>面向内部团队的用户、权限、系统配置和业务运营控制台。</p>
+      <div class="login-route-strip" aria-label="核心业务链路">
+        <span>USER</span>
+        <span>SYSTEM</span>
+        <span>CUSTOMER</span>
+        <span>OVERSEAS</span>
+      </div>
       <dl>
         <div>
           <dt>权限驱动</dt>
