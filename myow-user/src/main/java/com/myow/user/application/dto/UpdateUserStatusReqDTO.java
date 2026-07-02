@@ -7,14 +7,14 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Schema(description = "Update user status request")
+@Schema(description = "更新用户状态请求")
 public class UpdateUserStatusReqDTO {
 
-    @Schema(description = "User id")
+    @Schema(description = "用户 ID", example = "10001")
     @NotNull(message = "userId cannot be null")
     private Long userId;
 
-    @Schema(description = "Enabled status")
+    @Schema(description = "启用状态，true 表示启用，false 表示停用", example = "true")
     @NotNull(message = "status cannot be null")
     private Boolean status;
 }

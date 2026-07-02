@@ -134,7 +134,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import type { SystemRecord } from '@myow/api';
+import type { ApiId, SystemRecord } from '@myow/api';
 import {
   pageJobLogs,
   pageJobs,
@@ -188,27 +188,27 @@ async function loadAll() {
   }
 }
 
-async function handleRun(id: number) {
+async function handleRun(id: ApiId) {
   await runJob(id);
   await loadAll();
 }
 
-async function handlePause(id: number) {
+async function handlePause(id: ApiId) {
   await pauseJob(id);
   await loadAll();
 }
 
-async function handleResume(id: number) {
+async function handleResume(id: ApiId) {
   await resumeJob(id);
   await loadAll();
 }
 
-async function handlePublish(id: number) {
+async function handlePublish(id: ApiId) {
   await publishNotice(id);
   await loadAll();
 }
 
-async function handleWithdraw(id: number) {
+async function handleWithdraw(id: ApiId) {
   await withdrawNotice(id);
   await loadAll();
 }
@@ -218,23 +218,23 @@ function attr(record: SystemRecord, key: string) {
   return value == null ? '' : String(value);
 }
 
-function statusText(status?: number) {
-  return status === 1 ? '启用' : '停用';
+function statusText(status?: number | string | boolean) {
+  return Number(status) === 1 ? '启用' : '停用';
 }
 
-function statusTone(status?: number) {
-  return status === 1 ? 'green' : 'amber';
+function statusTone(status?: number | string | boolean) {
+  return Number(status) === 1 ? 'green' : 'amber';
 }
 
-function noticeStatus(status?: number) {
-  if (status === 1) return '已发布';
-  if (status === 2) return '已下线';
+function noticeStatus(status?: number | string | boolean) {
+  if (Number(status) === 1) return '已发布';
+  if (Number(status) === 2) return '已下线';
   return '草稿';
 }
 
-function noticeTone(status?: number) {
-  if (status === 1) return 'green';
-  if (status === 2) return 'red';
+function noticeTone(status?: number | string | boolean) {
+  if (Number(status) === 1) return 'green';
+  if (Number(status) === 2) return 'red';
   return 'amber';
 }
 

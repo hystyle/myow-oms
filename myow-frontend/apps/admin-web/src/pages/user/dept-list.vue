@@ -72,13 +72,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import type { DeptCreatePayload, DeptUpdatePayload } from '@myow/api';
+import type { ApiId, DeptCreatePayload, DeptUpdatePayload } from '@myow/api';
 import { postAdminData, type AdminRecord } from '@/services/admin-data-service';
 import { usePermission } from '@/composables/use-permission';
 import DeptFormDrawer from './components/dept-form-drawer.vue';
 
 interface DeptNode extends AdminRecord {
-  deptId?: number;
+  deptId?: ApiId;
   deptName?: string;
   name?: string;
   status?: string | boolean;

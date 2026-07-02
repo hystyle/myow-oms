@@ -22,7 +22,9 @@ import com.myow.user.system.infrastructure.persistence.repository.RoleDeptReposi
 import com.myow.user.system.infrastructure.persistence.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -74,6 +76,31 @@ public class RoleDeptService {
         return MyPageUtil.of(roleDeptDOPage, roleDeptApplicationConverter::convert);
     }
 
+    public List<Long> listDeptIdsByRoleId(Long roleId) {
+        validateRoleExists(roleId);
+        return roleDeptRepository.listDeptIdsByRoleId(roleId);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void saveRoleDepts(Long roleId, List<Long> deptIdList) {
+        validateRoleExists(roleId);
+        List<Long> distinctDeptIds = deptIdList == null
+                ? List.of()
+                : deptIdList.stream().filter(Objects::nonNull).distinct().toList();
+        for (Long deptId : distinctDeptIds) {
+            DeptDO dept = deptRepository.getById(deptId);
+            if (Objects.isNull(dept)) {
+                throw new BusinessException(UserErrorCode.DEPT_NOT_EXIST);
+            }
+        }
+        roleDeptRepository.removeByRoleId(roleId);
+        if (!distinctDeptIds.isEmpty()) {
+            roleDeptRepository.saveBatch(distinctDeptIds.stream()
+                    .map(deptId -> new RoleDeptDO().setRoleId(roleId).setDeptId(deptId))
+                    .toList());
+        }
+    }
+
     private void validateRoleDeptForCreate(CreateRoleDeptReqDTO createReqDTO) {
         if (Objects.isNull(createReqDTO.getRoleId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "角色ID不能为空");
@@ -83,10 +110,7 @@ public class RoleDeptService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "部门ID不能为空");
         }
         
-        RoleDO role = roleRepository.getById(createReqDTO.getRoleId());
-        if (Objects.isNull(role)) {
-            throw new BusinessException(UserErrorCode.ROLE_NOT_EXIST);
-        }
+        validateRoleExists(createReqDTO.getRoleId());
         
         DeptDO dept = deptRepository.getById(createReqDTO.getDeptId());
         if (Objects.isNull(dept)) {
@@ -116,10 +140,7 @@ public class RoleDeptService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "原部门ID不能为空");
         }
         
-        RoleDO role = roleRepository.getById(updateReqDTO.getRoleId());
-        if (Objects.isNull(role)) {
-            throw new BusinessException(UserErrorCode.ROLE_NOT_EXIST);
-        }
+        validateRoleExists(updateReqDTO.getRoleId());
         
         DeptDO dept = deptRepository.getById(updateReqDTO.getDeptId());
         if (Objects.isNull(dept)) {
@@ -129,6 +150,13 @@ public class RoleDeptService {
         RoleDeptDO existRoleDept = roleDeptRepository.getByCompositeKey(updateReqDTO.getRoleId(), updateReqDTO.getDeptId());
         if (Objects.nonNull(existRoleDept)) {
             throw new BusinessException(UserErrorCode.ALREADY_EXIST, "该角色部门关联已存在");
+        }
+    }
+
+    private void validateRoleExists(Long roleId) {
+        RoleDO role = roleRepository.getById(roleId);
+        if (Objects.isNull(role)) {
+            throw new BusinessException(UserErrorCode.ROLE_NOT_EXIST);
         }
     }
 }

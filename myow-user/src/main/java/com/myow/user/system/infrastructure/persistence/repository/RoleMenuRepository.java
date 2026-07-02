@@ -10,6 +10,8 @@ import com.myow.user.system.infrastructure.persistence.mapper.RoleMenuMapper;
 import com.myow.user.system.infrastructure.persistence.po.RoleMenuDO;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * @author yss
  */
@@ -40,5 +42,18 @@ public class RoleMenuRepository extends ServiceImpl<RoleMenuMapper, RoleMenuDO> 
         return this.remove(Wrappers.<RoleMenuDO>lambdaQuery()
                 .eq(RoleMenuDO::getRoleId, roleId)
                 .eq(RoleMenuDO::getMenuId, menuId));
+    }
+
+    public List<Long> listMenuIdsByRoleId(Long roleId) {
+        return this.list(Wrappers.<RoleMenuDO>lambdaQuery()
+                        .eq(RoleMenuDO::getRoleId, roleId))
+                .stream()
+                .map(RoleMenuDO::getMenuId)
+                .toList();
+    }
+
+    public boolean removeByRoleId(Long roleId) {
+        return this.remove(Wrappers.<RoleMenuDO>lambdaQuery()
+                .eq(RoleMenuDO::getRoleId, roleId));
     }
 }

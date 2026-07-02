@@ -1,7 +1,5 @@
 # MYOW Frontend Standard
 
-This standard is adapted from SmartAdmin Vue3 Standard V3.0 and adjusted for the MYOW frontend workspace.
-
 ## Scope
 
 Apply this standard to all code under `myow-frontend/apps/*` and `myow-frontend/packages/*`.

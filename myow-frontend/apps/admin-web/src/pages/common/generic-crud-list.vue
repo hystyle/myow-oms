@@ -18,16 +18,24 @@
       {{ toastMessage }}
     </div>
 
-    <section class="toolbar">
-      <input v-model="query.keyword" :placeholder="searchPlaceholder" @keyup.enter="loadData" />
-      <select v-model="query.status">
-        <option value="">全部状态</option>
-        <option v-for="option in statusOptions" :key="String(option.value)" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-      <button type="button" @click="loadData">查询</button>
-      <button type="button" @click="resetQuery()">重置</button>
+    <section class="toolbar query-panel" aria-label="查询条件">
+      <label>
+        <span>关键词</span>
+        <input v-model="query.keyword" :placeholder="searchPlaceholder" @keyup.enter="loadData" />
+      </label>
+      <label>
+        <span>状态</span>
+        <select v-model="query.status">
+          <option value="">全部状态</option>
+          <option v-for="option in statusOptions" :key="String(option.value)" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+      <div class="query-actions">
+        <button type="button" @click="loadData">查询</button>
+        <button type="button" @click="resetQuery()">重置</button>
+      </div>
     </section>
 
     <article class="panel table-panel">
@@ -65,7 +73,9 @@
             </td>
           </tr>
           <tr v-if="!loading && rows.length === 0">
-            <td :colspan="columns.length + (hasRowActions ? 1 : 0)" class="empty-cell">暂无数据</td>
+            <td :colspan="columns.length + (hasRowActions ? 1 : 0)" class="empty-cell">
+              当前筛选条件下没有数据，请调整条件或重置筛选。
+            </td>
           </tr>
         </tbody>
       </table>

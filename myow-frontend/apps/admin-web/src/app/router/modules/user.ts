@@ -9,7 +9,7 @@ export const userRoutes: RouteRecordRaw[] = [
     path: 'user/roles',
     alias: ['/system/role'],
     name: 'RoleCenter',
-    component: () => import('@/pages/common/generic-crud-list.vue'),
+    component: () => import('@/pages/user/role-management.vue'),
     meta: {
       title: '角色权限',
       description: '维护角色、数据范围和角色状态。',
@@ -44,7 +44,7 @@ export const userRoutes: RouteRecordRaw[] = [
     path: 'user/menus',
     alias: ['/system/menu'],
     name: 'MenuCenter',
-    component: () => import('@/pages/common/generic-crud-list.vue'),
+    component: () => import('@/pages/user/menu-management.vue'),
     meta: {
       title: '菜单权限',
       description: '维护后台菜单、按钮权限码和路由配置。',
@@ -65,7 +65,7 @@ export const userRoutes: RouteRecordRaw[] = [
       ],
       formFields: [
         idField('menuId', '菜单 ID'),
-        textField('parentId', '上级菜单 ID', 'number'),
+        textField('parentId', '上级菜单 ID'),
         textField('menuName', '菜单名称'),
         textField('menuType', '菜单类型'),
         textField('path', '路由地址'),

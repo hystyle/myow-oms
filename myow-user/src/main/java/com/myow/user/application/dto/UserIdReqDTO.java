@@ -7,10 +7,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Schema(description = "User id request")
+@Schema(description = "用户 ID 请求")
 public class UserIdReqDTO {
 
-    @Schema(description = "User id")
+    @Schema(description = "用户 ID", example = "10001")
     @NotNull(message = "userId cannot be null")
     private Long userId;
 }

@@ -71,5 +71,5 @@ export function aliasField(
 }
 
 export function idField(key: string, label = 'ID') {
-  return textField(key, label, 'number', undefined, { hideOnCreate: true, readonly: true });
+  return textField(key, label, 'text', undefined, { hideOnCreate: true, readonly: true });
 }

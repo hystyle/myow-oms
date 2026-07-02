@@ -10,6 +10,8 @@ import com.myow.user.system.infrastructure.persistence.mapper.RoleDeptMapper;
 import com.myow.user.system.infrastructure.persistence.po.RoleDeptDO;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * @author yss
  */
@@ -44,5 +46,18 @@ public class RoleDeptRepository extends ServiceImpl<RoleDeptMapper, RoleDeptDO> 
         return this.remove(Wrappers.<RoleDeptDO>lambdaQuery()
                 .eq(RoleDeptDO::getRoleId, roleId)
                 .eq(RoleDeptDO::getDeptId, deptId));
+    }
+
+    public List<Long> listDeptIdsByRoleId(Long roleId) {
+        return this.list(Wrappers.<RoleDeptDO>lambdaQuery()
+                        .eq(RoleDeptDO::getRoleId, roleId))
+                .stream()
+                .map(RoleDeptDO::getDeptId)
+                .toList();
+    }
+
+    public boolean removeByRoleId(Long roleId) {
+        return this.remove(Wrappers.<RoleDeptDO>lambdaQuery()
+                .eq(RoleDeptDO::getRoleId, roleId));
     }
 }

@@ -21,7 +21,9 @@ import com.myow.user.system.infrastructure.persistence.repository.RoleMenuReposi
 import com.myow.user.system.infrastructure.persistence.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -73,6 +75,31 @@ public class RoleMenuService {
         return MyPageUtil.of(roleMenuDOPage, roleMenuApplicationConverter::convert);
     }
 
+    public List<Long> listMenuIdsByRoleId(Long roleId) {
+        validateRoleExists(roleId);
+        return roleMenuRepository.listMenuIdsByRoleId(roleId);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void saveRoleMenus(Long roleId, List<Long> menuIdList) {
+        validateRoleExists(roleId);
+        List<Long> distinctMenuIds = menuIdList == null
+                ? List.of()
+                : menuIdList.stream().filter(Objects::nonNull).distinct().toList();
+        for (Long menuId : distinctMenuIds) {
+            MenuDO menu = menuRepository.getById(menuId);
+            if (Objects.isNull(menu)) {
+                throw new BusinessException(UserErrorCode.MENU_NOT_EXIST);
+            }
+        }
+        roleMenuRepository.removeByRoleId(roleId);
+        if (!distinctMenuIds.isEmpty()) {
+            roleMenuRepository.saveBatch(distinctMenuIds.stream()
+                    .map(menuId -> new RoleMenuDO().setRoleId(roleId).setMenuId(menuId))
+                    .toList());
+        }
+    }
+
     private void validateRoleMenuForCreate(CreateRoleMenuReqDTO createReqDTO) {
         if (Objects.isNull(createReqDTO.getRoleId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "角色ID不能为空");
@@ -82,10 +109,7 @@ public class RoleMenuService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "菜单ID不能为空");
         }
 
-        RoleDO role = roleRepository.getById(createReqDTO.getRoleId());
-        if (Objects.isNull(role)) {
-            throw new BusinessException(UserErrorCode.ROLE_NOT_EXIST);
-        }
+        validateRoleExists(createReqDTO.getRoleId());
 
         MenuDO menu = menuRepository.getById(createReqDTO.getMenuId());
         if (Objects.isNull(menu)) {
@@ -115,10 +139,7 @@ public class RoleMenuService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "原菜单ID不能为空");
         }
 
-        RoleDO role = roleRepository.getById(updateReqDTO.getRoleId());
-        if (Objects.isNull(role)) {
-            throw new BusinessException(UserErrorCode.ROLE_NOT_EXIST);
-        }
+        validateRoleExists(updateReqDTO.getRoleId());
 
         MenuDO menu = menuRepository.getById(updateReqDTO.getMenuId());
         if (Objects.isNull(menu)) {
@@ -128,6 +149,13 @@ public class RoleMenuService {
         RoleMenuDO existRoleMenu = roleMenuRepository.getByCompositeKey(updateReqDTO.getRoleId(), updateReqDTO.getMenuId());
         if (Objects.nonNull(existRoleMenu)) {
             throw new BusinessException(UserErrorCode.ALREADY_EXIST, "该角色菜单关联已存在");
+        }
+    }
+
+    private void validateRoleExists(Long roleId) {
+        RoleDO role = roleRepository.getById(roleId);
+        if (Objects.isNull(role)) {
+            throw new BusinessException(UserErrorCode.ROLE_NOT_EXIST);
         }
     }
 }

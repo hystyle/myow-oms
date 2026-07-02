@@ -8,15 +8,20 @@
       <nav class="client-menu">
         <router-link to="/dashboard">运营看板</router-link>
         <router-link to="/orders">订单履约</router-link>
+        <router-link to="/inbound">入库预报</router-link>
+        <router-link to="/returns">退货售后</router-link>
+        <router-link to="/skus">商品 SKU</router-link>
         <router-link to="/inventory">库存中心</router-link>
         <router-link to="/billing">账单费用</router-link>
         <router-link to="/developer">开发者中心</router-link>
+        <router-link to="/accounts">账号权限</router-link>
+        <router-link to="/tickets">客服工单</router-link>
       </nav>
     </aside>
     <section class="client-main">
       <header class="client-topbar">
         <strong>客户端门户</strong>
-        <span>示例客户：Acme Trading</span>
+        <span>Acme Trading / 主账号</span>
       </header>
       <main class="client-content"><router-view /></main>
     </section>

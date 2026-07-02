@@ -55,6 +55,9 @@ button { cursor: pointer; }
 .module-list a { display: grid; gap: 4px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 6px; color: inherit; text-decoration: none; }
 .module-list span, .check-list { color: #64748b; }
 .toolbar { display: flex; gap: 10px; padding: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; }
+.query-panel { flex-wrap: wrap; align-items: end; }
+.query-panel label { display: grid; gap: 6px; color: #475569; font-size: 12px; font-weight: 700; }
+.query-actions { display: flex; gap: 10px; }
 .toolbar input, .toolbar select { height: 34px; padding: 0 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
 .toolbar input { min-width: 260px; }
 .toolbar button { height: 34px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; }
@@ -86,6 +89,31 @@ button { cursor: pointer; }
 .system-card h2 { margin: 0; font-size: 16px; }
 .system-card p { margin: 8px 0 0; color: #64748b; font-size: 13px; }
 .org-layout { display: grid; grid-template-columns: 360px 1fr; gap: 16px; }
+.config-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: start; }
+.selected-row { background: #f8fafc; }
+.log-item { width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; }
+.log-detail { margin-top: 14px; }
+.role-layout { display: grid; grid-template-columns: 320px 1fr; gap: 16px; align-items: start; }
+.role-list-panel { max-height: calc(100vh - 160px); overflow: auto; }
+.role-list { display: grid; gap: 8px; }
+.role-item { display: grid; gap: 4px; width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; color: #334155; text-align: left; }
+.role-item span { color: #64748b; font-size: 12px; }
+.role-item.active, .role-item:hover { border-color: #93c5fd; background: #eaf1ff; color: #1d4ed8; }
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
+.tabs button { padding: 10px 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #475569; }
+.tabs button.active { border-bottom-color: #2563eb; color: #1d4ed8; font-weight: 700; }
+.scope-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.scope-option { display: grid; gap: 6px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; text-align: left; }
+.scope-option span { color: #64748b; font-size: 13px; line-height: 1.5; }
+.scope-option.active { border-color: #2563eb; background: #eaf1ff; color: #1d4ed8; }
+.permission-tree-panel { display: grid; gap: 12px; }
+.permission-tree-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; }
+.permission-tree-head p { margin: 0; color: #64748b; font-size: 13px; }
+.permission-tree { display: grid; gap: 4px; max-height: 460px; overflow: auto; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; }
+.permission-node { display: flex; align-items: center; gap: 8px; min-height: 32px; color: #334155; font-size: 13px; }
+.permission-node input { width: 14px; height: 14px; }
+.permission-node em { color: #64748b; font-style: normal; font-size: 12px; }
+.permission-node code { margin-left: auto; color: #475569; font-size: 12px; }
 .org-tree { max-height: calc(100vh - 180px); overflow: auto; }
 .org-node-list { display: grid; gap: 4px; }
 .org-node { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; border: 0; border-radius: 6px; color: #334155; background: transparent; text-align: left; }
@@ -118,5 +146,5 @@ button { cursor: pointer; }
   .login-page { grid-template-columns: 1fr; }
   .admin-shell { grid-template-columns: 1fr; }
   .admin-sidebar { position: static; height: auto; }
-  .login-brand dl, .metric-grid, .workspace-grid, .system-grid, .split-view, .org-layout, .detail-grid { grid-template-columns: 1fr; }
+  .login-brand dl, .metric-grid, .workspace-grid, .system-grid, .split-view, .org-layout, .role-layout, .scope-grid, .detail-grid { grid-template-columns: 1fr; }
 }

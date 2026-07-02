@@ -57,15 +57,17 @@ export function useAdminRowActions(deps: {
     const actionIdKey = action.idKey ?? deps.idKey();
     const payloadKey = action.payloadKey ?? actionIdKey;
     const id = deps.readValue(row, actionIdKey);
+    if (id == null) return;
+    const normalizedId = String(id);
     errorMessage.value = '';
     try {
       if (action.resultMode === 'download') {
-        const result = await downloadAdminRecord(action.endpoint, payloadKey, id);
-        downloadBlob(result.blob, result.fileName);
+        const result = await downloadAdminRecord(action.endpoint, payloadKey, normalizedId);
+        downloadBlob(result.blob, typeof result.fileName === 'string' ? result.fileName : undefined);
         deps.showToast(action.success ?? `${action.label}已开始`);
         return;
       }
-      const payload: AdminRecord = { [payloadKey]: id, id };
+      const payload: AdminRecord = { [payloadKey]: normalizedId, id: normalizedId };
       if (action.variablesPrompt) {
         const variables = readVariablesFromPrompt();
         if (variables == null) {
@@ -117,7 +119,7 @@ export function useAdminRowActions(deps: {
     }
   }
 
-  function downloadBlob(blob: Blob, fileName: string) {
+  function downloadBlob(blob: Blob, fileName?: string) {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;

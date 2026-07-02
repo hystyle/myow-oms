@@ -7,7 +7,7 @@ export const systemRoutes: RouteRecordRaw[] = [
     path: 'system/jobs',
     alias: ['/system-support/jobs'],
     name: 'JobCrudCenter',
-    component: () => import('@/pages/common/generic-crud-list.vue'),
+    component: () => import('@/pages/system/job-management.vue'),
     meta: {
       title: '定时任务',
       description: '维护系统调度任务、Cron 表达式和处理器。',
@@ -45,7 +45,7 @@ export const systemRoutes: RouteRecordRaw[] = [
     path: 'system/notices',
     alias: ['/system-support/notices'],
     name: 'NoticeCrudCenter',
-    component: () => import('@/pages/common/generic-crud-list.vue'),
+    component: () => import('@/pages/system/notice-management.vue'),
     meta: {
       title: '通知公告',
       description: '维护系统公告草稿、内容、类型和有效期。',
@@ -81,7 +81,7 @@ export const systemRoutes: RouteRecordRaw[] = [
     path: 'system/site-configs',
     alias: ['/system-support/site-configs'],
     name: 'SiteConfigCenter',
-    component: () => import('@/pages/common/generic-crud-list.vue'),
+    component: () => import('@/pages/system/site-config-management.vue'),
     meta: {
       title: '站点配置',
       description: '维护站点级参数、开关和敏感配置。',
@@ -117,7 +117,7 @@ export const systemRoutes: RouteRecordRaw[] = [
     path: 'system/files',
     alias: ['/system-support/files'],
     name: 'FileCenter',
-    component: () => import('@/pages/common/generic-crud-list.vue'),
+    component: () => import('@/pages/system/file-log-center.vue'),
     meta: {
       title: '文件管理',
       description: '查看上传文件、模块归属、大小和删除策略。',

@@ -48,33 +48,33 @@ const fallbackMenuGroups: MenuGroup[] = [
   {
     title: '启动模块',
     items: [
-      menu(1, '工作台', '/dashboard'),
-      menu(2, '用户账号', '/user'),
-      menu(3, '系统概览', '/system')
+      menu('1', '工作台', '/dashboard'),
+      menu('2', '用户账号', '/user'),
+      menu('3', '系统概览', '/system')
     ]
   },
   {
     title: '用户权限',
     items: [
-      menu(10, '部门组织', '/user/depts'),
-      menu(11, '角色权限', '/user/roles'),
-      menu(12, '菜单权限', '/user/menus'),
-      menu(13, '字典管理', '/user/dicts'),
-      menu(14, '登录日志', '/user/login-logs')
+      menu('10', '部门组织', '/user/depts'),
+      menu('11', '角色权限', '/user/roles'),
+      menu('12', '菜单权限', '/user/menus'),
+      menu('13', '字典管理', '/user/dicts'),
+      menu('14', '登录日志', '/user/login-logs')
     ]
   },
   {
     title: '系统运维',
     items: [
-      menu(20, '定时任务', '/system/jobs'),
-      menu(21, '通知公告', '/system/notices'),
-      menu(22, '站点配置', '/system/site-configs'),
-      menu(23, '文件管理', '/system/files'),
-      menu(24, '在线用户', '/system/online-users'),
-      menu(25, '敏感词', '/system/sensitive-words'),
-      menu(26, '消息模板', '/system/message-templates'),
-      menu(27, '导出任务', '/system/export-tasks'),
-      menu(28, '系统监控', '/system/monitor')
+      menu('20', '定时任务', '/system/jobs'),
+      menu('21', '通知公告', '/system/notices'),
+      menu('22', '站点配置', '/system/site-configs'),
+      menu('23', '文件管理', '/system/files'),
+      menu('24', '在线用户', '/system/online-users'),
+      menu('25', '敏感词', '/system/sensitive-words'),
+      menu('26', '消息模板', '/system/message-templates'),
+      menu('27', '导出任务', '/system/export-tasks'),
+      menu('28', '系统监控', '/system/monitor')
     ]
   }
 ];
@@ -94,7 +94,7 @@ const menuGroups = computed<MenuGroup[]>(() => {
   return groupBackendMenus(backendMenus);
 });
 
-function menu(menuId: number, menuName: string, path: string): MenuItem {
+function menu(menuId: string, menuName: string, path: string): MenuItem {
   return { menuId, menuName, path };
 }
 
@@ -118,27 +118,27 @@ const menuNameMap: Record<string, string> = {
   'Online User': '在线用户'
 };
 
-const menuIdNameMap: Record<number, string> = {
-  1000: '系统中心',
-  1100: '用户账号',
-  1200: '角色权限',
-  1300: '菜单权限',
-  1400: '部门组织',
-  1700: '字典管理',
-  1820: '登录日志',
-  1900: '系统运维',
-  1910: '定时任务',
-  1920: '通知公告',
-  1930: '文件管理',
-  1940: '站点配置',
-  1950: '敏感词',
-  1960: '消息模板',
-  1970: '导出任务',
-  1980: '系统监控',
-  1990: '在线用户'
+const menuIdNameMap: Record<string, string> = {
+  '1000': '系统中心',
+  '1100': '用户账号',
+  '1200': '角色权限',
+  '1300': '菜单权限',
+  '1400': '部门组织',
+  '1700': '字典管理',
+  '1820': '登录日志',
+  '1900': '系统运维',
+  '1910': '定时任务',
+  '1920': '通知公告',
+  '1930': '文件管理',
+  '1940': '站点配置',
+  '1950': '敏感词',
+  '1960': '消息模板',
+  '1970': '导出任务',
+  '1980': '系统监控',
+  '1990': '在线用户'
 };
 
-function menuDisplayName(name?: string, menuId?: number) {
+function menuDisplayName(name?: string, menuId?: string) {
   if (menuId && menuIdNameMap[menuId]) return menuIdNameMap[menuId];
   if (!name) return '';
   return menuNameMap[name] ?? name;

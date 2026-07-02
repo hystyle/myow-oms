@@ -15,7 +15,7 @@
         </label>
         <label>
           <span>上级部门 ID</span>
-          <input v-model="form.parentId" type="number" />
+          <input v-model="form.parentId" />
         </label>
         <label>
           <span>部门名称</span>
@@ -27,7 +27,7 @@
         </label>
         <label>
           <span>负责人 ID</span>
-          <input v-model="form.managerId" type="number" />
+          <input v-model="form.managerId" />
         </label>
         <footer class="crud-actions">
           <button type="button" @click="emit('close')">取消</button>
@@ -40,11 +40,11 @@
 
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
-import type { DeptCreatePayload, DeptUpdatePayload } from '@myow/api';
+import type { ApiId, DeptCreatePayload, DeptUpdatePayload } from '@myow/api';
 import type { AdminRecord } from '@/services/admin-data-service';
 
 interface DeptLike extends AdminRecord {
-  deptId?: number;
+  deptId?: ApiId;
   deptName?: string;
   name?: string;
 }
@@ -75,19 +75,19 @@ watch(
 
 function fillDeptForm(dept?: DeptLike | null) {
   form.deptId = dept?.deptId ?? '';
-  form.parentId = (dept?.parentId as number) ?? '';
+  form.parentId = (dept?.parentId as ApiId) ?? '';
   form.deptName = dept?.deptName || dept?.name || '';
   form.sort = (dept?.sort as number) ?? 0;
-  form.managerId = (dept?.managerId as number) ?? '';
+  form.managerId = (dept?.managerId as ApiId) ?? '';
 }
 
 function submit() {
   const payload = {
-    deptId: form.deptId ? Number(form.deptId) : undefined,
-    parentId: form.parentId ? Number(form.parentId) : undefined,
+    deptId: form.deptId ? String(form.deptId) : undefined,
+    parentId: form.parentId ? String(form.parentId) : undefined,
     deptName: String(form.deptName),
     sort: Number(form.sort) || undefined,
-    managerId: form.managerId ? Number(form.managerId) : undefined
+    managerId: form.managerId ? String(form.managerId) : undefined
   };
   emit('submit', payload);
 }

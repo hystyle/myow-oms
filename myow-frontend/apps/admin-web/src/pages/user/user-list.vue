@@ -18,22 +18,43 @@
       {{ toastMessage }}
     </div>
 
-    <section class="toolbar">
-      <input v-model="query.keyword" placeholder="搜索用户名、姓名、手机号" @keyup.enter="loadUsers" />
-      <select v-model="query.status">
-        <option value="">全部状态</option>
-        <option value="true">正常</option>
-        <option value="false">停用</option>
-      </select>
-      <button type="button" @click="loadUsers">查询</button>
-      <button type="button" @click="resetQuery">重置</button>
+    <section class="toolbar query-panel">
+      <label>
+        <span>关键词</span>
+        <input v-model="query.keyword" placeholder="搜索用户名、姓名、手机号" @keyup.enter="loadUsers" />
+      </label>
+      <label>
+        <span>状态</span>
+        <select v-model="query.status">
+          <option value="">全部状态</option>
+          <option value="true">正常</option>
+          <option value="false">停用</option>
+        </select>
+      </label>
+      <div class="query-actions">
+        <button type="button" @click="loadUsers">查询</button>
+        <button type="button" @click="resetQuery">重置</button>
+      </div>
     </section>
 
     <section class="split-view">
       <aside class="tree-panel">
         <h2>组织视图</h2>
-        <button type="button" class="tree-item active">全部部门</button>
-        <p class="tree-note">部门树接口尚未开放，当前按全部部门查询。</p>
+        <button type="button" class="tree-item" :class="{ active: !query.deptId }" @click="selectDept()">
+          全部部门
+        </button>
+        <button
+          v-for="dept in flatDeptNodes"
+          :key="dept.deptId"
+          type="button"
+          class="tree-item"
+          :class="{ active: query.deptId === dept.deptId }"
+          :style="{ paddingLeft: `${10 + dept.level * 16}px` }"
+          @click="selectDept(dept.deptId)"
+        >
+          {{ dept.deptName || dept.name || '-' }}
+        </button>
+        <p v-if="deptLoadFailed" class="tree-note">部门树加载失败，可继续按全部部门查询。</p>
       </aside>
 
       <article class="panel table-panel">
@@ -74,7 +95,7 @@
               </td>
             </tr>
             <tr v-if="!loading && rows.length === 0">
-              <td colspan="7" class="empty-cell">暂无用户数据</td>
+              <td colspan="7" class="empty-cell">当前筛选条件下没有用户，请调整条件或重置筛选。</td>
             </tr>
           </tbody>
         </table>
@@ -104,13 +125,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
-import type { UserCreatePayload, UserProfile, UserUpdatePayload } from '@myow/api';
+import type { ApiId, DeptTreeNode, UserCreatePayload, UserProfile, UserUpdatePayload } from '@myow/api';
 import { usePermission } from '@/composables/use-permission';
 import {
   createUser,
   deleteUser,
   forceUserChangePassword,
   getUser,
+  listDeptTree,
   pageUsers,
   resetUserPassword,
   unlockUser,
@@ -125,14 +147,18 @@ const { hasPermission } = usePermission();
 const errorMessage = ref('');
 const toastMessage = ref('');
 const rows = ref<UserProfile[]>([]);
+const deptTree = ref<DeptTreeNode[]>([]);
+const deptLoadFailed = ref(false);
 const total = ref(0);
 const query = reactive({
   keyword: '',
   status: '',
+  deptId: '' as ApiId | '',
   pageNum: 1,
   pageSize: 20
 });
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
+const flatDeptNodes = computed(() => flattenDeptTree(deptTree.value));
 
 // 表单状态
 const saving = ref(false);
@@ -140,8 +166,19 @@ const drawerOpen = ref(false);
 const selectedUser = ref<UserProfile | undefined>();
 
 onMounted(() => {
+  void loadDeptTree();
   void loadUsers();
 });
+
+async function loadDeptTree() {
+  try {
+    deptTree.value = await listDeptTree();
+    deptLoadFailed.value = false;
+  } catch {
+    deptTree.value = [];
+    deptLoadFailed.value = true;
+  }
+}
 
 async function loadUsers() {
   loading.value = true;
@@ -150,6 +187,7 @@ async function loadUsers() {
     const page = await pageUsers({
       keyword: query.keyword || undefined,
       status: query.status || undefined,
+      deptId: query.deptId || undefined,
       pageNum: query.pageNum,
       pageSize: query.pageSize
     });
@@ -175,6 +213,13 @@ function changePageSize() {
 function resetQuery() {
   query.keyword = '';
   query.status = '';
+  query.deptId = '';
+  query.pageNum = 1;
+  void loadUsers();
+}
+
+function selectDept(deptId: ApiId | '' = '') {
+  query.deptId = deptId;
   query.pageNum = 1;
   void loadUsers();
 }
@@ -189,20 +234,20 @@ async function handleToggleStatus(row: UserProfile) {
   await loadUsers();
 }
 
-async function handleResetPassword(userId: number) {
+async function handleResetPassword(userId: ApiId) {
   if (!window.confirm('确认重置该用户密码？')) return;
   await resetUserPassword(userId);
   showToast('用户密码已重置');
 }
 
-async function handleUnlock(userId: number) {
+async function handleUnlock(userId: ApiId) {
   if (!window.confirm('确认解锁该用户？')) return;
   await unlockUser(userId);
   showToast('用户已解锁');
   await loadUsers();
 }
 
-async function handleForceChangePassword(userId: number) {
+async function handleForceChangePassword(userId: ApiId) {
   if (!window.confirm('确认要求该用户下次登录强制改密？')) return;
   await forceUserChangePassword(userId);
   showToast('已设置强制改密');
@@ -244,7 +289,7 @@ async function submitUser(payload: UserCreatePayload | UserUpdatePayload) {
   }
 }
 
-async function handleDelete(userId: number) {
+async function handleDelete(userId: ApiId) {
   if (!window.confirm('确认删除该用户？')) return;
   errorMessage.value = '';
   try {
@@ -294,5 +339,12 @@ function formatTime(value?: string) {
     return '-';
   }
   return value.replace('T', ' ').slice(0, 19);
+}
+
+function flattenDeptTree(nodes: DeptTreeNode[], level = 0): Array<DeptTreeNode & { level: number }> {
+  return nodes.flatMap((node) => {
+    const current = { ...node, level };
+    return [current, ...flattenDeptTree(node.children ?? [], level + 1)];
+  });
 }
 </script>

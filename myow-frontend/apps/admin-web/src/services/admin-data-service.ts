@@ -1,7 +1,16 @@
 import { request } from '@myow/shared';
-import type { PageResult } from '@myow/api';
+import type { ApiId, PageResult, SystemRecord } from '@myow/api';
 
-export type AdminRecord = Record<string, unknown>;
+export interface AdminRecord extends Partial<SystemRecord> {
+  id?: ApiId;
+  userId?: ApiId;
+  roleId?: ApiId;
+  menuId?: ApiId;
+  deptId?: ApiId;
+  code?: string;
+  attributes?: Record<string, unknown>;
+  [key: string]: unknown;
+}
 
 export function pageAdminRecords(endpoint: string, query: Record<string, unknown>) {
   return request.post<PageResult<AdminRecord>>(endpoint, query);

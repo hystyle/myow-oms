@@ -111,11 +111,11 @@ function fillUserForm(user?: UserProfile) {
 
 function submit() {
   const payload = {
-    userId: form.userId ? Number(form.userId) : undefined,
+    userId: form.userId || undefined,
     loginName: form.loginName,
     nickName: form.nickName,
-    deptId: form.deptId ? Number(form.deptId) : undefined,
-    positionId: form.positionId ? Number(form.positionId) : undefined,
+    deptId: form.deptId || undefined,
+    positionId: form.positionId || undefined,
     roleIdList: parseIdList(form.roleIds),
     gender: form.gender || undefined,
     phone: form.phone || undefined,
@@ -130,6 +130,6 @@ function parseIdList(value: string) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
-    .map(Number);
+    .map((item) => item);
 }
 </script>
