@@ -30,3 +30,7 @@ npm run build
 ```
 
 The current Windows PowerShell environment may block `npm.ps1`; use `npm.cmd` if needed.
+
+## Standards
+
+- [Frontend standard](./spec/frontend-standard.md)
