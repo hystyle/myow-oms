@@ -240,7 +240,7 @@
             <td>当前用户菜单树</td>
             <td><code>POST /profile/menus</code> 或 <code>/menu/tree</code></td>
             <td><span class="tag tag-green">已具备</span></td>
-            <td>前端可直接使用 <code>POST /profile/menus</code>。</td>
+            <td>前端侧边栏以后端菜单为准；无菜单数据时仅使用本地开发兜底菜单。</td>
           </tr>
           <tr>
             <td>按钮权限码</td>
@@ -397,19 +397,19 @@
           <tr>
             <td>文件管理</td>
             <td><code>FileController</code></td>
-            <td>上传、分页、详情、删除。</td>
+            <td>上传、分页、详情、删除、文件流下载。</td>
             <td><span class="tag tag-green">已具备</span></td>
           </tr>
           <tr>
             <td>导出任务</td>
             <td><code>ExportTaskController</code></td>
-            <td>创建、分页、详情、下载结果。</td>
+            <td>创建、分页、详情、成功后下载导出文件流。</td>
             <td><span class="tag tag-green">已具备</span></td>
           </tr>
           <tr>
             <td>敏感词</td>
             <td><code>SensitiveWordController</code></td>
-            <td>分页、详情、新增、编辑、启停、删除。</td>
+            <td>分页、详情、新增、编辑、启停、删除、变量预览。</td>
             <td><span class="tag tag-green">已具备</span></td>
           </tr>
           <tr>
@@ -609,11 +609,11 @@
           <tr><td>定时任务</td><td>新增 / 编辑 / 删除 / 执行 / 暂停 / 恢复</td><td><code>system:job:create</code> / <code>system:job:update</code> / <code>system:job:delete</code> / <code>system:job:run</code> / <code>system:job:pause</code> / <code>system:job:resume</code></td><td>权限码与 Flyway system seed 保持一致。</td></tr>
           <tr><td>通知公告</td><td>新增 / 编辑 / 删除 / 发布 / 下线</td><td><code>system:notice:create</code> / <code>system:notice:update</code> / <code>system:notice:delete</code> / <code>system:notice:publish</code> / <code>system:notice:withdraw</code></td><td>发布和下线分离。</td></tr>
           <tr><td>站点配置</td><td>新增 / 编辑 / 删除 / 刷新缓存</td><td><code>system:site-config:create</code> / <code>system:site-config:update</code> / <code>system:site-config:delete</code> / <code>system:site-config:refresh</code></td><td>刷新缓存按站点编码执行。</td></tr>
-          <tr><td>文件管理</td><td>删除 / 下载</td><td><code>system:file:delete</code> / <code>system:file:download</code></td><td>上传入口后续单独设计。</td></tr>
+          <tr><td>文件管理</td><td>删除 / 下载</td><td><code>system:file:delete</code> / <code>system:file:download</code></td><td>下载接口返回附件文件流，前端按 <code>Content-Disposition</code> 触发浏览器下载。</td></tr>
           <tr><td>在线用户</td><td>踢出</td><td><code>system:online-user:kick</code></td><td>强制失效在线会话。</td></tr>
           <tr><td>敏感词</td><td>新增 / 编辑 / 删除</td><td><code>system:sensitive-word:create</code> / <code>system:sensitive-word:update</code> / <code>system:sensitive-word:delete</code></td><td>敏感词库维护。</td></tr>
-          <tr><td>消息模板</td><td>新增 / 编辑 / 删除 / 预览</td><td><code>system:message-template:create</code> / <code>system:message-template:update</code> / <code>system:message-template:delete</code> / <code>system:message-template:preview</code></td><td>预览不修改数据。</td></tr>
-          <tr><td>导出任务</td><td>创建 / 删除 / 下载</td><td><code>system:export-task:create</code> / <code>system:export-task:delete</code> / <code>system:export-task:download</code></td><td>下载前需后端校验任务归属。</td></tr>
+          <tr><td>消息模板</td><td>新增 / 编辑 / 删除 / 预览</td><td><code>system:message-template:create</code> / <code>system:message-template:update</code> / <code>system:message-template:delete</code> / <code>system:message-template:preview</code></td><td>预览请求携带变量 JSON，后端返回渲染后的标题、内容和缺失变量列表，不修改数据。</td></tr>
+          <tr><td>导出任务</td><td>创建 / 删除 / 下载</td><td><code>system:export-task:create</code> / <code>system:export-task:delete</code> / <code>system:export-task:download</code></td><td>下载前后端需校验任务成功状态、文件存在性和任务归属；当前接口返回附件文件流。</td></tr>
         </tbody>
       </table>
     </div>

@@ -78,10 +78,6 @@ public final class SystemModels {
     public record MessageTemplatePreviewCommand(Long id, String templateCode, Map<String, String> variables) {
     }
 
-    @Schema(description = "Download file payload")
-    public record DownloadFile(String fileName, String contentType, org.springframework.core.io.Resource resource) {
-    }
-
     @Schema(description = "Export task create command")
     public record ExportTaskCreateCommand(String moduleName, String exportType, Map<String, Object> queryParams) {
     }

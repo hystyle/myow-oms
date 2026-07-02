@@ -37,6 +37,10 @@ public class SystemFileStorageService {
         }
     }
 
+    public String uploadRoot() {
+        return properties.getUploadRoot();
+    }
+
     public record StoredFile(String storageKey, String absolutePath) {
     }
 }

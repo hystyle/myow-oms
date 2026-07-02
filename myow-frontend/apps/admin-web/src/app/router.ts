@@ -285,7 +285,7 @@ export const router = createRouter({
               textColumn('createTime', '上传时间')
             ],
             rowActions: [
-              { label: '下载', endpoint: '/myow/api/v1/system/files/download', permission: 'system:file:download', resultMode: 'drawer', refresh: false }
+              { label: '下载', endpoint: '/myow/api/v1/system/files/download', permission: 'system:file:download', resultMode: 'download', success: '文件下载已开始', refresh: false }
             ]
           }
         },
@@ -379,7 +379,7 @@ export const router = createRouter({
             ],
             requiredFields: ['templateCode', 'channel', 'title', 'content'],
             rowActions: [
-              { label: '预览', endpoint: '/myow/api/v1/system/message-templates/preview', permission: 'system:message-template:preview', resultMode: 'drawer', refresh: false }
+              { label: '预览', endpoint: '/myow/api/v1/system/message-templates/preview', permission: 'system:message-template:preview', resultMode: 'drawer', variablesPrompt: true, refresh: false }
             ]
           }
         },
@@ -411,7 +411,7 @@ export const router = createRouter({
             ],
             requiredFields: ['moduleName', 'exportType'],
             rowActions: [
-              { label: '下载', endpoint: '/myow/api/v1/system/export-tasks/download', permission: 'system:export-task:download', resultMode: 'drawer', refresh: false }
+              { label: '下载', endpoint: '/myow/api/v1/system/export-tasks/download', permission: 'system:export-task:download', resultMode: 'download', success: '导出文件下载已开始', refresh: false }
             ]
           }
         },

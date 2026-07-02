@@ -147,6 +147,7 @@ import {
   createAdminRecord,
   deleteAdminRecord,
   detailAdminRecord,
+  downloadAdminRecord,
   pageAdminRecords,
   updateAdminRecord,
   type AdminRecord
@@ -181,8 +182,9 @@ interface RowAction {
   success?: string;
   idKey?: string;
   payloadKey?: string;
-  resultMode?: 'toast' | 'drawer' | 'open-url';
+  resultMode?: 'toast' | 'drawer' | 'open-url' | 'download';
   urlKey?: string;
+  variablesPrompt?: boolean;
   refresh?: boolean;
 }
 
@@ -389,7 +391,21 @@ async function handleRowAction(action: RowAction, row: AdminRecord) {
   const id = readValue(row, actionIdKey);
   errorMessage.value = '';
   try {
-    const result = await createAdminRecord(action.endpoint, { [payloadKey]: id, id });
+    if (action.resultMode === 'download') {
+      const result = await downloadAdminRecord(action.endpoint, payloadKey, id);
+      downloadBlob(result.blob, result.fileName);
+      showToast(action.success ?? `${action.label}已开始`);
+      return;
+    }
+    const payload: AdminRecord = { [payloadKey]: id, id };
+    if (action.variablesPrompt) {
+      const variables = readVariablesFromPrompt();
+      if (variables == null) {
+        return;
+      }
+      payload.variables = variables;
+    }
+    const result = await createAdminRecord(action.endpoint, payload);
     handleActionResult(action, result);
     if (action.refresh !== false) {
       await loadData();
@@ -397,6 +413,33 @@ async function handleRowAction(action: RowAction, row: AdminRecord) {
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : `${action.label}失败`;
   }
+}
+
+function readVariablesFromPrompt() {
+  const text = window.prompt('请输入变量 JSON，例如 {"name":"test"}', '{}');
+  if (text == null) {
+    return null;
+  }
+  try {
+    const value = JSON.parse(text);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error('变量必须是 JSON 对象');
+    }
+    return value as Record<string, string>;
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : '变量 JSON 格式错误');
+  }
+}
+
+function downloadBlob(blob: Blob, fileName: string) {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName || 'download';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 function closeDrawer() {

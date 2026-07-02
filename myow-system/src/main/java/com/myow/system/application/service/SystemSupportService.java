@@ -21,6 +21,7 @@ import com.myow.system.application.dto.SystemModels.SensitiveWordUpdateCommand;
 import com.myow.system.application.dto.SystemModels.SiteCodeQuery;
 import com.myow.system.application.dto.SystemModels.SiteConfigCreateCommand;
 import com.myow.system.application.dto.SystemModels.SiteConfigUpdateCommand;
+import com.myow.system.application.vo.SystemDownloadFile;
 import com.myow.system.application.vo.SystemRecordVO;
 import com.myow.system.infrastructure.persistence.po.ExportTaskDO;
 import com.myow.system.infrastructure.persistence.po.FileDO;
@@ -40,15 +41,21 @@ import com.myow.system.infrastructure.persistence.repository.SensitiveWordReposi
 import com.myow.system.infrastructure.persistence.repository.SiteConfigRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class SystemSupportService {
@@ -56,6 +63,7 @@ public class SystemSupportService {
     private static final String LOCAL_STORAGE = "LOCAL";
     private static final long MAX_UPLOAD_SIZE = 50L * 1024L * 1024L;
     private static final Set<String> ALLOWED_FILE_SUFFIXES = Set.of("jpg", "jpeg", "png", "gif", "pdf", "doc", "docx", "xls", "xlsx", "csv", "txt", "zip", "rar");
+    private static final Pattern TEMPLATE_VARIABLE = Pattern.compile("\\$\\{([A-Za-z0-9_.-]+)}");
 
     private final JobRepository jobRepository;
     private final JobLogRepository jobLogRepository;
@@ -350,13 +358,19 @@ public class SystemSupportService {
 
     public Map<String, Object> previewMessageTemplate(MessageTemplatePreviewCommand command) {
         MessageTemplateDO template = command.id() == null ? null : messageTemplateRepository.getById(command.id());
-        String content = template == null ? "" : template.getContent();
-        if (command.variables() != null) {
-            for (Map.Entry<String, String> entry : command.variables().entrySet()) {
-                content = content.replace("${" + entry.getKey() + "}", entry.getValue());
-            }
+        if (template == null && StringUtils.hasText(command.templateCode())) {
+            template = messageTemplateRepository.lambdaQuery()
+                    .eq(MessageTemplateDO::getTemplateCode, command.templateCode())
+                    .last("limit 1")
+                    .one();
         }
-        return attrs("content", content);
+        if (template == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "message template not found");
+        }
+        String title = renderTemplate(template.getTitle(), command.variables());
+        String content = template == null ? "" : template.getContent();
+        content = renderTemplate(content, command.variables());
+        return attrs("title", title, "content", content, "missingVariables", missingVariables(template.getTitle(), template.getContent(), command.variables()));
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -412,6 +426,31 @@ public class SystemSupportService {
             case "EXPORT_TASK" -> toRecord(exportTaskRepository.getById(command.id()));
             default -> null;
         };
+    }
+
+    public SystemDownloadFile downloadFile(IdCommand command) {
+        validateId(command.id());
+        FileDO file = fileRepository.getById(command.id());
+        if (file == null || Boolean.TRUE.equals(file.getDeletedFlag())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "file not found");
+        }
+        return buildDownloadFile(file);
+    }
+
+    public SystemDownloadFile downloadExportTask(IdCommand command) {
+        validateId(command.id());
+        ExportTaskDO task = exportTaskRepository.getById(command.id());
+        if (task == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "export task not found");
+        }
+        if (!"SUCCESS".equals(task.getStatus()) || task.getFileId() == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "export task is not ready");
+        }
+        FileDO file = fileRepository.getById(task.getFileId());
+        if (file == null || Boolean.TRUE.equals(file.getDeletedFlag())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "export file not found");
+        }
+        return buildDownloadFile(file);
     }
 
     public PageResult<SystemRecordVO> page(String type, PageQuery query) {
@@ -524,6 +563,53 @@ public class SystemSupportService {
         }
         data.setDeletedFlag(true);
         return fileRepository.updateById(data);
+    }
+
+    private SystemDownloadFile buildDownloadFile(FileDO file) {
+        if (!LOCAL_STORAGE.equals(file.getStorageType())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "unsupported storage type");
+        }
+        Path root = Path.of(fileStorageService.uploadRoot()).toAbsolutePath().normalize();
+        Path target = Path.of(file.getStorageKey()).toAbsolutePath().normalize();
+        if (!target.startsWith(root) || !Files.isRegularFile(target)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "physical file not found");
+        }
+        String contentType = StringUtils.hasText(file.getContentType()) ? file.getContentType() : "application/octet-stream";
+        return new SystemDownloadFile(file.getOriginalName(), contentType, new FileSystemResource(target));
+    }
+
+    private static String renderTemplate(String text, Map<String, String> variables) {
+        if (text == null) {
+            return "";
+        }
+        String rendered = text;
+        if (variables != null) {
+            for (Map.Entry<String, String> entry : variables.entrySet()) {
+                rendered = rendered.replace("${" + entry.getKey() + "}", entry.getValue() == null ? "" : entry.getValue());
+            }
+        }
+        return rendered;
+    }
+
+    private static List<String> missingVariables(String title, String content, Map<String, String> variables) {
+        Set<String> provided = variables == null ? Set.of() : variables.keySet();
+        List<String> missing = new ArrayList<>();
+        collectMissingVariables(title, provided, missing);
+        collectMissingVariables(content, provided, missing);
+        return missing;
+    }
+
+    private static void collectMissingVariables(String text, Set<String> provided, List<String> missing) {
+        if (text == null) {
+            return;
+        }
+        Matcher matcher = TEMPLATE_VARIABLE.matcher(text);
+        while (matcher.find()) {
+            String variable = matcher.group(1);
+            if (!provided.contains(variable) && !missing.contains(variable)) {
+                missing.add(variable);
+            }
+        }
     }
 
     private SystemRecordVO toRecord(JobDO data) {
@@ -652,3 +738,4 @@ public class SystemSupportService {
         return attributes;
     }
 }
+

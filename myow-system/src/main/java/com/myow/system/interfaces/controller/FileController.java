@@ -6,9 +6,13 @@ import com.myow.common.response.Result;
 import com.myow.system.application.dto.SystemModels.IdCommand;
 import com.myow.system.application.dto.SystemModels.PageQuery;
 import com.myow.system.application.service.SystemSupportService;
+import com.myow.system.application.vo.SystemDownloadFile;
 import com.myow.system.application.vo.SystemRecordVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Tag(name = "System File", description = "System file upload and metadata APIs")
@@ -57,11 +63,12 @@ public class FileController {
         return Result.success(service.page("FILE", query));
     }
 
-    @Operation(summary = "Download file", description = "Returns file metadata for download routing.")
+    @Operation(summary = "Download file", description = "Downloads a locally stored file by file id.")
     @PostMapping("/download")
     @SaCheckPermission("system:file:download")
-    public Result<SystemRecordVO> download(@RequestBody IdCommand command) {
-        return Result.success(service.detail("FILE", command));
+    public ResponseEntity<org.springframework.core.io.Resource> download(@RequestBody IdCommand command) {
+        SystemDownloadFile file = service.downloadFile(command);
+        return downloadResponse(file);
     }
 
     @Operation(summary = "Delete file", description = "Deletes file metadata and schedules physical file cleanup.")
@@ -69,5 +76,13 @@ public class FileController {
     @SaCheckPermission("system:file:delete")
     public Result<Boolean> delete(@RequestBody IdCommand command) {
         return Result.success(service.delete("FILE", command));
+    }
+
+    private ResponseEntity<org.springframework.core.io.Resource> downloadResponse(SystemDownloadFile file) {
+        String fileName = URLEncoder.encode(file.fileName(), StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName)
+                .body(file.resource());
     }
 }

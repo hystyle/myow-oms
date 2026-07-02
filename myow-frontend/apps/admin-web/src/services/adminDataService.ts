@@ -26,3 +26,7 @@ export function updateAdminRecord(endpoint: string, data: AdminRecord) {
 export function deleteAdminRecord(endpoint: string, idKey: string, id: unknown) {
   return postAdminData<boolean>(endpoint, { [idKey]: id, id });
 }
+
+export function downloadAdminRecord(endpoint: string, idKey: string, id: unknown) {
+  return request.download(endpoint, { [idKey]: id, id });
+}
