@@ -583,6 +583,42 @@
     </div>
   </section>
 
+  <section id="s-admin-permissions">
+    <h2><span class="section-num">08</span>管理端按钮权限码</h2>
+    <p class="lead">管理端按钮由 <code>POST /profile/bootstrap</code> 返回的 <code>permissionList</code> 控制。前端只负责隐藏无权限按钮，后端接口仍必须做最终权限校验。未配置权限码的只读操作默认可见；新增、编辑、删除和状态类操作必须配置权限码。</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>页面</th>
+            <th>操作</th>
+            <th>权限码</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>用户账号</td><td>新增</td><td><code>system:user:add</code></td><td>创建内部用户。</td></tr>
+          <tr><td>用户账号</td><td>编辑 / 启停 / 重置密码 / 解锁 / 强制改密</td><td><code>system:user:update</code></td><td>账号维护类操作统一使用更新权限。</td></tr>
+          <tr><td>用户账号</td><td>删除</td><td><code>system:user:delete</code></td><td>删除内部用户。</td></tr>
+          <tr><td>部门组织</td><td>新增</td><td><code>system:dept:add</code></td><td>创建部门节点。</td></tr>
+          <tr><td>部门组织</td><td>编辑</td><td><code>system:dept:update</code></td><td>维护部门名称、上级、排序和负责人。</td></tr>
+          <tr><td>部门组织</td><td>删除</td><td><code>system:dept:delete</code></td><td>删除部门节点。</td></tr>
+          <tr><td>角色权限</td><td>新增 / 编辑 / 删除</td><td><code>system:role:add</code> / <code>system:role:update</code> / <code>system:role:delete</code></td><td>对应 RoleController 权限。</td></tr>
+          <tr><td>菜单权限</td><td>新增 / 编辑 / 删除</td><td><code>system:menu:add</code> / <code>system:menu:update</code> / <code>system:menu:delete</code></td><td>对应 MenuController 权限。</td></tr>
+          <tr><td>字典管理</td><td>新增 / 编辑 / 删除</td><td><code>system:dict:add</code> / <code>system:dict:update</code> / <code>system:dict:delete</code></td><td>对应 DictController 权限。</td></tr>
+          <tr><td>定时任务</td><td>新增 / 编辑 / 删除 / 执行 / 暂停 / 恢复</td><td><code>system:job:create</code> / <code>system:job:update</code> / <code>system:job:delete</code> / <code>system:job:run</code> / <code>system:job:pause</code> / <code>system:job:resume</code></td><td>权限码与 Flyway system seed 保持一致。</td></tr>
+          <tr><td>通知公告</td><td>新增 / 编辑 / 删除 / 发布 / 下线</td><td><code>system:notice:create</code> / <code>system:notice:update</code> / <code>system:notice:delete</code> / <code>system:notice:publish</code> / <code>system:notice:withdraw</code></td><td>发布和下线分离。</td></tr>
+          <tr><td>站点配置</td><td>新增 / 编辑 / 删除 / 刷新缓存</td><td><code>system:site-config:create</code> / <code>system:site-config:update</code> / <code>system:site-config:delete</code> / <code>system:site-config:refresh</code></td><td>刷新缓存按站点编码执行。</td></tr>
+          <tr><td>文件管理</td><td>删除 / 下载</td><td><code>system:file:delete</code> / <code>system:file:download</code></td><td>上传入口后续单独设计。</td></tr>
+          <tr><td>在线用户</td><td>踢出</td><td><code>system:online-user:kick</code></td><td>强制失效在线会话。</td></tr>
+          <tr><td>敏感词</td><td>新增 / 编辑 / 删除</td><td><code>system:sensitive-word:create</code> / <code>system:sensitive-word:update</code> / <code>system:sensitive-word:delete</code></td><td>敏感词库维护。</td></tr>
+          <tr><td>消息模板</td><td>新增 / 编辑 / 删除 / 预览</td><td><code>system:message-template:create</code> / <code>system:message-template:update</code> / <code>system:message-template:delete</code> / <code>system:message-template:preview</code></td><td>预览不修改数据。</td></tr>
+          <tr><td>导出任务</td><td>创建 / 删除 / 下载</td><td><code>system:export-task:create</code> / <code>system:export-task:delete</code> / <code>system:export-task:download</code></td><td>下载前需后端校验任务归属。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <section id="s8">
     <h2><span class="section-num">08</span>缺口与优先级</h2>
     <h3>P0 必须补齐</h3>

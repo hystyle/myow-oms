@@ -1,5 +1,6 @@
 package com.myow.system.interfaces.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.system.application.dto.SystemModels.KickOnlineUserCommand;
@@ -26,12 +27,14 @@ public class OnlineUserController {
 
     @Operation(summary = "Page online users", description = "Returns online user sessions.")
     @PostMapping("/page")
+    @SaCheckPermission("system:online-user:list")
     public Result<PageResult<SystemRecordVO>> page(@RequestBody OnlineUserPageQuery query) {
         return Result.success(service.onlineUsers(query));
     }
 
     @Operation(summary = "Kick online user", description = "Forces an online user token to logout.")
     @PostMapping("/kick")
+    @SaCheckPermission("system:online-user:kick")
     public Result<Boolean> kick(@RequestBody KickOnlineUserCommand command) {
         return Result.success(service.kickOnlineUser(command.token()));
     }

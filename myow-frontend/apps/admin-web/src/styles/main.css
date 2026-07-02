@@ -102,6 +102,7 @@ button { cursor: pointer; }
 .crud-drawer__head h2 { margin: 0; font-size: 20px; }
 .crud-drawer__head p { margin: 6px 0 0; color: #64748b; font-size: 13px; }
 .crud-drawer__head button { height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; }
+.result-view { margin: 20px; padding: 16px; min-height: 220px; overflow: auto; border: 1px solid #dbe3ee; border-radius: 8px; background: #0f172a; color: #e2e8f0; font-size: 13px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
 .crud-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 20px; }
 .crud-form label { display: grid; gap: 6px; color: #334155; font-size: 13px; font-weight: 700; }
 .crud-form input, .crud-form select, .crud-form textarea { min-width: 0; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; color: #0f172a; background: #fff; }

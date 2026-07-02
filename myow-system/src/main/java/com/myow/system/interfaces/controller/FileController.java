@@ -1,5 +1,6 @@
 package com.myow.system.interfaces.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.system.application.dto.SystemModels.IdCommand;
@@ -30,36 +31,42 @@ public class FileController {
 
     @Operation(summary = "Upload file", description = "Uploads a file and stores file metadata.")
     @PostMapping("/upload")
+    @SaCheckPermission("system:file:upload")
     public Result<SystemRecordVO> upload(@RequestParam("file") MultipartFile file, @RequestParam("moduleName") String moduleName) {
         return Result.success(service.uploadFile(file, moduleName));
     }
 
     @Operation(summary = "Batch upload files", description = "Uploads files and stores file metadata.")
     @PostMapping("/batch-upload")
+    @SaCheckPermission("system:file:upload")
     public Result<List<SystemRecordVO>> batchUpload(@RequestParam("files") MultipartFile[] files, @RequestParam("moduleName") String moduleName) {
         return Result.success(service.batchUploadFile(files, moduleName));
     }
 
     @Operation(summary = "Get file detail", description = "Returns file metadata detail by id.")
     @PostMapping("/detail")
+    @SaCheckPermission("system:file:list")
     public Result<SystemRecordVO> detail(@RequestBody IdCommand command) {
         return Result.success(service.detail("FILE", command));
     }
 
     @Operation(summary = "Page files", description = "Returns file metadata page data.")
     @PostMapping("/page")
+    @SaCheckPermission("system:file:list")
     public Result<PageResult<SystemRecordVO>> page(@RequestBody PageQuery query) {
         return Result.success(service.page("FILE", query));
     }
 
     @Operation(summary = "Download file", description = "Returns file metadata for download routing.")
     @PostMapping("/download")
+    @SaCheckPermission("system:file:download")
     public Result<SystemRecordVO> download(@RequestBody IdCommand command) {
         return Result.success(service.detail("FILE", command));
     }
 
     @Operation(summary = "Delete file", description = "Deletes file metadata and schedules physical file cleanup.")
     @PostMapping("/delete")
+    @SaCheckPermission("system:file:delete")
     public Result<Boolean> delete(@RequestBody IdCommand command) {
         return Result.success(service.delete("FILE", command));
     }

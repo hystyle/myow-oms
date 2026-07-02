@@ -6,13 +6,16 @@
         <p>管理内部用户、登录状态、密码策略和账号安全操作。</p>
       </div>
       <div class="heading-actions">
-        <button class="primary-action" type="button" @click="openCreate">新增用户</button>
+        <button v-if="hasPermission('system:user:add')" class="primary-action" type="button" @click="openCreate">新增用户</button>
         <button class="secondary-action" type="button" @click="loadUsers">刷新用户</button>
       </div>
     </header>
 
     <div v-if="errorMessage" class="error-banner">
       {{ errorMessage }}
+    </div>
+    <div v-if="toastMessage" class="success-banner">
+      {{ toastMessage }}
     </div>
 
     <section class="toolbar">
@@ -62,12 +65,12 @@
               <td><span class="status-tag" :data-tone="userStatusTone(row.status)">{{ userStatusText(row.status) }}</span></td>
               <td>{{ formatTime(row.lastLoginTime) }}</td>
               <td class="table-actions">
-                <button type="button" @click="openEdit(row)">编辑</button>
-                <button type="button" @click="handleToggleStatus(row)">{{ isEnabled(row.status) ? '停用' : '启用' }}</button>
-                <button type="button" @click="handleResetPassword(row.userId)">重置密码</button>
-                <button type="button" @click="handleUnlock(row.userId)">解锁</button>
-                <button type="button" @click="handleForceChangePassword(row.userId)">强制改密</button>
-                <button type="button" @click="handleDelete(row.userId)">删除</button>
+                <button v-if="hasPermission('system:user:update')" type="button" @click="openEdit(row)">编辑</button>
+                <button v-if="hasPermission('system:user:update')" type="button" @click="handleToggleStatus(row)">{{ isEnabled(row.status) ? '停用' : '启用' }}</button>
+                <button v-if="hasPermission('system:user:update')" type="button" @click="handleResetPassword(row.userId)">重置密码</button>
+                <button v-if="hasPermission('system:user:update')" type="button" @click="handleUnlock(row.userId)">解锁</button>
+                <button v-if="hasPermission('system:user:update')" type="button" @click="handleForceChangePassword(row.userId)">强制改密</button>
+                <button v-if="hasPermission('system:user:delete')" type="button" @click="handleDelete(row.userId)">删除</button>
               </td>
             </tr>
             <tr v-if="!loading && rows.length === 0">
@@ -75,6 +78,17 @@
             </tr>
           </tbody>
         </table>
+        <footer class="pagination-bar">
+          <span>第 {{ query.pageNum }} 页 / 共 {{ pageCount }} 页</span>
+          <select v-model.number="query.pageSize" @change="changePageSize">
+            <option :value="10">10 条/页</option>
+            <option :value="20">20 条/页</option>
+            <option :value="50">50 条/页</option>
+            <option :value="100">100 条/页</option>
+          </select>
+          <button type="button" :disabled="query.pageNum <= 1 || loading" @click="changePage(query.pageNum - 1)">上一页</button>
+          <button type="button" :disabled="query.pageNum >= pageCount || loading" @click="changePage(query.pageNum + 1)">下一页</button>
+        </footer>
       </article>
     </section>
 
@@ -135,7 +149,7 @@
           </label>
           <footer class="crud-actions">
             <button type="button" @click="closeDrawer">取消</button>
-            <button class="primary-action" type="submit">保存</button>
+            <button class="primary-action" type="submit" :disabled="saving">{{ saving ? '保存中' : '保存' }}</button>
           </footer>
         </form>
       </section>
@@ -144,8 +158,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import type { UserProfile } from '@myow/api';
+import { usePermission } from '@/composables/usePermission';
 import {
   createUser,
   deleteUser,
@@ -159,7 +174,10 @@ import {
 } from '@/services/userService';
 
 const loading = ref(false);
+const { hasPermission } = usePermission();
+const saving = ref(false);
 const errorMessage = ref('');
+const toastMessage = ref('');
 const rows = ref<UserProfile[]>([]);
 const total = ref(0);
 const drawerOpen = ref(false);
@@ -175,6 +193,7 @@ const userForm = reactive({
   email: '',
   remark: ''
 });
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
 const query = reactive({
   keyword: '',
   status: '',
@@ -205,6 +224,16 @@ async function loadUsers() {
   }
 }
 
+function changePage(pageNum: number) {
+  query.pageNum = Math.max(1, pageNum);
+  void loadUsers();
+}
+
+function changePageSize() {
+  query.pageNum = 1;
+  void loadUsers();
+}
+
 function resetQuery() {
   query.keyword = '';
   query.status = '';
@@ -216,21 +245,29 @@ async function handleToggleStatus(row: UserProfile) {
   if (!row.userId) {
     return;
   }
+  if (!window.confirm(`确认${isEnabled(row.status) ? '停用' : '启用'}该用户？`)) return;
   await updateUserStatus(row.userId, !isEnabled(row.status));
+  showToast('用户状态已更新');
   await loadUsers();
 }
 
 async function handleResetPassword(userId: number) {
+  if (!window.confirm('确认重置该用户密码？')) return;
   await resetUserPassword(userId);
+  showToast('用户密码已重置');
 }
 
 async function handleUnlock(userId: number) {
+  if (!window.confirm('确认解锁该用户？')) return;
   await unlockUser(userId);
+  showToast('用户已解锁');
   await loadUsers();
 }
 
 async function handleForceChangePassword(userId: number) {
+  if (!window.confirm('确认要求该用户下次登录强制改密？')) return;
   await forceUserChangePassword(userId);
+  showToast('已设置强制改密');
   await loadUsers();
 }
 
@@ -251,6 +288,12 @@ async function openEdit(row: UserProfile) {
 }
 
 async function submitUser() {
+  const invalid = firstInvalidField();
+  if (invalid) {
+    errorMessage.value = `请填写${invalid}`;
+    return;
+  }
+  saving.value = true;
   errorMessage.value = '';
   try {
     const payload = compact({
@@ -271,20 +314,32 @@ async function submitUser() {
       await createUser(payload);
     }
     closeDrawer();
+    showToast('用户已保存');
     await loadUsers();
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '用户保存失败';
+  } finally {
+    saving.value = false;
   }
 }
 
 async function handleDelete(userId: number) {
+  if (!window.confirm('确认删除该用户？')) return;
   errorMessage.value = '';
   try {
     await deleteUser(userId);
+    showToast('用户已删除');
     await loadUsers();
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '用户删除失败';
   }
+}
+
+function firstInvalidField() {
+  if (!userForm.userId && !userForm.loginName) return '登录账号';
+  if (!userForm.nickName) return '姓名';
+  if (!userForm.deptId) return '部门 ID';
+  return '';
 }
 
 function closeDrawer() {
@@ -317,6 +372,15 @@ function compact(source: Record<string, unknown>) {
     if (Array.isArray(value)) return value.length > 0;
     return value !== '' && value != null;
   }));
+}
+
+function showToast(message: string) {
+  toastMessage.value = message;
+  window.setTimeout(() => {
+    if (toastMessage.value === message) {
+      toastMessage.value = '';
+    }
+  }, 2600);
 }
 
 function formatRoles(roleNameList?: string[]) {

@@ -1,5 +1,6 @@
 package com.myow.system.interfaces.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.system.application.dto.SystemModels.ExportTaskCreateCommand;
@@ -27,30 +28,35 @@ public class ExportTaskController {
 
     @Operation(summary = "Create export task", description = "Creates an asynchronous export task.")
     @PostMapping("/create")
+    @SaCheckPermission("system:export-task:create")
     public Result<SystemRecordVO> create(@RequestBody ExportTaskCreateCommand command) {
         return Result.success(service.createExportTask(command));
     }
 
     @Operation(summary = "Get export task detail", description = "Returns export task status and metadata.")
     @PostMapping("/detail")
+    @SaCheckPermission("system:export-task:list")
     public Result<SystemRecordVO> detail(@RequestBody IdCommand command) {
         return Result.success(service.detail("EXPORT_TASK", command));
     }
 
     @Operation(summary = "Page my export tasks", description = "Returns current user's export task page data.")
     @PostMapping("/my-page")
+    @SaCheckPermission("system:export-task:list")
     public Result<PageResult<SystemRecordVO>> myPage(@RequestBody PageQuery query) {
         return Result.success(service.page("EXPORT_TASK", query));
     }
 
     @Operation(summary = "Download export file", description = "Returns export task metadata for file download.")
     @PostMapping("/download")
+    @SaCheckPermission("system:export-task:download")
     public Result<SystemRecordVO> download(@RequestBody IdCommand command) {
         return Result.success(service.detail("EXPORT_TASK", command));
     }
 
     @Operation(summary = "Delete export task", description = "Deletes an export task and schedules generated file cleanup.")
     @PostMapping("/delete")
+    @SaCheckPermission("system:export-task:delete")
     public Result<Boolean> delete(@RequestBody IdCommand command) {
         return Result.success(service.delete("EXPORT_TASK", command));
     }

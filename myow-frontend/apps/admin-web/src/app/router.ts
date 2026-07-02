@@ -2,7 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
 const textColumn = (key: string, label: string, code = false) => ({ key, label, code });
-const textField = (key: string, label: string, type: 'text' | 'number' | 'textarea' | 'select' | 'datetime' = 'text', options?: Array<{ label: string; value: string | number }>) => ({ key, label, type, options });
+const textField = (
+  key: string,
+  label: string,
+  type: 'text' | 'number' | 'textarea' | 'select' | 'datetime' = 'text',
+  options?: Array<{ label: string; value: string | number }>,
+  extra: Record<string, unknown> = {}
+) => ({ key, label, type, options, ...extra });
+const idField = (key: string, label: string = 'ID') => textField(key, label, 'number', undefined, { hideOnCreate: true, readonly: true });
 const normalDisableOptions = [{ label: '正常', value: '0' }, { label: '停用', value: '1' }];
 const systemStatusOptions = [{ label: '启用', value: 1 }, { label: '停用', value: 0 }];
 
@@ -28,6 +35,10 @@ export const router = createRouter({
             endpoint: '/myow/system/role/page',
             baseEndpoint: '/myow/system/role',
             idKey: 'roleId',
+            createPerm: 'system:role:add',
+            updatePerm: 'system:role:update',
+            deletePerm: 'system:role:delete',
+            statusOptions: normalDisableOptions,
             columns: [
               textColumn('roleId', '角色 ID'),
               textColumn('roleCode', '角色编码', true),
@@ -37,7 +48,7 @@ export const router = createRouter({
               textColumn('createTime', '创建时间')
             ],
             formFields: [
-              textField('roleId', '角色 ID', 'number'),
+              idField('roleId', '角色 ID'),
               textField('roleCode', '角色编码'),
               textField('roleName', '角色名称'),
               textField('sort', '排序', 'number'),
@@ -58,6 +69,10 @@ export const router = createRouter({
             endpoint: '/myow/system/menu/page',
             baseEndpoint: '/myow/system/menu',
             idKey: 'menuId',
+            createPerm: 'system:menu:add',
+            updatePerm: 'system:menu:update',
+            deletePerm: 'system:menu:delete',
+            statusOptions: normalDisableOptions,
             columns: [
               textColumn('menuId', '菜单 ID'),
               textColumn('menuName', '菜单名称'),
@@ -67,7 +82,7 @@ export const router = createRouter({
               textColumn('status', '状态')
             ],
             formFields: [
-              textField('menuId', '菜单 ID', 'number'),
+              idField('menuId', '菜单 ID'),
               textField('parentId', '上级菜单 ID', 'number'),
               textField('menuName', '菜单名称'),
               textField('menuType', '菜单类型'),
@@ -96,6 +111,10 @@ export const router = createRouter({
             endpoint: '/myow/system/dict/page',
             baseEndpoint: '/myow/system/dict',
             idKey: 'dictId',
+            createPerm: 'system:dict:add',
+            updatePerm: 'system:dict:update',
+            deletePerm: 'system:dict:delete',
+            statusOptions: normalDisableOptions,
             columns: [
               textColumn('dictId', '字典 ID'),
               textColumn('dictCode', '字典编码', true),
@@ -105,7 +124,7 @@ export const router = createRouter({
               textColumn('createTime', '创建时间')
             ],
             formFields: [
-              textField('dictId', '字典 ID', 'number'),
+              idField('dictId', '字典 ID'),
               textField('dictCode', '字典编码'),
               textField('dictName', '字典名称'),
               textField('remark', '备注', 'textarea')
@@ -125,6 +144,7 @@ export const router = createRouter({
             canCreate: false,
             canUpdate: false,
             canDelete: false,
+            statusOptions: normalDisableOptions,
             columns: [
               textColumn('loginLogId', '日志 ID'),
               textColumn('loginName', '登录账号'),
@@ -145,6 +165,10 @@ export const router = createRouter({
             description: '维护系统调度任务、Cron 表达式和处理器。',
             endpoint: '/myow/api/v1/system/jobs/page',
             baseEndpoint: '/myow/api/v1/system/jobs',
+            createPerm: 'system:job:create',
+            updatePerm: 'system:job:update',
+            deletePerm: 'system:job:delete',
+            statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '任务 ID'),
               textColumn('jobName', '任务名称'),
@@ -154,7 +178,7 @@ export const router = createRouter({
               textColumn('status', '状态')
             ],
             formFields: [
-              textField('id', '任务 ID', 'number'),
+              idField('id', '任务 ID'),
               textField('jobName', '任务名称'),
               textField('jobGroup', '任务组'),
               textField('cronExpression', 'Cron 表达式'),
@@ -163,9 +187,9 @@ export const router = createRouter({
             ],
             requiredFields: ['jobName', 'jobGroup', 'cronExpression', 'handlerName'],
             rowActions: [
-              { label: '执行一次', endpoint: '/myow/api/v1/system/jobs/run', confirm: '确认立即执行该任务？', success: '任务已提交执行' },
-              { label: '暂停', endpoint: '/myow/api/v1/system/jobs/pause', confirm: '确认暂停该任务？', success: '任务已暂停' },
-              { label: '恢复', endpoint: '/myow/api/v1/system/jobs/resume', confirm: '确认恢复该任务？', success: '任务已恢复' }
+              { label: '执行一次', endpoint: '/myow/api/v1/system/jobs/run', permission: 'system:job:run', confirm: '确认立即执行该任务？', success: '任务已提交执行' },
+              { label: '暂停', endpoint: '/myow/api/v1/system/jobs/pause', permission: 'system:job:pause', confirm: '确认暂停该任务？', success: '任务已暂停' },
+              { label: '恢复', endpoint: '/myow/api/v1/system/jobs/resume', permission: 'system:job:resume', confirm: '确认恢复该任务？', success: '任务已恢复' }
             ]
           }
         },
@@ -178,6 +202,10 @@ export const router = createRouter({
             description: '维护系统公告草稿、内容、类型和有效期。',
             endpoint: '/myow/api/v1/system/notices/page',
             baseEndpoint: '/myow/api/v1/system/notices',
+            createPerm: 'system:notice:create',
+            updatePerm: 'system:notice:update',
+            deletePerm: 'system:notice:delete',
+            statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '公告 ID'),
               textColumn('title', '标题'),
@@ -187,7 +215,7 @@ export const router = createRouter({
               textColumn('updateTime', '更新时间')
             ],
             formFields: [
-              textField('id', '公告 ID', 'number'),
+              idField('id', '公告 ID'),
               textField('title', '标题'),
               textField('noticeType', '公告类型'),
               textField('expireTime', '有效期', 'datetime'),
@@ -195,8 +223,8 @@ export const router = createRouter({
             ],
             requiredFields: ['title', 'noticeType', 'content'],
             rowActions: [
-              { label: '发布', endpoint: '/myow/api/v1/system/notices/publish', confirm: '确认发布该公告？', success: '公告已发布' },
-              { label: '下线', endpoint: '/myow/api/v1/system/notices/withdraw', confirm: '确认下线该公告？', success: '公告已下线' }
+              { label: '发布', endpoint: '/myow/api/v1/system/notices/publish', permission: 'system:notice:publish', confirm: '确认发布该公告？', success: '公告已发布' },
+              { label: '下线', endpoint: '/myow/api/v1/system/notices/withdraw', permission: 'system:notice:withdraw', confirm: '确认下线该公告？', success: '公告已下线' }
             ]
           }
         },
@@ -209,6 +237,10 @@ export const router = createRouter({
             description: '维护站点级参数、开关和敏感配置。',
             endpoint: '/myow/api/v1/system/site-configs/page',
             baseEndpoint: '/myow/api/v1/system/site-configs',
+            createPerm: 'system:site-config:create',
+            updatePerm: 'system:site-config:update',
+            deletePerm: 'system:site-config:delete',
+            statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', 'ID'),
               textColumn('siteCode', '站点', true),
@@ -218,7 +250,7 @@ export const router = createRouter({
               textColumn('updateTime', '更新时间')
             ],
             formFields: [
-              textField('id', '配置 ID', 'number'),
+              idField('id', '配置 ID'),
               textField('siteCode', '站点编码'),
               textField('configKey', '配置键'),
               textField('configValue', '配置值', 'textarea'),
@@ -227,7 +259,7 @@ export const router = createRouter({
             ],
             requiredFields: ['siteCode', 'configKey', 'configValue', 'configType'],
             rowActions: [
-              { label: '刷新缓存', endpoint: '/myow/api/v1/system/site-configs/refresh', payloadKey: 'siteCode', idKey: 'siteCode', success: '配置缓存已刷新', refresh: false }
+              { label: '刷新缓存', endpoint: '/myow/api/v1/system/site-configs/refresh', permission: 'system:site-config:refresh', payloadKey: 'siteCode', idKey: 'siteCode', success: '配置缓存已刷新', refresh: false }
             ]
           }
         },
@@ -240,8 +272,10 @@ export const router = createRouter({
             description: '查看上传文件、模块归属、大小和删除策略。',
             endpoint: '/myow/api/v1/system/files/page',
             baseEndpoint: '/myow/api/v1/system/files',
+            deletePerm: 'system:file:delete',
             canCreate: false,
             canUpdate: false,
+            statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '文件 ID'),
               textColumn('fileName', '文件名'),
@@ -251,7 +285,7 @@ export const router = createRouter({
               textColumn('createTime', '上传时间')
             ],
             rowActions: [
-              { label: '下载', endpoint: '/myow/api/v1/system/files/download', success: '文件下载请求已提交', refresh: false }
+              { label: '下载', endpoint: '/myow/api/v1/system/files/download', permission: 'system:file:download', resultMode: 'drawer', refresh: false }
             ]
           }
         },
@@ -267,6 +301,7 @@ export const router = createRouter({
             canCreate: false,
             canUpdate: false,
             canDelete: false,
+            statusOptions: systemStatusOptions,
             columns: [
               textColumn('userId', '用户 ID'),
               textColumn('loginName', '账号'),
@@ -276,7 +311,7 @@ export const router = createRouter({
               textColumn('expireTime', '过期时间')
             ],
             rowActions: [
-              { label: '踢出', endpoint: '/myow/api/v1/system/online-users/kick', payloadKey: 'token', idKey: 'token', confirm: '确认踢出该在线用户？', success: '用户已踢出' }
+              { label: '踢出', endpoint: '/myow/api/v1/system/online-users/kick', permission: 'system:online-user:kick', payloadKey: 'token', idKey: 'token', confirm: '确认踢出该在线用户？', success: '用户已踢出' }
             ]
           }
         },
@@ -289,6 +324,10 @@ export const router = createRouter({
             description: '维护敏感词库和文本检查基础数据。',
             endpoint: '/myow/api/v1/system/sensitive-words/page',
             baseEndpoint: '/myow/api/v1/system/sensitive-words',
+            createPerm: 'system:sensitive-word:create',
+            updatePerm: 'system:sensitive-word:update',
+            deletePerm: 'system:sensitive-word:delete',
+            statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', 'ID'),
               textColumn('word', '敏感词'),
@@ -298,7 +337,7 @@ export const router = createRouter({
               textColumn('updateTime', '更新时间')
             ],
             formFields: [
-              textField('id', '敏感词 ID', 'number'),
+              idField('id', '敏感词 ID'),
               textField('word', '敏感词'),
               textField('category', '分类'),
               textField('level', '等级', 'number'),
@@ -317,6 +356,10 @@ export const router = createRouter({
             description: '维护通知、邮件、站内信等消息模板。',
             endpoint: '/myow/api/v1/system/message-templates/page',
             baseEndpoint: '/myow/api/v1/system/message-templates',
+            createPerm: 'system:message-template:create',
+            updatePerm: 'system:message-template:update',
+            deletePerm: 'system:message-template:delete',
+            statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '模板 ID'),
               textColumn('templateCode', '模板编码', true),
@@ -326,7 +369,7 @@ export const router = createRouter({
               textColumn('updateTime', '更新时间')
             ],
             formFields: [
-              textField('id', '模板 ID', 'number'),
+              idField('id', '模板 ID'),
               textField('templateCode', '模板编码'),
               textField('channel', '消息渠道'),
               textField('title', '标题'),
@@ -336,7 +379,7 @@ export const router = createRouter({
             ],
             requiredFields: ['templateCode', 'channel', 'title', 'content'],
             rowActions: [
-              { label: '预览', endpoint: '/myow/api/v1/system/message-templates/preview', success: '模板预览请求已提交', refresh: false }
+              { label: '预览', endpoint: '/myow/api/v1/system/message-templates/preview', permission: 'system:message-template:preview', resultMode: 'drawer', refresh: false }
             ]
           }
         },
@@ -349,7 +392,10 @@ export const router = createRouter({
             description: '查看我的导出任务、执行状态和下载结果。',
             endpoint: '/myow/api/v1/system/export-tasks/my-page',
             baseEndpoint: '/myow/api/v1/system/export-tasks',
+            createPerm: 'system:export-task:create',
+            deletePerm: 'system:export-task:delete',
             canUpdate: false,
+            statusOptions: systemStatusOptions,
             columns: [
               textColumn('id', '任务 ID'),
               textColumn('taskName', '任务名称'),
@@ -361,11 +407,11 @@ export const router = createRouter({
             formFields: [
               textField('moduleName', '模块名称'),
               textField('exportType', '导出类型'),
-              textField('queryParams', '查询参数 JSON', 'textarea')
+              textField('queryParams', '查询参数 JSON', 'textarea', undefined, { json: true })
             ],
             requiredFields: ['moduleName', 'exportType'],
             rowActions: [
-              { label: '下载', endpoint: '/myow/api/v1/system/export-tasks/download', success: '导出文件下载请求已提交', refresh: false }
+              { label: '下载', endpoint: '/myow/api/v1/system/export-tasks/download', permission: 'system:export-task:download', resultMode: 'drawer', refresh: false }
             ]
           }
         },

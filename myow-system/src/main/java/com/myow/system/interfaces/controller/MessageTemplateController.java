@@ -1,5 +1,6 @@
 package com.myow.system.interfaces.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.system.application.dto.SystemModels.IdCommand;
@@ -31,36 +32,42 @@ public class MessageTemplateController {
 
     @Operation(summary = "Create message template", description = "Creates a message template.")
     @PostMapping("/create")
+    @SaCheckPermission("system:message-template:create")
     public Result<SystemRecordVO> create(@RequestBody MessageTemplateCreateCommand command) {
         return Result.success(service.createMessageTemplate(command));
     }
 
     @Operation(summary = "Update message template", description = "Updates a message template.")
     @PostMapping("/update")
+    @SaCheckPermission("system:message-template:update")
     public Result<SystemRecordVO> update(@RequestBody MessageTemplateUpdateCommand command) {
         return Result.success(service.updateMessageTemplate(command));
     }
 
     @Operation(summary = "Get message template detail", description = "Returns message template detail by id.")
     @PostMapping("/detail")
+    @SaCheckPermission("system:message-template:list")
     public Result<SystemRecordVO> detail(@RequestBody IdCommand command) {
         return Result.success(service.detail("MESSAGE_TEMPLATE", command));
     }
 
     @Operation(summary = "Page message templates", description = "Returns message template page data.")
     @PostMapping("/page")
+    @SaCheckPermission("system:message-template:list")
     public Result<PageResult<SystemRecordVO>> page(@RequestBody PageQuery query) {
         return Result.success(service.page("MESSAGE_TEMPLATE", query));
     }
 
     @Operation(summary = "Delete message template", description = "Deletes a message template.")
     @PostMapping("/delete")
+    @SaCheckPermission("system:message-template:delete")
     public Result<Boolean> delete(@RequestBody IdCommand command) {
         return Result.success(service.delete("MESSAGE_TEMPLATE", command));
     }
 
     @Operation(summary = "Preview message template", description = "Renders a message template using sample variables.")
     @PostMapping("/preview")
+    @SaCheckPermission("system:message-template:preview")
     public Result<Map<String, Object>> preview(@RequestBody MessageTemplatePreviewCommand command) {
         return Result.success(service.previewMessageTemplate(command));
     }

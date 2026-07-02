@@ -1,5 +1,6 @@
 package com.myow.system.interfaces.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.system.application.dto.SystemModels.IdCommand;
@@ -32,36 +33,42 @@ public class SensitiveWordController {
 
     @Operation(summary = "Create sensitive word", description = "Creates a sensitive word.")
     @PostMapping("/create")
+    @SaCheckPermission("system:sensitive-word:create")
     public Result<SystemRecordVO> create(@RequestBody SensitiveWordCreateCommand command) {
         return Result.success(service.createSensitiveWord(command));
     }
 
     @Operation(summary = "Update sensitive word", description = "Updates a sensitive word.")
     @PostMapping("/update")
+    @SaCheckPermission("system:sensitive-word:update")
     public Result<SystemRecordVO> update(@RequestBody SensitiveWordUpdateCommand command) {
         return Result.success(service.updateSensitiveWord(command));
     }
 
     @Operation(summary = "Get sensitive word detail", description = "Returns sensitive word detail by id.")
     @PostMapping("/detail")
+    @SaCheckPermission("system:sensitive-word:list")
     public Result<SystemRecordVO> detail(@RequestBody IdCommand command) {
         return Result.success(service.detail("SENSITIVE_WORD", command));
     }
 
     @Operation(summary = "Page sensitive words", description = "Returns sensitive word page data.")
     @PostMapping("/page")
+    @SaCheckPermission("system:sensitive-word:list")
     public Result<PageResult<SystemRecordVO>> page(@RequestBody PageQuery query) {
         return Result.success(service.page("SENSITIVE_WORD", query));
     }
 
     @Operation(summary = "Delete sensitive word", description = "Deletes a sensitive word.")
     @PostMapping("/delete")
+    @SaCheckPermission("system:sensitive-word:delete")
     public Result<Boolean> delete(@RequestBody IdCommand command) {
         return Result.success(service.delete("SENSITIVE_WORD", command));
     }
 
     @Operation(summary = "Import sensitive words", description = "Imports sensitive words from Excel or CSV.")
     @PostMapping("/import")
+    @SaCheckPermission("system:sensitive-word:import")
     public Result<Boolean> importFile(MultipartFile file) {
         return Result.success(file != null);
     }

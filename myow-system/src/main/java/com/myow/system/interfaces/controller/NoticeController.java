@@ -1,5 +1,6 @@
 package com.myow.system.interfaces.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.system.application.dto.SystemModels.IdCommand;
@@ -28,42 +29,49 @@ public class NoticeController {
 
     @Operation(summary = "Create notice", description = "Creates a system notice draft.")
     @PostMapping("/create")
+    @SaCheckPermission("system:notice:create")
     public Result<SystemRecordVO> create(@RequestBody NoticeCreateCommand command) {
         return Result.success(service.createNotice(command));
     }
 
     @Operation(summary = "Update notice", description = "Updates a draft notice.")
     @PostMapping("/update")
+    @SaCheckPermission("system:notice:update")
     public Result<SystemRecordVO> update(@RequestBody NoticeUpdateCommand command) {
         return Result.success(service.updateNotice(command));
     }
 
     @Operation(summary = "Get notice detail", description = "Returns notice detail by id.")
     @PostMapping("/detail")
+    @SaCheckPermission("system:notice:list")
     public Result<SystemRecordVO> detail(@RequestBody IdCommand command) {
         return Result.success(service.detail("NOTICE", command));
     }
 
     @Operation(summary = "Page notices", description = "Returns notice page data for administrators.")
     @PostMapping("/page")
+    @SaCheckPermission("system:notice:list")
     public Result<PageResult<SystemRecordVO>> page(@RequestBody PageQuery query) {
         return Result.success(service.page("NOTICE", query));
     }
 
     @Operation(summary = "Publish notice", description = "Publishes a draft notice.")
     @PostMapping("/publish")
+    @SaCheckPermission("system:notice:publish")
     public Result<SystemRecordVO> publish(@RequestBody IdCommand command) {
         return Result.success(service.changeStatus("NOTICE", command, 1));
     }
 
     @Operation(summary = "Withdraw notice", description = "Withdraws a published notice.")
     @PostMapping("/withdraw")
+    @SaCheckPermission("system:notice:withdraw")
     public Result<SystemRecordVO> withdraw(@RequestBody IdCommand command) {
         return Result.success(service.changeStatus("NOTICE", command, 2));
     }
 
     @Operation(summary = "Delete notice", description = "Deletes a notice.")
     @PostMapping("/delete")
+    @SaCheckPermission("system:notice:delete")
     public Result<Boolean> delete(@RequestBody IdCommand command) {
         return Result.success(service.delete("NOTICE", command));
     }

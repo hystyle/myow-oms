@@ -1,5 +1,6 @@
 package com.myow.system.interfaces.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.myow.common.response.PageResult;
 import com.myow.common.response.Result;
 import com.myow.system.application.dto.SystemModels.IdCommand;
@@ -31,42 +32,49 @@ public class SiteConfigController {
 
     @Operation(summary = "Create site config", description = "Creates a site configuration item.")
     @PostMapping("/create")
+    @SaCheckPermission("system:site-config:create")
     public Result<SystemRecordVO> create(@RequestBody SiteConfigCreateCommand command) {
         return Result.success(service.createSiteConfig(command));
     }
 
     @Operation(summary = "Update site config", description = "Updates a site configuration item.")
     @PostMapping("/update")
+    @SaCheckPermission("system:site-config:update")
     public Result<SystemRecordVO> update(@RequestBody SiteConfigUpdateCommand command) {
         return Result.success(service.updateSiteConfig(command));
     }
 
     @Operation(summary = "Get site config detail", description = "Returns site configuration detail by id.")
     @PostMapping("/detail")
+    @SaCheckPermission("system:site-config:list")
     public Result<SystemRecordVO> detail(@RequestBody IdCommand command) {
         return Result.success(service.detail("SITE_CONFIG", command));
     }
 
     @Operation(summary = "Page site configs", description = "Returns site configuration page data.")
     @PostMapping("/page")
+    @SaCheckPermission("system:site-config:list")
     public Result<PageResult<SystemRecordVO>> page(@RequestBody PageQuery query) {
         return Result.success(service.page("SITE_CONFIG", query));
     }
 
     @Operation(summary = "Delete site config", description = "Deletes a site configuration item.")
     @PostMapping("/delete")
+    @SaCheckPermission("system:site-config:delete")
     public Result<Boolean> delete(@RequestBody IdCommand command) {
         return Result.success(service.delete("SITE_CONFIG", command));
     }
 
     @Operation(summary = "Get configs by site", description = "Returns site configuration map by site code.")
     @PostMapping("/by-site")
+    @SaCheckPermission("system:site-config:list")
     public Result<Map<String, Object>> bySite(@RequestBody SiteCodeQuery query) {
         return Result.success(service.getSiteConfigBySite(query));
     }
 
     @Operation(summary = "Refresh site config cache", description = "Refreshes site configuration cache.")
     @PostMapping("/refresh")
+    @SaCheckPermission("system:site-config:refresh")
     public Result<Boolean> refresh(@RequestBody SiteCodeQuery query) {
         return Result.success(query.siteCode() != null);
     }
