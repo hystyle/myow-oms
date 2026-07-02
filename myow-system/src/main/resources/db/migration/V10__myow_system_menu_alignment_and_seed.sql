@@ -70,9 +70,18 @@ ON CONFLICT (word, category) DO UPDATE SET
 
 INSERT INTO sys_message_template(template_id, template_code, channel, title, content, variables, status, create_time, update_time)
 VALUES
-    (94001, 'USER_PASSWORD_RESET', 'EMAIL', 'Password reset for ${name}', 'Hello ${name}, your temporary password is ${password}.', 'name,password', 1, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3)),
-    (94002, 'EXPORT_TASK_READY', 'SITE_MESSAGE', 'Export task ${taskName} is ready', 'Your export task ${taskName} has completed. File id: ${fileId}.', 'taskName,fileId', 1, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3)),
-    (94003, 'NOTICE_PUBLISH', 'SITE_MESSAGE', 'Notice: ${title}', '${content}', 'title,content', 1, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))
+    (94001, 'USER_PASSWORD_RESET', 'EMAIL',
+     'Password reset for ' || CHR(36) || '{name}',
+     'Hello ' || CHR(36) || '{name}, your temporary password is ' || CHR(36) || '{password}.',
+     'name,password', 1, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3)),
+    (94002, 'EXPORT_TASK_READY', 'SITE_MESSAGE',
+     'Export task ' || CHR(36) || '{taskName} is ready',
+     'Your export task ' || CHR(36) || '{taskName} has completed. File id: ' || CHR(36) || '{fileId}.',
+     'taskName,fileId', 1, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3)),
+    (94003, 'NOTICE_PUBLISH', 'SITE_MESSAGE',
+     'Notice: ' || CHR(36) || '{title}',
+     CHR(36) || '{content}',
+     'title,content', 1, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))
 ON CONFLICT (template_code, channel) DO UPDATE SET
     title = EXCLUDED.title,
     content = EXCLUDED.content,

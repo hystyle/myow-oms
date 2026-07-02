@@ -2,9 +2,11 @@ package com.myow.common.web.config;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.LocalDateTimeUtil;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.myow.common.exception.BusinessException;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -35,12 +38,34 @@ public class JsonConfig {
     public Jackson2ObjectMapperBuilderCustomizer customizer() {
         return builder -> {
             builder.deserializers(new LocalDateDeserializer(DatePattern.NORM_DATE_FORMAT.getDateTimeFormatter()));
-            builder.deserializers(new LocalDateTimeDeserializer(DatePattern.NORM_DATETIME_FORMAT.getDateTimeFormatter()));
+            builder.deserializers(new FlexibleLocalDateTimeDeserializer());
             builder.serializers(new LocalDateSerializer(DatePattern.NORM_DATE_FORMAT.getDateTimeFormatter()));
             builder.serializers(new LocalDateTimeSerializer(DatePattern.NORM_DATETIME_FORMAT.getDateTimeFormatter()));
+            builder.serializerByType(Long.class, ToStringSerializer.instance);
+            builder.serializerByType(Long.TYPE, ToStringSerializer.instance);
             builder.serializerByType(BigInteger.class, ToStringSerializer.instance);
             builder.serializerByType(BigDecimal.class, ToStringSerializer.instance);
         };
+    }
+
+    public static class FlexibleLocalDateTimeDeserializer extends StdDeserializer<LocalDateTime> {
+
+        public FlexibleLocalDateTimeDeserializer() {
+            super(LocalDateTime.class);
+        }
+
+        @Override
+        public LocalDateTime deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+            String text = parser.getText();
+            if (StringUtils.isBlank(text)) {
+                return null;
+            }
+            String normalized = text.trim().replace('T', ' ');
+            if (normalized.length() == 16) {
+                normalized = normalized + ":00";
+            }
+            return LocalDateTimeUtil.parse(normalized, DatePattern.NORM_DATETIME_FORMAT.getDateTimeFormatter());
+        }
     }
 
 
@@ -57,7 +82,11 @@ public class JsonConfig {
             }
             LocalDateTime localDateTime;
             try {
-                localDateTime = LocalDateTimeUtil.parse(str, DatePattern.NORM_DATETIME_FORMAT.getDateTimeFormatter());
+                String normalized = str.trim().replace('T', ' ');
+                if (normalized.length() == 16) {
+                    normalized = normalized + ":00";
+                }
+                localDateTime = LocalDateTimeUtil.parse(normalized, DatePattern.NORM_DATETIME_FORMAT.getDateTimeFormatter());
             } catch (DateTimeParseException e) {
                 throw new RuntimeException("请输入正确的日期格式：yyyy-MM-dd HH:mm:ss");
             }
