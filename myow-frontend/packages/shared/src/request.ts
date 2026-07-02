@@ -16,6 +16,9 @@ requestClient.interceptors.request.use((config) => {
 requestClient.interceptors.response.use((response) => {
   const body = response.data as ApiResult<unknown>;
   if (body && Object.prototype.hasOwnProperty.call(body, 'data')) {
+    if (body.code && Number(body.code) !== 200) {
+      throw new Error(body.message || 'Request failed');
+    }
     return body.data;
   }
   return response.data;

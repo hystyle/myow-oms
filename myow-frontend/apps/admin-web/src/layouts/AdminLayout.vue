@@ -1,9 +1,14 @@
 <template>
   <div class="admin-shell">
     <aside class="admin-sidebar">
-      <div class="admin-logo">MYOW</div>
+      <div class="admin-logo">
+        <span class="admin-logo-mark">M</span>
+        <span>MYOW Platform</span>
+      </div>
       <nav class="admin-menu">
-        <router-link to="/dashboard">Dashboard</router-link>
+        <router-link to="/dashboard">工作台</router-link>
+        <router-link to="/user">用户中心</router-link>
+        <router-link to="/system">系统中心</router-link>
         <router-link v-for="menu in displayMenus" :key="menu.menuId" :to="menu.path || '/dashboard'">
           {{ menu.menuName }}
         </router-link>
@@ -11,7 +16,10 @@
     </aside>
     <section class="admin-main">
       <header class="admin-topbar">
-        <span>MYOW Admin</span>
+        <div>
+          <strong>后台管理端</strong>
+          <span class="admin-env">本地开发</span>
+        </div>
         <span class="admin-user">{{ authStore.user?.nickName || authStore.user?.userName || 'User' }}</span>
         <button type="button" @click="logout">Logout</button>
       </header>

@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
 export const router = createRouter({
-  history: createWebHistory('/admin/'),
+  history: createWebHistory('/'),
   routes: [
     { path: '/login', name: 'AdminLogin', component: () => import('@/pages/login/AdminLogin.vue'), meta: { public: true } },
     {
@@ -10,7 +10,9 @@ export const router = createRouter({
       component: () => import('@/layouts/AdminLayout.vue'),
       children: [
         { path: '', redirect: '/dashboard' },
-        { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/pages/dashboard/AdminDashboard.vue') }
+        { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/pages/dashboard/AdminDashboard.vue') },
+        { path: 'user', name: 'UserCenter', component: () => import('@/pages/user/UserCenter.vue') },
+        { path: 'system', name: 'SystemCenter', component: () => import('@/pages/system/SystemCenter.vue') }
       ]
     },
     { path: '/403', name: 'Forbidden', component: () => import('@/pages/error/Forbidden.vue'), meta: { public: true } },
