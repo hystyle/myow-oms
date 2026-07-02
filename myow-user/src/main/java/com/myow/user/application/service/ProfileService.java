@@ -11,6 +11,7 @@ import com.myow.common.security.PasswordService;
 import com.myow.common.security.UserContext;
 import com.myow.user.application.dto.ChangePasswordReqDTO;
 import com.myow.user.application.dto.UpdateProfileReqDTO;
+import com.myow.user.application.vo.ProfileBootstrapVO;
 import com.myow.user.application.vo.UserMenuRespVO;
 import com.myow.user.application.vo.UserRespVO;
 import com.myow.user.infrastructure.persistence.po.MenuDO;
@@ -71,6 +72,30 @@ public class ProfileService {
                 .filter(StrUtil::isNotBlank)
                 .distinct()
                 .toList();
+    }
+
+    public ProfileBootstrapVO getBootstrap() {
+        UserRespVO currentUser = getCurrentUser();
+        List<UserMenuRespVO> menuList = getCurrentMenus();
+        List<String> permissionList = getCurrentPermissions();
+
+        ProfileBootstrapVO result = new ProfileBootstrapVO();
+        result.setUser(currentUser);
+        result.setMenuList(menuList);
+        result.setPermissionList(permissionList);
+        result.setRoleIdList(currentUser.getRoleIdList());
+        result.setRoleNameList(currentUser.getRoleNameList());
+        result.setAdminFlag(currentUser.getAdminFlag());
+        result.setMustChangePassword(currentUser.getMustChangePassword());
+        result.setForceChangePassword(currentUser.getForceChangePassword());
+        result.setTenantModeEnabled(false);
+        result.setTenantEnabled(true);
+        result.setDataScope(Boolean.TRUE.equals(currentUser.getAdminFlag()) ? "ALL" : null);
+        result.setSystemConfig(Map.of(
+                "tenantModeEnabled", false,
+                "clientPortalEnabled", false
+        ));
+        return result;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -169,7 +194,10 @@ public class ProfileService {
         result.setLockedUntil(user.getLockedUntil());
         result.setPasswordUpdateTime(user.getPasswordUpdateTime());
         result.setPasswordExpireTime(user.getPasswordExpireTime());
-        result.setMustChangePassword(user.getMustChangePassword());
+        boolean passwordExpired = user.getPasswordExpireTime() != null && user.getPasswordExpireTime().isBefore(LocalDateTime.now());
+        boolean mustChangePassword = Boolean.TRUE.equals(user.getMustChangePassword()) || passwordExpired;
+        result.setMustChangePassword(mustChangePassword);
+        result.setForceChangePassword(mustChangePassword);
         result.setLastLoginTime(user.getLastLoginTime());
         result.setLastLoginIp(user.getLastLoginIp());
         return result;

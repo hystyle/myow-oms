@@ -1,0 +1,17 @@
+{
+  "name": "@myow/client-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5174",
+    "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@myow/api": "0.1.0",
+    "@myow/shared": "0.1.0",
+    "@myow/ui": "0.1.0"
+  }
+}

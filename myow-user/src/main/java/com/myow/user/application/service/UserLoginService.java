@@ -148,6 +148,7 @@ public class UserLoginService {
         result.setAdminFlag(user.getAdminFlag());
         boolean passwordExpired = user.getPasswordExpireTime() != null && user.getPasswordExpireTime().isBefore(LocalDateTime.now());
         result.setMustChangePassword(Boolean.TRUE.equals(user.getMustChangePassword()) || passwordExpired);
+        result.setForceChangePassword(result.getMustChangePassword());
         result.setPasswordExpireTime(user.getPasswordExpireTime());
         if (Boolean.TRUE.equals(result.getMustChangePassword())) {
             result.setMenuList(List.of());

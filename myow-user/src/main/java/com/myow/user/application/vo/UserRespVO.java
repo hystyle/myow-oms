@@ -1,5 +1,6 @@
 package com.myow.user.application.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@Schema(description = "User profile response")
 public class UserRespVO {
 
     private Long userId;
@@ -57,6 +59,9 @@ public class UserRespVO {
     private LocalDateTime passwordExpireTime;
 
     private Boolean mustChangePassword;
+
+    @Schema(description = "Whether current user must change password before using the system")
+    private Boolean forceChangePassword;
 
     private LocalDateTime lastLoginTime;
 

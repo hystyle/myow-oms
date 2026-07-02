@@ -4,6 +4,7 @@ import com.myow.common.response.Result;
 import com.myow.user.application.dto.ChangePasswordReqDTO;
 import com.myow.user.application.dto.UpdateProfileReqDTO;
 import com.myow.user.application.service.ProfileService;
+import com.myow.user.application.vo.ProfileBootstrapVO;
 import com.myow.user.application.vo.UserMenuRespVO;
 import com.myow.user.application.vo.UserRespVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,12 @@ public class ProfileController {
     @Operation(summary = "Get current user permissions")
     public Result<List<String>> permissions() {
         return Result.success(profileService.getCurrentPermissions());
+    }
+
+    @PostMapping("/bootstrap")
+    @Operation(summary = "Get current user frontend bootstrap payload")
+    public Result<ProfileBootstrapVO> bootstrap() {
+        return Result.success(profileService.getBootstrap());
     }
 
     @PostMapping("/update")

@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "composite": true,
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@/*": ["src/*"],
+      "@myow/api": ["../../packages/api/src/index.ts"],
+      "@myow/shared": ["../../packages/shared/src/index.ts"],
+      "@myow/ui": ["../../packages/ui/src/index.ts"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.vue",
+    "vite.config.ts",
+    "../../packages/api/src/**/*.ts",
+    "../../packages/shared/src/**/*.ts",
+    "../../packages/ui/src/**/*.ts",
+    "../../packages/ui/src/**/*.vue"
+  ]
+}

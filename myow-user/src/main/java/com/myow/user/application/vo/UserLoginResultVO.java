@@ -31,6 +31,9 @@ public class UserLoginResultVO {
 
     private Boolean mustChangePassword;
 
+    @Schema(description = "Whether current user must change password before using the system")
+    private Boolean forceChangePassword;
+
     private LocalDateTime passwordExpireTime;
 
     private List<UserMenuRespVO> menuList = List.of();
