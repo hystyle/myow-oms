@@ -85,6 +85,7 @@ const menuGroups = computed<MenuGroup[]>(() => {
     .filter((item) => item.visible !== '1')
     .filter((item) => item.status !== '1')
     .filter((item) => item.path)
+    .filter((item) => isSupportedRoute(item.path))
     .slice()
     .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
   if (backendMenus.length === 0) {
@@ -117,6 +118,7 @@ function groupBackendMenus(menus: MenuItem[]) {
 function inferGroupTitle(path?: string) {
   if (!path) return '其他';
   if (path.startsWith('/user') || path.startsWith('user')) return '用户权限';
+  if (path.startsWith('/system-support') || path.startsWith('system-support')) return '系统运维';
   if (path.startsWith('/system') || path.startsWith('system')) return '系统运维';
   return '启动模块';
 }
@@ -124,6 +126,11 @@ function inferGroupTitle(path?: string) {
 function normalizePath(path?: string) {
   if (!path) return '/dashboard';
   return path.startsWith('/') ? path : `/${path}`;
+}
+
+function isSupportedRoute(path?: string) {
+  const resolved = router.resolve(normalizePath(path));
+  return resolved.matched.some((item) => item.name && item.name !== 'NotFound');
 }
 
 async function logout() {

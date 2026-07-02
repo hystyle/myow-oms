@@ -23,10 +23,11 @@ export const router = createRouter({
       children: [
         { path: '', redirect: '/dashboard' },
         { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/pages/dashboard/AdminDashboard.vue') },
-        { path: 'user', name: 'UserCenter', component: () => import('@/pages/user/UserCenter.vue') },
-        { path: 'user/depts', name: 'DeptCenter', component: () => import('@/pages/user/DeptCenter.vue') },
+        { path: 'user', alias: ['/system/user'], name: 'UserCenter', component: () => import('@/pages/user/UserCenter.vue') },
+        { path: 'user/depts', alias: ['/system/dept'], name: 'DeptCenter', component: () => import('@/pages/user/DeptCenter.vue') },
         {
           path: 'user/roles',
+          alias: ['/system/role'],
           name: 'RoleCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -61,6 +62,7 @@ export const router = createRouter({
         },
         {
           path: 'user/menus',
+          alias: ['/system/menu'],
           name: 'MenuCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -103,6 +105,7 @@ export const router = createRouter({
         },
         {
           path: 'user/dicts',
+          alias: ['/system/dict'],
           name: 'DictCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -134,6 +137,7 @@ export const router = createRouter({
         },
         {
           path: 'user/login-logs',
+          alias: ['/system/login-log'],
           name: 'LoginLogCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -158,6 +162,7 @@ export const router = createRouter({
         { path: 'system', name: 'SystemCenter', component: () => import('@/pages/system/SystemCenter.vue') },
         {
           path: 'system/jobs',
+          alias: ['/system-support/jobs'],
           name: 'JobCrudCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -195,6 +200,7 @@ export const router = createRouter({
         },
         {
           path: 'system/notices',
+          alias: ['/system-support/notices'],
           name: 'NoticeCrudCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -230,6 +236,7 @@ export const router = createRouter({
         },
         {
           path: 'system/site-configs',
+          alias: ['/system-support/site-configs'],
           name: 'SiteConfigCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -265,6 +272,7 @@ export const router = createRouter({
         },
         {
           path: 'system/files',
+          alias: ['/system-support/files'],
           name: 'FileCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -291,6 +299,7 @@ export const router = createRouter({
         },
         {
           path: 'system/online-users',
+          alias: ['/system-support/online-users'],
           name: 'OnlineUserCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -317,6 +326,7 @@ export const router = createRouter({
         },
         {
           path: 'system/sensitive-words',
+          alias: ['/system-support/sensitive-words'],
           name: 'SensitiveWordCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -349,6 +359,7 @@ export const router = createRouter({
         },
         {
           path: 'system/message-templates',
+          alias: ['/system-support/message-templates'],
           name: 'MessageTemplateCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -385,6 +396,7 @@ export const router = createRouter({
         },
         {
           path: 'system/export-tasks',
+          alias: ['/system-support/export-tasks'],
           name: 'ExportTaskCenter',
           component: () => import('@/pages/common/AdminGenericPage.vue'),
           meta: {
@@ -415,7 +427,7 @@ export const router = createRouter({
             ]
           }
         },
-        { path: 'system/monitor', name: 'MonitorCenter', component: () => import('@/pages/system/MonitorCenter.vue') }
+        { path: 'system/monitor', alias: ['/system-support/monitor'], name: 'MonitorCenter', component: () => import('@/pages/system/MonitorCenter.vue') }
       ]
     },
     { path: '/403', name: 'Forbidden', component: () => import('@/pages/error/Forbidden.vue'), meta: { public: true } },
