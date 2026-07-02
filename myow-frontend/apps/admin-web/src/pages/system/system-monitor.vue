@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { postAdminData, type AdminRecord } from '@/services/adminDataService';
+import { postAdminData, type AdminRecord } from '@/services/admin-data-service';
 
 const server = ref<AdminRecord>({});
 const redis = ref<AdminRecord>({});

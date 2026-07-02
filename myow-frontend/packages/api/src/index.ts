@@ -6,3 +6,37 @@ export interface BootstrapPayload { user: UserProfile; menuList: MenuItem[]; per
 export interface PageQuery { keyword?: string; status?: string | number; pageNum?: number; pageSize?: number; deptId?: number; }
 export interface PageResult<T> { pageNum?: number; pageSize?: number; total?: number; pages?: number; list?: T[]; emptyFlag?: boolean; }
 export interface SystemRecord { id: number; type: string; code?: string; name?: string; status?: number; attributes?: Record<string, unknown>; createTime?: string; updateTime?: string; }
+
+// 用户管理请求载荷
+export interface UserCreatePayload {
+  loginName: string;
+  nickName: string;
+  deptId?: number | string;
+  positionId?: number | string;
+  roleIdList?: number[];
+  gender?: string;
+  phone?: string;
+  email?: string;
+  remark?: string;
+}
+
+export interface UserUpdatePayload extends UserCreatePayload {
+  userId: number | string;
+}
+
+export interface UserStatusPayload {
+  userId: number;
+  status: boolean;
+}
+
+// 部门管理请求载荷
+export interface DeptCreatePayload {
+  parentId?: number | string;
+  deptName: string;
+  sort?: number;
+  managerId?: number | string;
+}
+
+export interface DeptUpdatePayload extends DeptCreatePayload {
+  deptId: number | string;
+}

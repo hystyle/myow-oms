@@ -60,50 +60,22 @@
       </article>
     </section>
 
-    <div v-if="drawerOpen" class="crud-backdrop" @click.self="closeDrawer">
-      <section class="crud-drawer">
-        <header class="crud-drawer__head">
-          <div>
-            <h2>{{ deptForm.deptId ? '编辑部门' : '新增部门' }}</h2>
-            <p>提交到 /myow/system/dept/create 或 /update。</p>
-          </div>
-          <button type="button" @click="closeDrawer">关闭</button>
-        </header>
-        <form class="crud-form" @submit.prevent="submitDept">
-          <label>
-            <span>部门 ID</span>
-            <input v-model="deptForm.deptId" disabled />
-          </label>
-          <label>
-            <span>上级部门 ID</span>
-            <input v-model="deptForm.parentId" type="number" />
-          </label>
-          <label>
-            <span>部门名称</span>
-            <input v-model="deptForm.deptName" />
-          </label>
-          <label>
-            <span>排序</span>
-            <input v-model="deptForm.sort" type="number" />
-          </label>
-          <label>
-            <span>负责人 ID</span>
-            <input v-model="deptForm.managerId" type="number" />
-          </label>
-          <footer class="crud-actions">
-            <button type="button" @click="closeDrawer">取消</button>
-            <button class="primary-action" type="submit" :disabled="saving">{{ saving ? '保存中' : '保存' }}</button>
-          </footer>
-        </form>
-      </section>
-    </div>
+    <dept-form-drawer
+      v-if="drawerOpen"
+      :dept="selected"
+      :saving="saving"
+      @close="closeDrawer"
+      @submit="submitDept"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import { postAdminData, type AdminRecord } from '@/services/adminDataService';
-import { usePermission } from '@/composables/usePermission';
+import { computed, onMounted, ref } from 'vue';
+import type { DeptCreatePayload, DeptUpdatePayload } from '@myow/api';
+import { postAdminData, type AdminRecord } from '@/services/admin-data-service';
+import { usePermission } from '@/composables/use-permission';
+import DeptFormDrawer from './components/dept-form-drawer.vue';
 
 interface DeptNode extends AdminRecord {
   deptId?: number;
@@ -121,13 +93,6 @@ const saving = ref(false);
 const tree = ref<DeptNode[]>([]);
 const selected = ref<DeptNode | null>(null);
 const drawerOpen = ref(false);
-const deptForm = reactive<Record<string, string | number>>({
-  deptId: '',
-  parentId: '',
-  deptName: '',
-  sort: 0,
-  managerId: ''
-});
 const flatNodes = computed(() => flatten(tree.value));
 const detailItems = computed(() => {
   const node = selected.value;
@@ -168,44 +133,21 @@ function flatten(nodes: DeptNode[], level = 0): DeptNode[] {
 }
 
 function openCreate() {
-  deptForm.deptId = '';
-  deptForm.parentId = selected.value?.deptId ?? '';
-  deptForm.deptName = '';
-  deptForm.sort = 0;
-  deptForm.managerId = '';
+  selected.value = null;
   drawerOpen.value = true;
 }
 
 function openEdit() {
   if (!selected.value) return;
-  deptForm.deptId = selected.value.deptId ?? '';
-  deptForm.parentId = selected.value.parentId as number ?? '';
-  deptForm.deptName = selected.value.deptName || selected.value.name || '';
-  deptForm.sort = selected.value.sort as number ?? 0;
-  deptForm.managerId = selected.value.managerId as number ?? '';
   drawerOpen.value = true;
 }
 
-async function submitDept() {
-  if (!deptForm.deptName) {
-    errorMessage.value = '请填写部门名称';
-    return;
-  }
-  if (deptForm.sort === '') {
-    errorMessage.value = '请填写排序';
-    return;
-  }
+async function submitDept(payload: DeptCreatePayload | DeptUpdatePayload) {
   saving.value = true;
   errorMessage.value = '';
   try {
-    const payload = compact({
-      deptId: deptForm.deptId,
-      parentId: deptForm.parentId,
-      deptName: deptForm.deptName,
-      sort: deptForm.sort,
-      managerId: deptForm.managerId
-    });
-    await postAdminData(`/myow/system/dept/${deptForm.deptId ? 'update' : 'create'}`, payload);
+    const isUpdate = 'deptId' in payload && Boolean(payload.deptId);
+    await postAdminData(`/myow/system/dept/${isUpdate ? 'update' : 'create'}`, payload as unknown as Record<string, unknown>);
     closeDrawer();
     showToast('部门已保存');
     await loadTree();
@@ -231,10 +173,6 @@ async function handleDelete() {
 
 function closeDrawer() {
   drawerOpen.value = false;
-}
-
-function compact(source: Record<string, unknown>) {
-  return Object.fromEntries(Object.entries(source).filter(([, value]) => value !== '' && value != null));
 }
 
 function showToast(message: string) {

@@ -1,5 +1,5 @@
 import { request } from '@myow/shared';
-import type { PageQuery, PageResult, UserProfile } from '@myow/api';
+import type { PageQuery, PageResult, UserCreatePayload, UserProfile, UserStatusPayload, UserUpdatePayload } from '@myow/api';
 
 const USER_BASE = '/myow/system/user';
 
@@ -11,11 +11,11 @@ export function getUser(userId: number) {
   return request.post<UserProfile>(`${USER_BASE}/get`, { userId });
 }
 
-export function createUser(data: Record<string, unknown>) {
+export function createUser(data: UserCreatePayload) {
   return request.post<string>(`${USER_BASE}/create`, data);
 }
 
-export function updateUser(data: Record<string, unknown>) {
+export function updateUser(data: UserUpdatePayload) {
   return request.post<boolean>(`${USER_BASE}/update`, data);
 }
 
@@ -24,7 +24,7 @@ export function deleteUser(userId: number) {
 }
 
 export function updateUserStatus(userId: number, status: boolean) {
-  return request.post<boolean>(`${USER_BASE}/status`, { userId, status });
+  return request.post<boolean>(`${USER_BASE}/status`, { userId, status } satisfies UserStatusPayload);
 }
 
 export function resetUserPassword(userId: number) {

@@ -34,7 +34,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { MenuItem } from '@myow/api';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/user-session';
 
 const router = useRouter();
 const authStore = useAuthStore();

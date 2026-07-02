@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/user-session';
 
 export function usePermission() {
   const authStore = useAuthStore();

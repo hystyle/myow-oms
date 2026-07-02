@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/user-session';
 
 const authStore = useAuthStore();
 </script>

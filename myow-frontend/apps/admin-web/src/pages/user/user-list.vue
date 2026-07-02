@@ -92,75 +92,20 @@
       </article>
     </section>
 
-    <div v-if="drawerOpen" class="crud-backdrop" @click.self="closeDrawer">
-      <section class="crud-drawer">
-        <header class="crud-drawer__head">
-          <div>
-            <h2>{{ userForm.userId ? '编辑用户' : '新增用户' }}</h2>
-            <p>提交到 UserController 的 create / update 接口。</p>
-          </div>
-          <button type="button" @click="closeDrawer">关闭</button>
-        </header>
-        <form class="crud-form" @submit.prevent="submitUser">
-          <label>
-            <span>用户 ID</span>
-            <input v-model="userForm.userId" disabled />
-          </label>
-          <label>
-            <span>登录账号</span>
-            <input v-model="userForm.loginName" :disabled="Boolean(userForm.userId)" />
-          </label>
-          <label>
-            <span>姓名</span>
-            <input v-model="userForm.nickName" />
-          </label>
-          <label>
-            <span>部门 ID</span>
-            <input v-model="userForm.deptId" type="number" />
-          </label>
-          <label>
-            <span>岗位 ID</span>
-            <input v-model="userForm.positionId" type="number" />
-          </label>
-          <label>
-            <span>角色 ID 列表</span>
-            <input v-model="userForm.roleIds" placeholder="多个角色用英文逗号分隔" />
-          </label>
-          <label>
-            <span>性别</span>
-            <select v-model="userForm.gender">
-              <option value="">未设置</option>
-              <option value="0">未知</option>
-              <option value="1">男</option>
-              <option value="2">女</option>
-            </select>
-          </label>
-          <label>
-            <span>手机</span>
-            <input v-model="userForm.phone" />
-          </label>
-          <label>
-            <span>邮箱</span>
-            <input v-model="userForm.email" />
-          </label>
-          <label class="form-wide">
-            <span>备注</span>
-            <textarea v-model="userForm.remark" rows="4" />
-          </label>
-          <footer class="crud-actions">
-            <button type="button" @click="closeDrawer">取消</button>
-            <button class="primary-action" type="submit" :disabled="saving">{{ saving ? '保存中' : '保存' }}</button>
-          </footer>
-        </form>
-      </section>
-    </div>
+    <user-form-drawer
+      v-if="drawerOpen"
+      :user="selectedUser"
+      :saving="saving"
+      @close="closeDrawer"
+      @submit="submitUser"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
-import type { UserProfile } from '@myow/api';
-import { usePermission } from '@/composables/usePermission';
+import type { UserCreatePayload, UserProfile, UserUpdatePayload } from '@myow/api';
+import { usePermission } from '@/composables/use-permission';
 import {
   createUser,
   deleteUser,
@@ -171,35 +116,28 @@ import {
   unlockUser,
   updateUser,
   updateUserStatus
-} from '@/services/userService';
+} from '@/services/user-service';
+import UserFormDrawer from './components/user-form-drawer.vue';
 
+// 查询状态
 const loading = ref(false);
 const { hasPermission } = usePermission();
-const saving = ref(false);
 const errorMessage = ref('');
 const toastMessage = ref('');
 const rows = ref<UserProfile[]>([]);
 const total = ref(0);
-const drawerOpen = ref(false);
-const userForm = reactive({
-  userId: '',
-  loginName: '',
-  nickName: '',
-  deptId: '',
-  positionId: '',
-  roleIds: '',
-  gender: '',
-  phone: '',
-  email: '',
-  remark: ''
-});
-const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
 const query = reactive({
   keyword: '',
   status: '',
   pageNum: 1,
   pageSize: 20
 });
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
+
+// 表单状态
+const saving = ref(false);
+const drawerOpen = ref(false);
+const selectedUser = ref<UserProfile | undefined>();
 
 onMounted(() => {
   void loadUsers();
@@ -272,43 +210,26 @@ async function handleForceChangePassword(userId: number) {
 }
 
 function openCreate() {
-  fillUserForm();
+  selectedUser.value = undefined;
   drawerOpen.value = true;
 }
 
 async function openEdit(row: UserProfile) {
-  fillUserForm(row);
+  selectedUser.value = row;
   drawerOpen.value = true;
   try {
     const detail = await getUser(row.userId);
-    fillUserForm(detail);
+    selectedUser.value = detail;
   } catch {
-    fillUserForm(row);
+    // 保留行数据
   }
 }
 
-async function submitUser() {
-  const invalid = firstInvalidField();
-  if (invalid) {
-    errorMessage.value = `请填写${invalid}`;
-    return;
-  }
+async function submitUser(payload: UserCreatePayload | UserUpdatePayload) {
   saving.value = true;
   errorMessage.value = '';
   try {
-    const payload = compact({
-      userId: userForm.userId,
-      loginName: userForm.loginName,
-      nickName: userForm.nickName,
-      deptId: userForm.deptId,
-      positionId: userForm.positionId,
-      roleIdList: parseIdList(userForm.roleIds),
-      gender: userForm.gender,
-      phone: userForm.phone,
-      email: userForm.email,
-      remark: userForm.remark
-    });
-    if (userForm.userId) {
+    if ('userId' in payload && payload.userId) {
       await updateUser(payload);
     } else {
       await createUser(payload);
@@ -335,43 +256,9 @@ async function handleDelete(userId: number) {
   }
 }
 
-function firstInvalidField() {
-  if (!userForm.userId && !userForm.loginName) return '登录账号';
-  if (!userForm.nickName) return '姓名';
-  if (!userForm.deptId) return '部门 ID';
-  return '';
-}
-
 function closeDrawer() {
   drawerOpen.value = false;
-}
-
-function fillUserForm(user?: UserProfile) {
-  userForm.userId = user?.userId ? String(user.userId) : '';
-  userForm.loginName = user?.userName ?? '';
-  userForm.nickName = user?.nickName ?? '';
-  userForm.deptId = user?.deptId ? String(user.deptId) : '';
-  userForm.positionId = user?.positionId ? String(user.positionId) : '';
-  userForm.roleIds = user?.roleIdList?.join(',') ?? '';
-  userForm.gender = user?.gender ?? '';
-  userForm.phone = user?.phone ?? '';
-  userForm.email = user?.email ?? '';
-  userForm.remark = user?.remark ?? '';
-}
-
-function parseIdList(value: string) {
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map(Number);
-}
-
-function compact(source: Record<string, unknown>) {
-  return Object.fromEntries(Object.entries(source).filter(([, value]) => {
-    if (Array.isArray(value)) return value.length > 0;
-    return value !== '' && value != null;
-  }));
+  selectedUser.value = undefined;
 }
 
 function showToast(message: string) {

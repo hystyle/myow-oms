@@ -144,7 +144,7 @@ import {
   resumeJob,
   runJob,
   withdrawNotice
-} from '@/services/systemService';
+} from '@/services/system-service';
 
 const loading = ref(false);
 const errorMessage = ref('');
