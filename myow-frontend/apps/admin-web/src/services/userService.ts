@@ -7,6 +7,22 @@ export function pageUsers(query: PageQuery) {
   return request.post<PageResult<UserProfile>>(`${USER_BASE}/page`, query);
 }
 
+export function getUser(userId: number) {
+  return request.post<UserProfile>(`${USER_BASE}/get`, { userId });
+}
+
+export function createUser(data: Record<string, unknown>) {
+  return request.post<string>(`${USER_BASE}/create`, data);
+}
+
+export function updateUser(data: Record<string, unknown>) {
+  return request.post<boolean>(`${USER_BASE}/update`, data);
+}
+
+export function deleteUser(userId: number) {
+  return request.post<boolean>(`${USER_BASE}/delete`, { userId });
+}
+
 export function updateUserStatus(userId: number, status: boolean) {
   return request.post<boolean>(`${USER_BASE}/status`, { userId, status });
 }

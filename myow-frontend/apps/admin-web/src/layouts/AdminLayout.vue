@@ -6,9 +6,26 @@
         <span>MYOW Platform</span>
       </div>
       <nav class="admin-menu">
+        <span class="admin-menu-title">启动模块</span>
         <router-link to="/dashboard">工作台</router-link>
-        <router-link to="/user">用户中心</router-link>
-        <router-link to="/system">系统中心</router-link>
+        <router-link to="/user">用户账号</router-link>
+        <router-link to="/system">系统概览</router-link>
+        <span class="admin-menu-title">用户权限</span>
+        <router-link to="/user/depts">部门组织</router-link>
+        <router-link to="/user/roles">角色权限</router-link>
+        <router-link to="/user/menus">菜单权限</router-link>
+        <router-link to="/user/dicts">字典管理</router-link>
+        <router-link to="/user/login-logs">登录日志</router-link>
+        <span class="admin-menu-title">系统运维</span>
+        <router-link to="/system/jobs">定时任务</router-link>
+        <router-link to="/system/notices">通知公告</router-link>
+        <router-link to="/system/site-configs">站点配置</router-link>
+        <router-link to="/system/files">文件管理</router-link>
+        <router-link to="/system/online-users">在线用户</router-link>
+        <router-link to="/system/sensitive-words">敏感词</router-link>
+        <router-link to="/system/message-templates">消息模板</router-link>
+        <router-link to="/system/export-tasks">导出任务</router-link>
+        <router-link to="/system/monitor">系统监控</router-link>
         <router-link v-for="menu in displayMenus" :key="menu.menuId" :to="menu.path || '/dashboard'">
           {{ menu.menuName }}
         </router-link>

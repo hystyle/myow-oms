@@ -5,7 +5,10 @@
         <h1>用户中心</h1>
         <p>管理内部用户、登录状态、密码策略和账号安全操作。</p>
       </div>
-      <button class="primary-action" type="button" @click="loadUsers">刷新用户</button>
+      <div class="heading-actions">
+        <button class="primary-action" type="button" @click="openCreate">新增用户</button>
+        <button class="secondary-action" type="button" @click="loadUsers">刷新用户</button>
+      </div>
     </header>
 
     <div v-if="errorMessage" class="error-banner">
@@ -59,10 +62,12 @@
               <td><span class="status-tag" :data-tone="userStatusTone(row.status)">{{ userStatusText(row.status) }}</span></td>
               <td>{{ formatTime(row.lastLoginTime) }}</td>
               <td class="table-actions">
+                <button type="button" @click="openEdit(row)">编辑</button>
                 <button type="button" @click="handleToggleStatus(row)">{{ isEnabled(row.status) ? '停用' : '启用' }}</button>
                 <button type="button" @click="handleResetPassword(row.userId)">重置密码</button>
                 <button type="button" @click="handleUnlock(row.userId)">解锁</button>
                 <button type="button" @click="handleForceChangePassword(row.userId)">强制改密</button>
+                <button type="button" @click="handleDelete(row.userId)">删除</button>
               </td>
             </tr>
             <tr v-if="!loading && rows.length === 0">
@@ -72,6 +77,69 @@
         </table>
       </article>
     </section>
+
+    <div v-if="drawerOpen" class="crud-backdrop" @click.self="closeDrawer">
+      <section class="crud-drawer">
+        <header class="crud-drawer__head">
+          <div>
+            <h2>{{ userForm.userId ? '编辑用户' : '新增用户' }}</h2>
+            <p>提交到 UserController 的 create / update 接口。</p>
+          </div>
+          <button type="button" @click="closeDrawer">关闭</button>
+        </header>
+        <form class="crud-form" @submit.prevent="submitUser">
+          <label>
+            <span>用户 ID</span>
+            <input v-model="userForm.userId" disabled />
+          </label>
+          <label>
+            <span>登录账号</span>
+            <input v-model="userForm.loginName" :disabled="Boolean(userForm.userId)" />
+          </label>
+          <label>
+            <span>姓名</span>
+            <input v-model="userForm.nickName" />
+          </label>
+          <label>
+            <span>部门 ID</span>
+            <input v-model="userForm.deptId" type="number" />
+          </label>
+          <label>
+            <span>岗位 ID</span>
+            <input v-model="userForm.positionId" type="number" />
+          </label>
+          <label>
+            <span>角色 ID 列表</span>
+            <input v-model="userForm.roleIds" placeholder="多个角色用英文逗号分隔" />
+          </label>
+          <label>
+            <span>性别</span>
+            <select v-model="userForm.gender">
+              <option value="">未设置</option>
+              <option value="0">未知</option>
+              <option value="1">男</option>
+              <option value="2">女</option>
+            </select>
+          </label>
+          <label>
+            <span>手机</span>
+            <input v-model="userForm.phone" />
+          </label>
+          <label>
+            <span>邮箱</span>
+            <input v-model="userForm.email" />
+          </label>
+          <label class="form-wide">
+            <span>备注</span>
+            <textarea v-model="userForm.remark" rows="4" />
+          </label>
+          <footer class="crud-actions">
+            <button type="button" @click="closeDrawer">取消</button>
+            <button class="primary-action" type="submit">保存</button>
+          </footer>
+        </form>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -79,10 +147,14 @@
 import { onMounted, reactive, ref } from 'vue';
 import type { UserProfile } from '@myow/api';
 import {
+  createUser,
+  deleteUser,
   forceUserChangePassword,
+  getUser,
   pageUsers,
   resetUserPassword,
   unlockUser,
+  updateUser,
   updateUserStatus
 } from '@/services/userService';
 
@@ -90,6 +162,19 @@ const loading = ref(false);
 const errorMessage = ref('');
 const rows = ref<UserProfile[]>([]);
 const total = ref(0);
+const drawerOpen = ref(false);
+const userForm = reactive({
+  userId: '',
+  loginName: '',
+  nickName: '',
+  deptId: '',
+  positionId: '',
+  roleIds: '',
+  gender: '',
+  phone: '',
+  email: '',
+  remark: ''
+});
 const query = reactive({
   keyword: '',
   status: '',
@@ -147,6 +232,91 @@ async function handleUnlock(userId: number) {
 async function handleForceChangePassword(userId: number) {
   await forceUserChangePassword(userId);
   await loadUsers();
+}
+
+function openCreate() {
+  fillUserForm();
+  drawerOpen.value = true;
+}
+
+async function openEdit(row: UserProfile) {
+  fillUserForm(row);
+  drawerOpen.value = true;
+  try {
+    const detail = await getUser(row.userId);
+    fillUserForm(detail);
+  } catch {
+    fillUserForm(row);
+  }
+}
+
+async function submitUser() {
+  errorMessage.value = '';
+  try {
+    const payload = compact({
+      userId: userForm.userId,
+      loginName: userForm.loginName,
+      nickName: userForm.nickName,
+      deptId: userForm.deptId,
+      positionId: userForm.positionId,
+      roleIdList: parseIdList(userForm.roleIds),
+      gender: userForm.gender,
+      phone: userForm.phone,
+      email: userForm.email,
+      remark: userForm.remark
+    });
+    if (userForm.userId) {
+      await updateUser(payload);
+    } else {
+      await createUser(payload);
+    }
+    closeDrawer();
+    await loadUsers();
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '用户保存失败';
+  }
+}
+
+async function handleDelete(userId: number) {
+  errorMessage.value = '';
+  try {
+    await deleteUser(userId);
+    await loadUsers();
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '用户删除失败';
+  }
+}
+
+function closeDrawer() {
+  drawerOpen.value = false;
+}
+
+function fillUserForm(user?: UserProfile) {
+  userForm.userId = user?.userId ? String(user.userId) : '';
+  userForm.loginName = user?.userName ?? '';
+  userForm.nickName = user?.nickName ?? '';
+  userForm.deptId = user?.deptId ? String(user.deptId) : '';
+  userForm.positionId = user?.positionId ? String(user.positionId) : '';
+  userForm.roleIds = user?.roleIdList?.join(',') ?? '';
+  userForm.gender = user?.gender ?? '';
+  userForm.phone = user?.phone ?? '';
+  userForm.email = user?.email ?? '';
+  userForm.remark = user?.remark ?? '';
+}
+
+function parseIdList(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map(Number);
+}
+
+function compact(source: Record<string, unknown>) {
+  return Object.fromEntries(Object.entries(source).filter(([, value]) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return value !== '' && value != null;
+  }));
 }
 
 function formatRoles(roleNameList?: string[]) {
