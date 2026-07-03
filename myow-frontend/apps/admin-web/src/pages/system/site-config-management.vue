@@ -60,7 +60,12 @@
         <form class="crud-form" @submit.prevent="submit">
           <label><span>站点代码</span><input v-model="form.siteCode" required placeholder="ADMIN / CLIENT / GLOBAL" /></label>
           <label><span>配置键</span><input v-model="form.configKey" required placeholder="site.name" /></label>
-          <label><span>配置类型</span><select v-model="form.configType"><option value="STRING">字符串</option><option value="NUMBER">数字</option><option value="BOOLEAN">布尔</option><option value="SECRET">敏感值</option><option value="JSON">JSON</option></select></label>
+          <label>
+            <span>配置类型</span>
+            <select v-model="form.configType">
+              <option v-for="option in configTypeOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
+            </select>
+          </label>
           <label><span>配置值</span><input v-model="form.configValue" /></label>
           <label class="form-wide"><span>备注</span><textarea v-model="form.remark" rows="4" /></label>
           <footer class="crud-actions">
@@ -77,6 +82,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
 import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { createSiteConfig, deleteSiteConfig, pageSiteConfigs, refreshSiteConfig, updateSiteConfig } from '@/services/system-service';
 
 const groups = ['GLOBAL', 'ADMIN', 'CLIENT', 'FILE', 'SECURITY'];
@@ -92,6 +98,13 @@ const errorMessage = ref('');
 const revealedIds = ref<Set<string>>(new Set());
 const query = reactive({ keyword: '', pageNum: 1, pageSize: 20 });
 const form = reactive({ siteCode: 'GLOBAL', configKey: '', configValue: '', configType: 'STRING', remark: '' });
+const { options: configTypeOptions } = useDictOptions('sys_site_config_type', [
+  { label: '字符串', value: 'STRING' },
+  { label: '数字', value: 'NUMBER' },
+  { label: '布尔', value: 'BOOLEAN' },
+  { label: '敏感值', value: 'SECRET' },
+  { label: 'JSON', value: 'JSON' }
+]);
 
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
 

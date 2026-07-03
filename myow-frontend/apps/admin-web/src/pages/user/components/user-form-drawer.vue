@@ -37,9 +37,7 @@
           <span>性别</span>
           <select v-model="form.gender">
             <option value="">未设置</option>
-            <option value="0">未知</option>
-            <option value="1">男</option>
-            <option value="2">女</option>
+            <option v-for="option in genderOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
           </select>
         </label>
         <label>
@@ -66,6 +64,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
 import type { UserProfile, UserCreatePayload, UserUpdatePayload } from '@myow/api';
+import { useDictOptions } from '@/composables/use-dict-options';
 
 const props = defineProps<{
   user?: UserProfile;
@@ -76,6 +75,12 @@ const emit = defineEmits<{
   close: [];
   submit: [payload: UserCreatePayload | UserUpdatePayload];
 }>();
+
+const { options: genderOptions } = useDictOptions('sys_user_gender', [
+  { label: '未知', value: '0' },
+  { label: '男', value: '1' },
+  { label: '女', value: '2' }
+]);
 
 const form = reactive({
   userId: '',

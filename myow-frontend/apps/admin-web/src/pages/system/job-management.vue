@@ -17,8 +17,7 @@
         <span>状态</span>
         <select v-model="query.status">
           <option value="">全部状态</option>
-          <option value="1">启用</option>
-          <option value="0">暂停</option>
+          <option v-for="option in jobStatusOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
         </select>
       </label>
       <div class="query-actions">
@@ -96,7 +95,12 @@
           <label><span>任务组</span><input v-model="form.jobGroup" required /></label>
           <label><span>Cron 表达式</span><input v-model="form.cronExpression" required placeholder="0 */5 * * * ?" /></label>
           <label><span>处理器 Bean</span><input v-model="form.handlerName" required /></label>
-          <label v-if="editingId"><span>状态</span><select v-model.number="form.status"><option :value="1">启用</option><option :value="0">暂停</option></select></label>
+          <label v-if="editingId">
+            <span>状态</span>
+            <select v-model.number="form.status">
+              <option v-for="option in jobStatusOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
+            </select>
+          </label>
           <footer class="crud-actions">
             <button type="button" @click="closeDrawer">取消</button>
             <button class="primary-action" type="submit" :disabled="saving">{{ saving ? '保存中...' : '保存' }}</button>
@@ -111,6 +115,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
 import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { createJob, deleteJob, pageJobLogs, pageJobs, pauseJob, resumeJob, runJob, updateJob } from '@/services/system-service';
 
 const loading = ref(false);
@@ -126,6 +131,10 @@ const toastMessage = ref('');
 const errorMessage = ref('');
 const query = reactive({ keyword: '', status: '', pageNum: 1, pageSize: 10 });
 const form = reactive({ jobName: '', jobGroup: '', cronExpression: '', handlerName: '', status: 1 });
+const { options: jobStatusOptions } = useDictOptions('sys_job_status', [
+  { label: '启用', value: 1 },
+  { label: '暂停', value: 0 }
+], Number);
 
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
 

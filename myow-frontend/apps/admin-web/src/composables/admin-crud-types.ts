@@ -24,6 +24,7 @@ export interface FormField {
   json?: boolean;
   aliases?: string[];
   options?: readonly FormOption[];
+  dictCode?: string;
 }
 
 // 行操作按钮定义

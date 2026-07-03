@@ -1,5 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
-import { aliasField, idField, SYSTEM_STATUS_OPTIONS, textColumn, textField } from '../helpers';
+import { aliasField, idField, textColumn, textField } from '../helpers';
 
 export const systemRoutes: RouteRecordRaw[] = [
   { path: 'system', alias: ['/admin/system'], name: 'SystemCenter', component: () => import('@/pages/system/system-overview.vue') },
@@ -16,7 +16,7 @@ export const systemRoutes: RouteRecordRaw[] = [
       createPerm: 'system:job:create',
       updatePerm: 'system:job:update',
       deletePerm: 'system:job:delete',
-      statusOptions: SYSTEM_STATUS_OPTIONS,
+      statusDictCode: 'sys_system_status',
       columns: [
         textColumn('id', '任务 ID'),
         textColumn('jobName', '任务名称', false, ['code']),
@@ -31,7 +31,7 @@ export const systemRoutes: RouteRecordRaw[] = [
         aliasField('jobGroup', '任务组', ['name']),
         textField('cronExpression', 'Cron 表达式'),
         textField('handlerName', '处理器 Bean'),
-        textField('status', '状态', 'select', SYSTEM_STATUS_OPTIONS)
+        textField('status', '状态', 'select', undefined, { dictCode: 'sys_system_status' })
       ],
       requiredFields: ['jobName', 'jobGroup', 'cronExpression', 'handlerName'],
       rowActions: [
@@ -54,7 +54,7 @@ export const systemRoutes: RouteRecordRaw[] = [
       createPerm: 'system:notice:create',
       updatePerm: 'system:notice:update',
       deletePerm: 'system:notice:delete',
-      statusOptions: SYSTEM_STATUS_OPTIONS,
+      statusDictCode: 'sys_system_status',
       columns: [
         textColumn('id', '公告 ID'),
         textColumn('title', '标题', false, ['code']),
@@ -66,7 +66,7 @@ export const systemRoutes: RouteRecordRaw[] = [
       formFields: [
         idField('id', '公告 ID'),
         aliasField('title', '标题', ['code']),
-        textField('noticeType', '公告类型'),
+        textField('noticeType', '公告类型', 'select', undefined, { dictCode: 'sys_notice_type' }),
         textField('expireTime', '有效期', 'datetime'),
         textField('content', '公告内容', 'textarea')
       ],
@@ -79,7 +79,7 @@ export const systemRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'system/site-configs',
-    alias: ['/system-support/site-configs', '/admin/system/config'],
+    alias: ['/system-support/site-configs', '/admin/system/site-config'],
     name: 'SiteConfigCenter',
     component: () => import('@/pages/system/site-config-management.vue'),
     meta: {
@@ -90,7 +90,7 @@ export const systemRoutes: RouteRecordRaw[] = [
       createPerm: 'system:site-config:create',
       updatePerm: 'system:site-config:update',
       deletePerm: 'system:site-config:delete',
-      statusOptions: SYSTEM_STATUS_OPTIONS,
+      statusDictCode: 'sys_system_status',
       columns: [
         textColumn('id', 'ID'),
         textColumn('siteCode', '站点', true, ['name']),
@@ -104,7 +104,7 @@ export const systemRoutes: RouteRecordRaw[] = [
         aliasField('siteCode', '站点编码', ['name']),
         aliasField('configKey', '配置键', ['code']),
         textField('configValue', '配置值', 'textarea'),
-        textField('configType', '配置类型'),
+        textField('configType', '配置类型', 'select', undefined, { dictCode: 'sys_site_config_type' }),
         textField('remark', '备注', 'textarea')
       ],
       requiredFields: ['siteCode', 'configKey', 'configValue', 'configType'],
@@ -126,7 +126,7 @@ export const systemRoutes: RouteRecordRaw[] = [
       deletePerm: 'system:file:delete',
       canCreate: false,
       canUpdate: false,
-      statusOptions: SYSTEM_STATUS_OPTIONS,
+      statusDictCode: 'sys_system_status',
       columns: [
         textColumn('id', '文件 ID'),
         textColumn('fileName', '文件名', false, ['code']),
@@ -150,17 +150,18 @@ export const systemRoutes: RouteRecordRaw[] = [
       description: '查看当前在线会话与踢出控制入口。',
       endpoint: '/myow/api/v1/system/online-users/page',
       baseEndpoint: '/myow/api/v1/system/online-users',
+      keywordQueryField: 'loginName',
+      searchPlaceholder: '搜索登录 ID',
       canCreate: false,
       canUpdate: false,
       canDelete: false,
-      statusOptions: SYSTEM_STATUS_OPTIONS,
+      statusDictCode: 'sys_system_status',
       columns: [
-        textColumn('userId', '用户 ID'),
-        textColumn('loginName', '账号'),
-        textColumn('nickName', '姓名'),
-        textColumn('ip', 'IP'),
-        textColumn('loginTime', '登录时间'),
-        textColumn('expireTime', '过期时间')
+        textColumn('id', '用户 ID'),
+        textColumn('name', '登录 ID'),
+        textColumn('code', 'Token', true),
+        textColumn('tokenTimeout', '剩余秒数'),
+        textColumn('status', '状态')
       ],
       rowActions: [
         { label: '踢出', endpoint: '/myow/api/v1/system/online-users/kick', permission: 'system:online-user:kick', payloadKey: 'token', idKey: 'token', confirm: '确认踢出该在线用户？', success: '用户已踢出' }
@@ -180,7 +181,7 @@ export const systemRoutes: RouteRecordRaw[] = [
       createPerm: 'system:sensitive-word:create',
       updatePerm: 'system:sensitive-word:update',
       deletePerm: 'system:sensitive-word:delete',
-      statusOptions: SYSTEM_STATUS_OPTIONS,
+      statusDictCode: 'sys_system_status',
       columns: [
         textColumn('id', 'ID'),
         textColumn('word', '敏感词', false, ['code']),
@@ -195,7 +196,7 @@ export const systemRoutes: RouteRecordRaw[] = [
         aliasField('category', '分类', ['name']),
         textField('level', '等级', 'number'),
         textField('replacement', '替换文本'),
-        textField('status', '状态', 'select', SYSTEM_STATUS_OPTIONS)
+        textField('status', '状态', 'select', undefined, { dictCode: 'sys_system_status' })
       ],
       requiredFields: ['word', 'category', 'level']
     }
@@ -213,7 +214,7 @@ export const systemRoutes: RouteRecordRaw[] = [
       createPerm: 'system:message-template:create',
       updatePerm: 'system:message-template:update',
       deletePerm: 'system:message-template:delete',
-      statusOptions: SYSTEM_STATUS_OPTIONS,
+      statusDictCode: 'sys_system_status',
       columns: [
         textColumn('id', '模板 ID'),
         textColumn('templateCode', '模板编码', true, ['code']),
@@ -229,7 +230,7 @@ export const systemRoutes: RouteRecordRaw[] = [
         aliasField('title', '标题', ['name']),
         textField('content', '内容', 'textarea'),
         textField('variables', '变量定义', 'textarea'),
-        textField('status', '状态', 'select', SYSTEM_STATUS_OPTIONS)
+        textField('status', '状态', 'select', undefined, { dictCode: 'sys_system_status' })
       ],
       requiredFields: ['templateCode', 'channel', 'title', 'content'],
       rowActions: [
@@ -250,7 +251,7 @@ export const systemRoutes: RouteRecordRaw[] = [
       createPerm: 'system:export-task:create',
       deletePerm: 'system:export-task:delete',
       canUpdate: false,
-      statusOptions: SYSTEM_STATUS_OPTIONS,
+      statusDictCode: 'sys_system_status',
       columns: [
         textColumn('id', '任务 ID'),
         textColumn('moduleName', '模块名称', true, ['code']),

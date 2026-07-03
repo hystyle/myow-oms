@@ -1,19 +1,15 @@
 <template>
   <section class="page-stack">
     <header class="page-heading">
-      <div><h1>文件与日志</h1><p>查看上传文件、操作日志、登录日志和在线会话。</p></div>
-      <button v-if="current === '文件管理'" class="primary-action" type="button" @click="openUpload">上传文件</button>
+      <div><h1>文件管理</h1><p>查看上传文件、模块归属、文件大小和下载删除状态。</p></div>
+      <button class="primary-action" type="button" @click="openUpload">上传文件</button>
     </header>
 
     <div v-if="toastMessage" class="success-banner">{{ toastMessage }}</div>
     <div v-if="errorMessage" class="error-banner">{{ errorMessage }}</div>
 
-    <div class="tabs">
-      <button v-for="tab in tabs" :key="tab" :class="{ active: current === tab }" type="button" @click="selectTab(tab)">{{ tab }}</button>
-    </div>
-
     <section class="toolbar query-panel">
-      <label><span>关键词</span><input v-model="query.keyword" placeholder="文件名、模块、账号、Token" @keyup.enter="loadData" /></label>
+      <label><span>关键词</span><input v-model="query.keyword" placeholder="文件名、模块" @keyup.enter="loadData" /></label>
       <div class="query-actions"><button type="button" :disabled="loading" @click="loadData">查询</button><button type="button" :disabled="loading" @click="resetQuery">重置</button></div>
     </section>
 
@@ -29,9 +25,8 @@
             <td>{{ note(row) }}</td>
             <td>{{ formatTime(row.createTime || row.updateTime) }}</td>
             <td class="table-actions">
-              <button v-if="current === '文件管理'" type="button" @click="download(row)">下载</button>
-              <button v-if="current === '文件管理'" type="button" @click="remove(row)">删除</button>
-              <button v-if="current === '在线用户'" type="button" @click="kick(row)">强退</button>
+              <button type="button" @click="download(row)">下载</button>
+              <button type="button" @click="remove(row)">删除</button>
             </td>
           </tr>
           <tr v-if="!loading && rows.length === 0"><td class="empty-cell" colspan="6">{{ emptyText }}</td></tr>
@@ -61,11 +56,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
-import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
-import { deleteFile, downloadFile, kickOnlineUser, pageFiles, pageOnlineUsers, uploadFile } from '@/services/system-service';
+import { confirmDelete } from '@/composables/use-confirm-action';
+import { deleteFile, downloadFile, pageFiles, uploadFile } from '@/services/system-service';
 
-const tabs = ['文件管理', '操作日志', '登录日志', '在线用户'];
-const current = ref(tabs[0]);
+const current = '文件管理';
 const loading = ref(false);
 const saving = ref(false);
 const uploadOpen = ref(false);
@@ -78,40 +72,19 @@ const query = reactive({ keyword: '', pageNum: 1, pageSize: 20 });
 const uploadForm = reactive({ moduleName: 'system' });
 
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
-const currentHint = computed(() => {
-  if (current.value === '文件管理') return '文件元数据来自 system file 接口。';
-  if (current.value === '在线用户') return '在线会话来自 system online-user 接口。';
-  return '该标签后续将接入 user 域日志接口。';
-});
-const emptyText = computed(() => current.value === '操作日志' || current.value === '登录日志' ? '该日志入口待接入 user 域接口' : '暂无数据');
+const currentHint = '文件元数据来自 system file 接口。';
+const emptyText = '暂无文件数据';
 
 onMounted(loadData);
 
 async function loadData() {
   await runWithFeedback(async () => {
     loading.value = true;
-    if (current.value === '文件管理') {
-      const result = await pageFiles(query);
-      rows.value = result.list ?? [];
-      total.value = Number(result.total ?? rows.value.length);
-      return;
-    }
-    if (current.value === '在线用户') {
-      const result = await pageOnlineUsers(query);
-      rows.value = result.list ?? [];
-      total.value = Number(result.total ?? rows.value.length);
-      return;
-    }
-    rows.value = [];
-    total.value = 0;
+    const result = await pageFiles(query);
+    rows.value = result.list ?? [];
+    total.value = Number(result.total ?? rows.value.length);
   }, false);
   loading.value = false;
-}
-
-function selectTab(tab: string) {
-  current.value = tab;
-  query.pageNum = 1;
-  void loadData();
 }
 
 function resetQuery() {
@@ -171,24 +144,6 @@ async function remove(row: SystemRecord) {
   });
 }
 
-async function kick(row: SystemRecord) {
-  const token = String(attr(row, 'token') ?? row.code ?? '');
-  if (!token) {
-    errorMessage.value = '缺少会话 Token';
-    return;
-  }
-  if (!confirmImportantAction({
-    title: `强退在线会话 ${row.name || row.id}`,
-    risk: '强退会立即使该 Token 失效，用户下次请求将被要求重新登录。',
-    confirmText: '确认强退该在线会话？'
-  })) return;
-  await runWithFeedback(async () => {
-    await kickOnlineUser(token);
-    showToast('在线会话已强退');
-    await loadData();
-  });
-}
-
 async function runWithFeedback(task: () => Promise<void>, clearToast = true) {
   if (clearToast) toastMessage.value = '';
   errorMessage.value = '';
@@ -208,11 +163,8 @@ function attr(record: SystemRecord, key: string) {
 }
 
 function note(row: SystemRecord) {
-  if (current.value === '文件管理') {
-    const size = Number(attr(row, 'fileSize') ?? 0);
-    return `${attr(row, 'contentType') || '-'} / ${formatSize(size)}`;
-  }
-  return String(attr(row, 'message') ?? '-');
+  const size = Number(attr(row, 'fileSize') ?? 0);
+  return `${attr(row, 'contentType') || '-'} / ${formatSize(size)}`;
 }
 
 function formatSize(size: number) {

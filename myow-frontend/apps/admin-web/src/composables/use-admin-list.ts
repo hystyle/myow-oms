@@ -1,6 +1,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePermission } from '@/composables/use-permission';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { pageAdminRecords, type AdminRecord } from '@/services/admin-data-service';
 import type { FormOption, TableColumn } from './admin-crud-types';
 
@@ -29,10 +30,12 @@ export function useAdminList() {
   const listTitle = computed(() => String(route.meta.listTitle ?? `${pageTitle.value}列表`));
   const searchPlaceholder = computed(() => String(route.meta.searchPlaceholder ?? '搜索编码、名称或关键字'));
   const columns = computed<TableColumn[]>(() => route.meta.columns as TableColumn[] | undefined ?? defaultColumns.value);
-  const statusOptions = computed<readonly FormOption[]>(() => route.meta.statusOptions as readonly FormOption[] | undefined ?? [
-    { label: '启用 / 正常 / 成功', value: 1 },
-    { label: '停用 / 草稿 / 失败', value: 0 }
+  const statusDictCode = computed(() => String(route.meta.statusDictCode ?? 'sys_system_status'));
+  const { options: loadedStatusOptions } = useDictOptions(statusDictCode, [
+    { label: '启用', value: '1' },
+    { label: '停用', value: '0' }
   ]);
+  const statusOptions = computed<readonly FormOption[]>(() => loadedStatusOptions.value);
   const canDetail = computed(() => route.meta.canDetail !== false);
   const canDelete = computed(() => route.meta.canDelete !== false && hasPermission(String(route.meta.deletePerm ?? '')));
   const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
@@ -73,12 +76,19 @@ export function useAdminList() {
     errorMessage.value = '';
     toastMessage.value = '';
     try {
-      const page = await pageAdminRecords(endpoint.value, {
-        keyword: query.keyword || undefined,
-        status: query.status === '' ? undefined : Number(query.status),
+      const keywordField = String(route.meta.keywordQueryField ?? 'keyword');
+      const statusField = String(route.meta.statusQueryField ?? 'status');
+      const payload: Record<string, unknown> = {
         pageNum: query.pageNum,
         pageSize: query.pageSize
-      });
+      };
+      if (query.keyword) {
+        payload[keywordField] = query.keyword;
+      }
+      if (query.status !== '') {
+        payload[statusField] = Number(query.status);
+      }
+      const page = await pageAdminRecords(endpoint.value, payload);
       rows.value = page.list ?? [];
       total.value = Number(page.total ?? rows.value.length);
     } catch (error) {
@@ -148,6 +158,8 @@ export function useAdminList() {
   }
 
   function statusText(value: unknown) {
+    const option = statusOptions.value.find((item) => String(item.value) === String(value));
+    if (option) return option.label;
     if (value === true || value === 'true' || value === 1) return '启用';
     if (value === false || value === 'false' || value === 0) return '停用';
     if (value === '0') return '正常';

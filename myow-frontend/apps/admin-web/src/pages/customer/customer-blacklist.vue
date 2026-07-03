@@ -32,8 +32,7 @@
         <span>状态</span>
         <select v-model="query.status">
           <option value="">全部状态</option>
-          <option value="ACTIVE">启用</option>
-          <option value="DISABLED">停用</option>
+          <option v-for="option in roleStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
         </select>
       </label>
       <div class="query-actions">
@@ -119,17 +118,13 @@
           <label>
             <span>风险等级</span>
             <select v-model="form.riskLevel">
-              <option value="LOW">低</option>
-              <option value="MEDIUM">中</option>
-              <option value="HIGH">高</option>
-              <option value="CRITICAL">严重</option>
+              <option v-for="option in riskLevelOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
           </label>
           <label>
             <span>状态</span>
             <select v-model="form.status">
-              <option value="ACTIVE">启用</option>
-              <option value="DISABLED">停用</option>
+              <option v-for="option in roleStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
           </label>
           <label><span>关联客户 ID</span><input v-model="form.sourceCustomerId" /></label>
@@ -150,6 +145,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { BlacklistTargetType, CustomerBlacklist, CustomerBlacklistPayload } from '@myow/api';
 import { confirmDelete } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { usePermission } from '@/composables/use-permission';
 import {
   createCustomerBlacklist,
@@ -160,13 +156,23 @@ import {
 
 const { hasPermission } = usePermission();
 
-const targetTypeOptions: Array<{ label: string; value: BlacklistTargetType }> = [
+const { options: targetTypeOptions } = useDictOptions<BlacklistTargetType>('customer_blacklist_target_type', [
   { label: '客户 ID', value: 'CUSTOMER_ID' },
   { label: '税号', value: 'TAX_NO' },
   { label: '营业执照', value: 'LICENSE_NO' },
   { label: '电话', value: 'PHONE' },
   { label: '邮箱', value: 'EMAIL' }
-];
+]);
+const { options: riskLevelOptions } = useDictOptions('risk_level', [
+  { label: '低', value: 'LOW' },
+  { label: '中', value: 'MEDIUM' },
+  { label: '高', value: 'HIGH' },
+  { label: '严重', value: 'CRITICAL' }
+]);
+const { options: roleStatusOptions } = useDictOptions('customer_role_status', [
+  { label: '启用', value: 'ACTIVE' },
+  { label: '停用', value: 'DISABLED' }
+]);
 
 const loading = ref(false);
 const saving = ref(false);
@@ -310,17 +316,11 @@ function showToast(message: string) {
 }
 
 function targetTypeText(value?: string) {
-  return targetTypeOptions.find((option) => option.value === value)?.label || value || '-';
+  return targetTypeOptions.value.find((option) => option.value === value)?.label || value || '-';
 }
 
 function riskLevelText(value?: string) {
-  const map: Record<string, string> = {
-    LOW: '低',
-    MEDIUM: '中',
-    HIGH: '高',
-    CRITICAL: '严重'
-  };
-  return value ? map[value] ?? value : '-';
+  return riskLevelOptions.value.find((option) => option.value === value)?.label || value || '-';
 }
 
 function formatRange(start?: string, end?: string) {

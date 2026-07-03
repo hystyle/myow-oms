@@ -154,8 +154,7 @@
           <label>
             <span>状态</span>
             <select v-model="form.status">
-              <option value="0">启用</option>
-              <option value="1">停用</option>
+              <option v-for="option in normalStatusOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
             </select>
           </label>
           <label class="form-wide">
@@ -184,6 +183,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { ApiId, DeptTreeNode, PageResult } from '@myow/api';
 import { confirmDelete } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { postAdminData } from '@/services/admin-data-service';
 import { usePermission } from '@/composables/use-permission';
 
@@ -214,7 +214,7 @@ type MenuTreeNode = MenuRecord & { children: MenuTreeNode[] };
 type FlatMenuNode = MenuTreeNode & { level: number };
 type DeptTreeFlatNode = DeptTreeNode & { level: number };
 
-const dataScopeOptions = [
+const dataScopeFallbackOptions = [
   { value: '1', label: '全部数据', description: '可查看和操作授权模块内全部数据。' },
   { value: '2', label: '自定义部门', description: '按指定部门范围控制数据可见性。' },
   { value: '3', label: '本部门', description: '仅当前用户所属部门数据。' },
@@ -224,6 +224,15 @@ const dataScopeOptions = [
 ];
 
 const { hasPermission } = usePermission();
+const { options: normalStatusOptions } = useDictOptions('sys_normal_disable', [
+  { label: '启用', value: '0' },
+  { label: '停用', value: '1' }
+]);
+const { options: dataScopeDictOptions } = useDictOptions('sys_data_scope', dataScopeFallbackOptions.map(({ value, label }) => ({ value, label })));
+const dataScopeOptions = computed(() => dataScopeDictOptions.value.map((option) => ({
+  ...option,
+  description: dataScopeFallbackOptions.find((item) => item.value === option.value)?.description || ''
+})));
 const loading = ref(false);
 const saving = ref(false);
 const savingPermission = ref(false);
@@ -255,8 +264,8 @@ const roleDetailItems = computed(() => {
     { key: 'roleId', label: '角色 ID', value: formatValue(role.roleId) },
     { key: 'roleCode', label: '角色编码', value: formatValue(role.roleCode) },
     { key: 'roleName', label: '角色名称', value: formatValue(role.roleName) },
-    { key: 'dataScope', label: '数据范围', value: dataScopeOptions.find((item) => item.value === role.dataScope)?.label ?? formatValue(role.dataScope) },
-    { key: 'status', label: '状态', value: role.status === '1' ? '停用' : '启用' },
+    { key: 'dataScope', label: '数据范围', value: dataScopeOptions.value.find((item) => item.value === role.dataScope)?.label ?? formatValue(role.dataScope) },
+    { key: 'status', label: '状态', value: normalStatusOptions.value.find((item) => item.value === role.status)?.label ?? formatValue(role.status) },
     { key: 'updateTime', label: '更新时间', value: formatTime(role.updateTime || role.createTime) }
   ];
 });

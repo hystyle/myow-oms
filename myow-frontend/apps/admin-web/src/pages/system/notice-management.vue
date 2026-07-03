@@ -14,9 +14,7 @@
         <span>状态</span>
         <select v-model="query.status">
           <option value="">全部状态</option>
-          <option value="0">草稿</option>
-          <option value="1">已发布</option>
-          <option value="2">已下线</option>
+          <option v-for="option in noticeStatusOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
         </select>
       </label>
       <div class="query-actions">
@@ -64,7 +62,12 @@
         </header>
         <form class="crud-form" @submit.prevent="submit">
           <label><span>标题</span><input v-model="form.title" :disabled="readonly" required /></label>
-          <label><span>类型</span><select v-model="form.noticeType" :disabled="readonly"><option value="SYSTEM">系统公告</option><option value="CUSTOMER">客户公告</option></select></label>
+          <label>
+            <span>类型</span>
+            <select v-model="form.noticeType" :disabled="readonly">
+              <option v-for="option in noticeTypeOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
+            </select>
+          </label>
           <label><span>有效期</span><input v-model="form.expireTime" :disabled="readonly" type="datetime-local" /></label>
           <label><span>状态</span><input :value="editingRecord ? statusText(editingRecord.status) : '草稿'" disabled /></label>
           <label class="form-wide"><span>公告内容</span><textarea v-model="form.content" :disabled="readonly" rows="8" required /></label>
@@ -82,6 +85,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
 import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { createNotice, deleteNotice, pageNotices, publishNotice, updateNotice, withdrawNotice } from '@/services/system-service';
 
 const loading = ref(false);
@@ -95,6 +99,15 @@ const errorMessage = ref('');
 const editingRecord = ref<SystemRecord | null>(null);
 const query = reactive({ keyword: '', status: '', pageNum: 1, pageSize: 10 });
 const form = reactive({ title: '', content: '', noticeType: 'SYSTEM', expireTime: '' });
+const { options: noticeStatusOptions } = useDictOptions('sys_notice_status', [
+  { label: '草稿', value: '0' },
+  { label: '已发布', value: '1' },
+  { label: '已下线', value: '2' }
+]);
+const { options: noticeTypeOptions } = useDictOptions('sys_notice_type', [
+  { label: '系统公告', value: 'SYSTEM' },
+  { label: '客户公告', value: 'CUSTOMER' }
+]);
 
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
 const drawerTitle = computed(() => {

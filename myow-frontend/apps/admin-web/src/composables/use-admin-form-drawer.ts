@@ -1,4 +1,4 @@
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePermission } from '@/composables/use-permission';
 import {
@@ -7,7 +7,8 @@ import {
   updateAdminRecord,
   type AdminRecord
 } from '@/services/admin-data-service';
-import type { FormField } from './admin-crud-types';
+import { pageDictData, pageDicts } from '@/services/user-service';
+import type { FormField, FormOption } from './admin-crud-types';
 
 // 表单与抽屉：负责 create/edit/detail 模式切换、表单填充、提交保存
 export function useAdminFormDrawer(deps: {
@@ -26,9 +27,12 @@ export function useAdminFormDrawer(deps: {
   const drawerOpen = ref(false);
   const mode = ref<'create' | 'edit' | 'detail'>('create');
   const formModel = reactive<Record<string, string | number | undefined>>({});
+  const fieldDictOptions = ref<Record<string, FormOption[]>>({});
 
   const configuredFormFields = computed<FormField[]>(() => route.meta.formFields as FormField[] | undefined ?? []);
-  const formFields = computed<FormField[]>(() => configuredFormFields.value.filter((field) => !(mode.value === 'create' && field.hideOnCreate)));
+  const formFields = computed<FormField[]>(() => configuredFormFields.value
+    .map((field) => field.dictCode ? { ...field, options: fieldDictOptions.value[field.dictCode] ?? field.options ?? [] } : field)
+    .filter((field) => !(mode.value === 'create' && field.hideOnCreate)));
   const requiredFields = computed<string[]>(() => route.meta.requiredFields as string[] | undefined ?? []);
   const canCreate = computed(() => route.meta.canCreate !== false && formFields.value.length > 0 && hasPermission(String(route.meta.createPerm ?? '')));
   const canUpdate = computed(() => route.meta.canUpdate !== false && formFields.value.length > 0 && hasPermission(String(route.meta.updatePerm ?? '')));
@@ -38,6 +42,14 @@ export function useAdminFormDrawer(deps: {
     if (mode.value === 'edit') return `编辑${pageTitle.value}`;
     return `${pageTitle.value}详情`;
   });
+
+  watch(
+    () => configuredFormFields.value.map((field) => field.dictCode).filter(Boolean).join('|'),
+    () => {
+      void loadFieldDictOptions();
+    },
+    { immediate: true }
+  );
 
   async function openCreate() {
     mode.value = 'create';
@@ -143,6 +155,33 @@ export function useAdminFormDrawer(deps: {
     if (typeof value === 'number' || typeof value === 'string') return value;
     if (typeof value === 'boolean') return String(value);
     return JSON.stringify(value);
+  }
+
+  async function loadFieldDictOptions() {
+    const dictCodes = Array.from(new Set(configuredFormFields.value
+      .map((field) => field.dictCode)
+      .filter((dictCode): dictCode is string => Boolean(dictCode))));
+    if (dictCodes.length === 0) {
+      fieldDictOptions.value = {};
+      return;
+    }
+    const entries = await Promise.all(dictCodes.map(async (dictCode) => [dictCode, await loadDictOptions(dictCode)] as const));
+    fieldDictOptions.value = Object.fromEntries(entries);
+  }
+
+  async function loadDictOptions(dictCode: string): Promise<FormOption[]> {
+    try {
+      const dictPage = await pageDicts({ dictCode, pageNum: 1, pageSize: 1 });
+      const dict = dictPage.list?.[0];
+      if (!dict?.dictId) return [];
+      const dataPage = await pageDictData({ dictId: dict.dictId, disabledFlag: false, pageNum: 1, pageSize: 500 });
+      return (dataPage.list ?? []).map((item) => ({
+        label: item.dataLabel || item.dataValue || '',
+        value: item.dataValue || ''
+      }));
+    } catch {
+      return [];
+    }
   }
 
   return {

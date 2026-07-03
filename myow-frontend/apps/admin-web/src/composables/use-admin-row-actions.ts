@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router';
 import { usePermission } from '@/composables/use-permission';
 import {
   createAdminRecord,
+  deleteAdminRecordByPath,
   deleteAdminRecord,
   downloadAdminRecord,
   type AdminRecord
@@ -43,7 +44,11 @@ export function useAdminRowActions(deps: {
     if (!confirmDelete(pageTitle, '删除操作可能影响引用该数据的业务记录，执行后通常不可直接恢复。')) return;
     errorMessage.value = '';
     try {
-      await deleteAdminRecord(`${deps.baseEndpoint()}/delete`, deps.idKey(), id);
+      if (route.meta.deletePathParam) {
+        await deleteAdminRecordByPath(`${deps.baseEndpoint()}/delete`, id);
+      } else {
+        await deleteAdminRecord(`${deps.baseEndpoint()}/delete`, deps.idKey(), id);
+      }
       deps.showToast(`${pageTitle}已删除`);
       await deps.loadData();
     } catch (error) {

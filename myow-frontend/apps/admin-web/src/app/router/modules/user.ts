@@ -1,5 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
-import { aliasField, idField, NORMAL_DISABLE_OPTIONS, textColumn, textField } from '../helpers';
+import { aliasField, idField, textColumn, textField } from '../helpers';
 
 export const userRoutes: RouteRecordRaw[] = [
   { path: 'dashboard', alias: ['/admin/dashboard'], name: 'AdminDashboard', component: () => import('@/pages/dashboard/admin-dashboard.vue') },
@@ -19,7 +19,7 @@ export const userRoutes: RouteRecordRaw[] = [
       createPerm: 'system:role:add',
       updatePerm: 'system:role:update',
       deletePerm: 'system:role:delete',
-      statusOptions: NORMAL_DISABLE_OPTIONS,
+      statusDictCode: 'sys_normal_disable',
       columns: [
         textColumn('roleId', '角色 ID'),
         textColumn('roleCode', '角色编码', true),
@@ -34,7 +34,7 @@ export const userRoutes: RouteRecordRaw[] = [
         textField('roleName', '角色名称'),
         textField('sort', '排序', 'number'),
         textField('dataScope', '数据范围'),
-        textField('status', '状态', 'select', NORMAL_DISABLE_OPTIONS),
+        textField('status', '状态', 'select', undefined, { dictCode: 'sys_normal_disable' }),
         textField('remark', '备注', 'textarea')
       ],
       requiredFields: ['roleCode', 'roleName', 'sort', 'dataScope', 'status']
@@ -54,7 +54,7 @@ export const userRoutes: RouteRecordRaw[] = [
       createPerm: 'system:menu:add',
       updatePerm: 'system:menu:update',
       deletePerm: 'system:menu:delete',
-      statusOptions: NORMAL_DISABLE_OPTIONS,
+      statusDictCode: 'sys_normal_disable',
       columns: [
         textColumn('menuId', '菜单 ID'),
         textColumn('menuName', '菜单名称'),
@@ -77,7 +77,7 @@ export const userRoutes: RouteRecordRaw[] = [
         textField('perms', '权限码'),
         textField('icon', '图标'),
         textField('sort', '排序', 'number'),
-        textField('status', '状态', 'select', NORMAL_DISABLE_OPTIONS),
+        textField('status', '状态', 'select', undefined, { dictCode: 'sys_normal_disable' }),
         textField('remark', '备注', 'textarea')
       ],
       requiredFields: ['parentId', 'menuName', 'sort', 'menuType', 'visible', 'status']
@@ -97,7 +97,7 @@ export const userRoutes: RouteRecordRaw[] = [
       createPerm: 'system:dict:add',
       updatePerm: 'system:dict:update',
       deletePerm: 'system:dict:delete',
-      statusOptions: NORMAL_DISABLE_OPTIONS,
+      statusDictCode: 'sys_normal_disable',
       columns: [
         textColumn('dictId', '字典 ID'),
         textColumn('dictCode', '字典编码', true),
@@ -116,6 +116,76 @@ export const userRoutes: RouteRecordRaw[] = [
     }
   },
   {
+    path: 'user/configs',
+    alias: ['/system/config', '/admin/system/config'],
+    name: 'ConfigCenter',
+    component: () => import('@/pages/common/generic-crud-list.vue'),
+    meta: {
+      title: '参数配置',
+      description: '维护系统级和租户级参数，支持按参数键查询、分组管理和系统参数保护。',
+      endpoint: '/myow/system/config/page',
+      baseEndpoint: '/myow/system/config',
+      idKey: 'configId',
+      keywordQueryField: 'configKey',
+      searchPlaceholder: '搜索参数键',
+      createPerm: 'system:config:add',
+      updatePerm: 'system:config:update',
+      deletePerm: 'system:config:delete',
+      deletePathParam: true,
+      canDetail: false,
+      columns: [
+        textColumn('configId', '配置 ID'),
+        textColumn('configKey', '参数键', true),
+        textColumn('configValue', '参数值'),
+        textColumn('configType', '类型'),
+        textColumn('groupCode', '分组'),
+        textColumn('systemFlag', '系统参数'),
+        textColumn('updateTime', '更新时间')
+      ],
+      formFields: [
+        idField('configId', '配置 ID'),
+        textField('tenantId', '租户 ID', 'number'),
+        textField('configKey', '参数键'),
+        textField('configValue', '参数值', 'textarea'),
+        textField('configType', '参数类型', 'select', undefined, { dictCode: 'sys_site_config_type' }),
+        textField('groupCode', '分组编码'),
+        textField('systemFlag', '系统参数', 'select', undefined, { dictCode: 'sys_yes_no' }),
+        textField('remark', '备注', 'textarea')
+      ],
+      requiredFields: ['configKey', 'configValue', 'configType', 'groupCode', 'systemFlag']
+    }
+  },
+  {
+    path: 'user/oper-logs',
+    alias: ['/system/oper-log', '/admin/system/oper-log'],
+    name: 'OperLogCenter',
+    component: () => import('@/pages/common/generic-crud-list.vue'),
+    meta: {
+      title: '操作日志',
+      description: '查看后台关键操作、请求信息、执行状态和耗时。',
+      endpoint: '/myow/system/oper-log/page',
+      baseEndpoint: '/myow/system/oper-log',
+      idKey: 'operId',
+      keywordQueryField: 'title',
+      searchPlaceholder: '搜索模块标题',
+      deletePerm: 'system:oper-log:delete',
+      statusDictCode: 'sys_normal_disable',
+      canCreate: false,
+      canUpdate: false,
+      columns: [
+        textColumn('operId', '日志 ID'),
+        textColumn('title', '模块标题'),
+        textColumn('businessType', '业务类型'),
+        textColumn('requestMethod', '请求方式'),
+        textColumn('operName', '操作人'),
+        textColumn('operIp', '操作 IP'),
+        textColumn('status', '状态'),
+        textColumn('costTime', '耗时(ms)'),
+        textColumn('operTime', '操作时间')
+      ]
+    }
+  },
+  {
     path: 'user/login-logs',
     alias: ['/system/login-log', '/admin/system/login-log'],
     name: 'LoginLogCenter',
@@ -125,17 +195,21 @@ export const userRoutes: RouteRecordRaw[] = [
       description: '查看账号登录、失败原因和登录 IP。',
       endpoint: '/myow/system/login-log/page',
       baseEndpoint: '/myow/system/login-log',
+      keywordQueryField: 'loginName',
+      searchPlaceholder: '搜索登录账号',
       canCreate: false,
       canUpdate: false,
       canDelete: false,
-      statusOptions: NORMAL_DISABLE_OPTIONS,
+      statusDictCode: 'sys_normal_disable',
       columns: [
         textColumn('loginLogId', '日志 ID'),
         textColumn('loginName', '登录账号'),
-        textColumn('ip', 'IP'),
+        textColumn('loginIp', 'IP'),
+        textColumn('loginType', '登录类型'),
+        textColumn('loginClient', '客户端'),
         textColumn('status', '状态'),
         textColumn('failReason', '失败原因'),
-        textColumn('createTime', '登录时间')
+        textColumn('loginTime', '登录时间')
       ]
     }
   }

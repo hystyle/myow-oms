@@ -36,6 +36,10 @@ export function deleteAdminRecord(endpoint: string, idKey: string, id: unknown) 
   return postAdminData<boolean>(endpoint, { [idKey]: id, id });
 }
 
+export function deleteAdminRecordByPath(endpoint: string, id: unknown) {
+  return postAdminData<boolean>(`${endpoint}/${encodeURIComponent(String(id))}`);
+}
+
 export function downloadAdminRecord(endpoint: string, idKey: string, id: unknown) {
   return request.download(endpoint, { [idKey]: id, id });
 }

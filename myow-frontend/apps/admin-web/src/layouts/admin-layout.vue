@@ -73,7 +73,9 @@ const fallbackMenuGroups: MenuGroup[] = [
       menu('11', '角色权限', '/admin/system/role'),
       menu('12', '菜单权限', '/admin/system/menu'),
       menu('13', '字典管理', '/user/dicts'),
-      menu('14', '登录日志', '/user/login-logs')
+      menu('14', '参数配置', '/admin/system/config'),
+      menu('15', '操作日志', '/admin/system/oper-log'),
+      menu('16', '登录日志', '/admin/system/login-log')
     ]
   },
   {
@@ -81,7 +83,7 @@ const fallbackMenuGroups: MenuGroup[] = [
     items: [
       menu('20', '定时任务', '/admin/system/job'),
       menu('21', '通知公告', '/admin/system/notice'),
-      menu('22', '站点配置', '/admin/system/config'),
+      menu('22', '站点配置', '/admin/system/site-config'),
       menu('23', '文件管理', '/admin/system/file'),
       menu('24', '在线用户', '/system/online-users'),
       menu('25', '敏感词', '/system/sensitive-words'),
@@ -125,7 +127,9 @@ const menuNameMap: Record<string, string> = {
   Menu: '菜单权限',
   Dept: '部门组织',
   Dict: '字典管理',
+  Config: '参数配置',
   'Login Log': '登录日志',
+  'Operation Log': '操作日志',
   'System Support': '系统运维',
   'Scheduled Job': '定时任务',
   Notice: '通知公告',
@@ -150,7 +154,9 @@ const menuIdNameMap: Record<string, string> = {
   '1300': '菜单权限',
   '1400': '部门组织',
   '1700': '字典管理',
+  '1600': '参数配置',
   '1820': '登录日志',
+  '1830': '操作日志',
   '1900': '系统运维',
   '1910': '定时任务',
   '1920': '通知公告',

@@ -27,8 +27,7 @@
         <span>状态</span>
         <select v-model="query.status">
           <option value="">全部状态</option>
-          <option value="true">正常</option>
-          <option value="false">停用</option>
+          <option v-for="option in userStatusOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
         </select>
       </label>
       <div class="query-actions">
@@ -127,6 +126,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { ApiId, DeptTreeNode, UserCreatePayload, UserProfile, UserUpdatePayload } from '@myow/api';
 import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { usePermission } from '@/composables/use-permission';
 import {
   createUser,
@@ -145,6 +145,10 @@ import UserFormDrawer from './components/user-form-drawer.vue';
 // 查询状态
 const loading = ref(false);
 const { hasPermission } = usePermission();
+const { options: userStatusOptions } = useDictOptions('sys_user_status', [
+  { label: '正常', value: 'true' },
+  { label: '停用', value: 'false' }
+]);
 const errorMessage = ref('');
 const toastMessage = ref('');
 const rows = ref<UserProfile[]>([]);

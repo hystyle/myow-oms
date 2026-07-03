@@ -34,8 +34,9 @@
         <span>公私海</span>
         <select v-model="query.poolStatus">
           <option value="">全部</option>
-          <option value="PRIVATE">私海</option>
-          <option value="PUBLIC">公海</option>
+          <option v-for="option in customerPoolOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
         </select>
       </label>
       <div class="query-actions">
@@ -132,17 +133,17 @@
           <label>
             <span>客户类型</span>
             <select v-model="customerForm.customerType">
-              <option value="COMPANY">企业</option>
-              <option value="INDIVIDUAL">个人</option>
+              <option v-for="option in customerTypeOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label>
             <span>客户等级</span>
             <select v-model="customerForm.customerLevel">
-              <option value="BRONZE">普通</option>
-              <option value="SILVER">银牌</option>
-              <option value="GOLD">金牌</option>
-              <option value="VIP">VIP</option>
+              <option v-for="option in customerLevelOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label>
@@ -156,9 +157,9 @@
           <label>
             <span>结算方式</span>
             <select v-model="customerForm.settlementType">
-              <option value="PREPAID">预付</option>
-              <option value="CREDIT">授信</option>
-              <option value="MONTHLY">月结</option>
+              <option v-for="option in settlementTypeOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label>
@@ -176,8 +177,9 @@
           <label v-if="editingCustomerId">
             <span>公私海</span>
             <select v-model="customerForm.poolStatus">
-              <option value="PRIVATE">私海</option>
-              <option value="PUBLIC">公海</option>
+              <option v-for="option in customerPoolOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label class="form-wide">
@@ -477,11 +479,9 @@
           <label>
             <span>附件类型</span>
             <select v-model="attachmentForm.attachmentType" required>
-              <option value="CONTRACT_COPY">合同</option>
-              <option value="LICENSE">营业执照</option>
-              <option value="TAX_FILE">税务文件</option>
-              <option value="KYC_FILE">KYC 文件</option>
-              <option value="OTHER">其他</option>
+              <option v-for="option in attachmentTypeOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label><span>文件 ID</span><input v-model="attachmentForm.fileId" required /></label>
@@ -490,9 +490,9 @@
           <label>
             <span>审核状态</span>
             <select v-model="attachmentForm.auditStatus">
-              <option value="PENDING">待审核</option>
-              <option value="APPROVED">通过</option>
-              <option value="REJECTED">驳回</option>
+              <option v-for="option in auditStatusOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label class="form-wide"><span>备注</span><textarea v-model="attachmentForm.remark" rows="3" /></label>
@@ -517,10 +517,9 @@
           <label>
             <span>KYC 类型</span>
             <select v-model="kycForm.kycType" required>
-              <option value="COMPANY_LICENSE">企业营业执照</option>
-              <option value="PERSONAL_ID">个人证件</option>
-              <option value="TAX">税务资料</option>
-              <option value="COMPLIANCE">合规资料</option>
+              <option v-for="option in kycTypeOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label class="form-wide"><span>备注</span><textarea v-model="kycForm.remark" rows="3" /></label>
@@ -545,9 +544,9 @@
           <label>
             <span>关系类型</span>
             <select v-model="relationForm.relationType" :disabled="Boolean(relationForm.relationId)" required>
-              <option value="PARENT_CHILD">主子公司</option>
-              <option value="BILLING_TITLE">多抬头</option>
-              <option value="SETTLEMENT_SUBJECT">结算主体</option>
+              <option v-for="option in relationTypeOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label>
@@ -561,8 +560,9 @@
           <label>
             <span>状态</span>
             <select v-model.number="relationForm.status">
-              <option :value="1">启用</option>
-              <option :value="0">停用</option>
+              <option v-for="option in relationStatusOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label class="checkbox-line">
@@ -594,19 +594,17 @@
           <label>
             <span>角色类型</span>
             <select v-model="roleForm.roleType" :disabled="Boolean(roleForm.customerRoleId)" required>
-              <option value="CUSTOMER">客户</option>
-              <option value="SUPPLIER">供应商</option>
-              <option value="OVERSEAS_AGENT">海外代理</option>
-              <option value="CARRIER">物流商</option>
-              <option value="WAREHOUSE_PROVIDER">仓库服务商</option>
-              <option value="CUSTOMS_BROKER">清关行</option>
+              <option v-for="option in roleTypeOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label>
             <span>状态</span>
             <select v-model="roleForm.roleStatus">
-              <option value="ACTIVE">启用</option>
-              <option value="DISABLED">停用</option>
+              <option v-for="option in roleStatusOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label><span>角色编码</span><input v-model="roleForm.roleCode" placeholder="可填写财务或外部系统编码" /></label>
@@ -640,12 +638,9 @@
           <label>
             <span>角色</span>
             <select v-model="contactForm.contactRole">
-              <option value="BUSINESS">业务</option>
-              <option value="FINANCE">财务</option>
-              <option value="TECH">技术</option>
-              <option value="WAREHOUSE">仓储</option>
-              <option value="LEGAL">法务</option>
-              <option value="MANAGER">管理层</option>
+              <option v-for="option in contactRoleOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label><span>职位</span><input v-model="contactForm.position" /></label>
@@ -677,12 +672,9 @@
           <label>
             <span>地址类型</span>
             <select v-model="addressForm.addressType">
-              <option value="REGISTERED">注册地址</option>
-              <option value="SHIP_FROM">发货地址</option>
-              <option value="RETURN_TO">退货地址</option>
-              <option value="BILLING">账单地址</option>
-              <option value="WAREHOUSE_CONTACT">仓库联系人</option>
-              <option value="OTHER">其他</option>
+              <option v-for="option in addressTypeOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label><span>联系人</span><input v-model="addressForm.contactName" /></label>
@@ -733,6 +725,7 @@ import type {
   CustomerUpdatePayload
 } from '@myow/api';
 import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { usePermission } from '@/composables/use-permission';
 import {
   changeCustomerStatus,
@@ -770,12 +763,86 @@ import {
 
 const { hasPermission } = usePermission();
 
-const customerStatusOptions: Array<{ label: string; value: CustomerStatus }> = [
+const { options: customerStatusOptions } = useDictOptions<CustomerStatus>('customer_status', [
   { label: '待审核', value: 'PENDING' },
   { label: '启用', value: 'ACTIVE' },
   { label: '冻结', value: 'SUSPENDED' },
   { label: '终止', value: 'TERMINATED' }
-];
+]);
+const { options: customerPoolOptions } = useDictOptions<CustomerPoolStatus>('customer_pool_status', [
+  { label: '私海', value: 'PRIVATE' },
+  { label: '公海', value: 'PUBLIC' }
+]);
+const { options: customerTypeOptions } = useDictOptions('customer_type', [
+  { label: '企业', value: 'COMPANY' },
+  { label: '个人', value: 'INDIVIDUAL' }
+]);
+const { options: customerLevelOptions } = useDictOptions('customer_level', [
+  { label: '普通', value: 'BRONZE' },
+  { label: '银牌', value: 'SILVER' },
+  { label: '金牌', value: 'GOLD' },
+  { label: 'VIP', value: 'VIP' }
+]);
+const { options: settlementTypeOptions } = useDictOptions('customer_settlement_type', [
+  { label: '预付', value: 'PREPAID' },
+  { label: '授信', value: 'CREDIT' },
+  { label: '月结', value: 'MONTHLY' }
+]);
+const { options: attachmentTypeOptions } = useDictOptions('customer_attachment_type', [
+  { label: '合同', value: 'CONTRACT_COPY' },
+  { label: '营业执照', value: 'LICENSE' },
+  { label: '税务文件', value: 'TAX_FILE' },
+  { label: 'KYC 文件', value: 'KYC_FILE' },
+  { label: '其他', value: 'OTHER' }
+]);
+const { options: auditStatusOptions } = useDictOptions('audit_status', [
+  { label: '待审核', value: 'PENDING' },
+  { label: '通过', value: 'APPROVED' },
+  { label: '驳回', value: 'REJECTED' }
+]);
+const { options: kycTypeOptions } = useDictOptions('customer_kyc_type', [
+  { label: '企业营业执照', value: 'COMPANY_LICENSE' },
+  { label: '个人证件', value: 'PERSONAL_ID' },
+  { label: '税务资料', value: 'TAX' },
+  { label: '合规资料', value: 'COMPLIANCE' }
+]);
+const { options: relationTypeOptions } = useDictOptions<CustomerRelationType>('customer_relation_type', [
+  { label: '主子公司', value: 'PARENT_CHILD' },
+  { label: '多抬头', value: 'BILLING_TITLE' },
+  { label: '结算主体', value: 'SETTLEMENT_SUBJECT' }
+]);
+const { options: roleTypeOptions } = useDictOptions<CustomerRoleType>('customer_role_type', [
+  { label: '客户', value: 'CUSTOMER' },
+  { label: '供应商', value: 'SUPPLIER' },
+  { label: '海外代理', value: 'OVERSEAS_AGENT' },
+  { label: '物流商', value: 'CARRIER' },
+  { label: '仓库服务商', value: 'WAREHOUSE_PROVIDER' },
+  { label: '清关行', value: 'CUSTOMS_BROKER' }
+]);
+const { options: roleStatusOptions } = useDictOptions('customer_role_status', [
+  { label: '启用', value: 'ACTIVE' },
+  { label: '停用', value: 'DISABLED' }
+]);
+const { options: relationStatusOptions } = useDictOptions('sys_normal_disable', [
+  { label: '启用', value: 1 },
+  { label: '停用', value: 0 }
+], (value) => Number(value));
+const { options: contactRoleOptions } = useDictOptions('customer_contact_role', [
+  { label: '业务', value: 'BUSINESS' },
+  { label: '财务', value: 'FINANCE' },
+  { label: '技术', value: 'TECH' },
+  { label: '仓储', value: 'WAREHOUSE' },
+  { label: '法务', value: 'LEGAL' },
+  { label: '管理层', value: 'MANAGER' }
+]);
+const { options: addressTypeOptions } = useDictOptions('customer_address_type', [
+  { label: '注册地址', value: 'REGISTERED' },
+  { label: '发货地址', value: 'SHIP_FROM' },
+  { label: '退货地址', value: 'RETURN_TO' },
+  { label: '账单地址', value: 'BILLING' },
+  { label: '仓库联系人', value: 'WAREHOUSE_CONTACT' },
+  { label: '其他', value: 'OTHER' }
+]);
 
 const loading = ref(false);
 const saving = ref(false);
@@ -1392,7 +1459,7 @@ function showToast(message: string) {
 }
 
 function customerStatusText(status?: string) {
-  return customerStatusOptions.find((option) => option.value === status)?.label || status || '-';
+  return optionLabel(customerStatusOptions.value, status);
 }
 
 function customerStatusTone(status?: string) {
@@ -1403,87 +1470,40 @@ function customerStatusTone(status?: string) {
 }
 
 function settlementText(value?: string) {
-  const map: Record<string, string> = {
-    PREPAID: '预付',
-    CREDIT: '授信',
-    MONTHLY: '月结'
-  };
-  return value ? map[value] ?? value : '-';
+  return optionLabel(settlementTypeOptions.value, value);
 }
 
 function contactRoleText(value?: string) {
-  const map: Record<string, string> = {
-    BUSINESS: '业务',
-    FINANCE: '财务',
-    TECH: '技术',
-    WAREHOUSE: '仓储',
-    LEGAL: '法务',
-    MANAGER: '管理层'
-  };
-  return value ? map[value] ?? value : '-';
+  return optionLabel(contactRoleOptions.value, value);
 }
 
 function roleTypeText(value?: string) {
-  const map: Record<string, string> = {
-    CUSTOMER: '客户',
-    SUPPLIER: '供应商',
-    OVERSEAS_AGENT: '海外代理',
-    CARRIER: '物流商',
-    WAREHOUSE_PROVIDER: '仓库服务商',
-    CUSTOMS_BROKER: '清关行'
-  };
-  return value ? map[value] ?? value : '-';
+  return optionLabel(roleTypeOptions.value, value);
 }
 
 function relationTypeText(value?: string) {
-  const map: Record<string, string> = {
-    PARENT_CHILD: '主子公司',
-    BILLING_TITLE: '多抬头',
-    SETTLEMENT_SUBJECT: '结算主体'
-  };
-  return value ? map[value] ?? value : '-';
+  return optionLabel(relationTypeOptions.value, value);
 }
 
 function attachmentTypeText(value?: string) {
-  const map: Record<string, string> = {
-    CONTRACT_COPY: '合同',
-    LICENSE: '营业执照',
-    TAX_FILE: '税务文件',
-    KYC_FILE: 'KYC 文件',
-    OTHER: '其他'
-  };
-  return value ? map[value] ?? value : '-';
+  return optionLabel(attachmentTypeOptions.value, value);
 }
 
 function kycTypeText(value?: string) {
-  const map: Record<string, string> = {
-    COMPANY_LICENSE: '企业营业执照',
-    PERSONAL_ID: '个人证件',
-    TAX: '税务资料',
-    COMPLIANCE: '合规资料'
-  };
-  return value ? map[value] ?? value : '-';
+  return optionLabel(kycTypeOptions.value, value);
 }
 
 function auditStatusText(value?: string) {
-  const map: Record<string, string> = {
-    PENDING: '待审核',
-    APPROVED: '通过',
-    REJECTED: '驳回'
-  };
-  return value ? map[value] ?? value : '-';
+  return optionLabel(auditStatusOptions.value, value);
 }
 
 function addressTypeText(value?: string) {
-  const map: Record<string, string> = {
-    REGISTERED: '注册地址',
-    SHIP_FROM: '发货地址',
-    RETURN_TO: '退货地址',
-    BILLING: '账单地址',
-    WAREHOUSE_CONTACT: '仓库联系人',
-    OTHER: '其他'
-  };
-  return value ? map[value] ?? value : '-';
+  return optionLabel(addressTypeOptions.value, value);
+}
+
+function optionLabel<T extends string | number>(options: Array<{ label: string; value: T }>, value?: T | string) {
+  if (value === undefined || value === null || value === '') return '-';
+  return options.find((option) => String(option.value) === String(value))?.label || String(value);
 }
 
 function formatTime(value?: string) {

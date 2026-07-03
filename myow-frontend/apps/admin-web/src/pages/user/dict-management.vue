@@ -64,8 +64,9 @@
             <span>状态</span>
             <select v-model="dataQuery.disabledFlag">
               <option value="">全部</option>
-              <option value="false">启用</option>
-              <option value="true">停用</option>
+              <option v-for="option in disabledFlagQueryOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <div class="query-actions">
@@ -156,8 +157,9 @@
           <label>
             <span>状态</span>
             <select v-model="dataForm.disabledFlag">
-              <option :value="false">启用</option>
-              <option :value="true">停用</option>
+              <option v-for="option in disabledFlagFormOptions" :key="String(option.value)" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </label>
           <label class="form-wide"><span>备注</span><textarea v-model="dataForm.remark" rows="4" /></label>
@@ -175,6 +177,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { ApiId } from '@myow/api';
 import { confirmDelete } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import {
   createDict,
   createDictData,
@@ -202,6 +205,14 @@ const dictTotal = ref(0);
 const dataTotal = ref(0);
 const toastMessage = ref('');
 const errorMessage = ref('');
+const { options: disabledFlagQueryOptions } = useDictOptions('sys_disabled_flag', [
+  { label: '启用', value: 'false' },
+  { label: '停用', value: 'true' }
+]);
+const { options: disabledFlagFormOptions } = useDictOptions<boolean>('sys_disabled_flag', [
+  { label: '启用', value: false },
+  { label: '停用', value: true }
+], (value) => value === 'true');
 
 const dictQuery = reactive({ dictCode: '', dictName: '', pageNum: 1, pageSize: 200 });
 const dataQuery = reactive({ dataLabel: '', dataValue: '', disabledFlag: '', pageNum: 1, pageSize: 20 });

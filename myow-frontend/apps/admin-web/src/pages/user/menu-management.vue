@@ -23,17 +23,14 @@
         <span>菜单类型</span>
         <select v-model="query.menuType">
           <option value="">全部类型</option>
-          <option value="M">目录</option>
-          <option value="C">菜单</option>
-          <option value="F">按钮</option>
+          <option v-for="option in menuTypeOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
         </select>
       </label>
       <label>
         <span>状态</span>
         <select v-model="query.status">
           <option value="">全部状态</option>
-          <option value="0">启用</option>
-          <option value="1">停用</option>
+          <option v-for="option in normalStatusOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
         </select>
       </label>
       <div class="query-actions">
@@ -108,9 +105,7 @@
           <label>
             <span>菜单类型</span>
             <select v-model="form.menuType">
-              <option value="M">目录</option>
-              <option value="C">菜单</option>
-              <option value="F">按钮</option>
+              <option v-for="option in menuTypeOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
             </select>
           </label>
           <label>
@@ -136,29 +131,25 @@
           <label>
             <span>显示状态</span>
             <select v-model="form.visible">
-              <option value="0">显示</option>
-              <option value="1">隐藏</option>
+              <option v-for="option in menuVisibleOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
             </select>
           </label>
           <label>
             <span>菜单状态</span>
             <select v-model="form.status">
-              <option value="0">启用</option>
-              <option value="1">停用</option>
+              <option v-for="option in normalStatusOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
             </select>
           </label>
           <label>
             <span>是否缓存</span>
             <select v-model="form.isCache">
-              <option value="0">缓存</option>
-              <option value="1">不缓存</option>
+              <option v-for="option in menuCacheOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
             </select>
           </label>
           <label>
             <span>是否外链</span>
             <select v-model="form.isFrame">
-              <option value="0">外链</option>
-              <option value="1">非外链</option>
+              <option v-for="option in menuFrameOptions" :key="String(option.value)" :value="option.value">{{ option.label }}</option>
             </select>
           </label>
           <label class="form-wide">
@@ -179,6 +170,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { ApiId, PageResult } from '@myow/api';
 import { confirmDelete } from '@/composables/use-confirm-action';
+import { useDictOptions } from '@/composables/use-dict-options';
 import { postAdminData } from '@/services/admin-data-service';
 import { usePermission } from '@/composables/use-permission';
 
@@ -202,6 +194,27 @@ interface MenuRecord {
 }
 
 const { hasPermission } = usePermission();
+const { options: menuTypeOptions } = useDictOptions('sys_menu_type', [
+  { label: '目录', value: 'M' },
+  { label: '菜单', value: 'C' },
+  { label: '按钮', value: 'F' }
+]);
+const { options: normalStatusOptions } = useDictOptions('sys_normal_disable', [
+  { label: '启用', value: '0' },
+  { label: '停用', value: '1' }
+]);
+const { options: menuVisibleOptions } = useDictOptions('sys_menu_visible', [
+  { label: '显示', value: '0' },
+  { label: '隐藏', value: '1' }
+]);
+const { options: menuCacheOptions } = useDictOptions('sys_menu_cache', [
+  { label: '缓存', value: '0' },
+  { label: '不缓存', value: '1' }
+]);
+const { options: menuFrameOptions } = useDictOptions('sys_menu_frame', [
+  { label: '外链', value: '0' },
+  { label: '非外链', value: '1' }
+]);
 const loading = ref(false);
 const saving = ref(false);
 const errorMessage = ref('');
