@@ -126,6 +126,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { ApiId, DeptTreeNode, UserCreatePayload, UserProfile, UserUpdatePayload } from '@myow/api';
+import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
 import { usePermission } from '@/composables/use-permission';
 import {
   createUser,
@@ -228,27 +229,44 @@ async function handleToggleStatus(row: UserProfile) {
   if (!row.userId) {
     return;
   }
-  if (!window.confirm(`确认${isEnabled(row.status) ? '停用' : '启用'}该用户？`)) return;
+  const action = isEnabled(row.status) ? '停用' : '启用';
+  if (!confirmImportantAction({
+    title: `${action}用户 ${row.userName || row.nickName || row.userId}`,
+    risk: '用户状态变更会影响该账号登录和后续系统操作，请确认该账号当前不在关键作业流程中。',
+    confirmText: `确认${action}该用户？`
+  })) return;
   await updateUserStatus(row.userId, !isEnabled(row.status));
   showToast('用户状态已更新');
   await loadUsers();
 }
 
 async function handleResetPassword(userId: ApiId) {
-  if (!window.confirm('确认重置该用户密码？')) return;
+  if (!confirmImportantAction({
+    title: '重置用户密码',
+    risk: '重置后用户需要使用新密码登录，可能中断当前登录会话或影响正在进行的操作。',
+    confirmText: '确认重置该用户密码？'
+  })) return;
   await resetUserPassword(userId);
   showToast('用户密码已重置');
 }
 
 async function handleUnlock(userId: ApiId) {
-  if (!window.confirm('确认解锁该用户？')) return;
+  if (!confirmImportantAction({
+    title: '解锁用户',
+    risk: '解锁后该账号可重新尝试登录，请确认锁定原因已经处理。',
+    confirmText: '确认解锁该用户？'
+  })) return;
   await unlockUser(userId);
   showToast('用户已解锁');
   await loadUsers();
 }
 
 async function handleForceChangePassword(userId: ApiId) {
-  if (!window.confirm('确认要求该用户下次登录强制改密？')) return;
+  if (!confirmImportantAction({
+    title: '强制改密',
+    risk: '该用户下次登录必须修改密码，适用于密码泄露风险或安全策略调整。',
+    confirmText: '确认要求该用户下次登录强制改密？'
+  })) return;
   await forceUserChangePassword(userId);
   showToast('已设置强制改密');
   await loadUsers();
@@ -290,7 +308,7 @@ async function submitUser(payload: UserCreatePayload | UserUpdatePayload) {
 }
 
 async function handleDelete(userId: ApiId) {
-  if (!window.confirm('确认删除该用户？')) return;
+  if (!confirmDelete(`用户 ${userId}`, '删除用户会影响账号登录、角色授权和历史操作归属。已参与业务流程的账号建议优先停用。')) return;
   errorMessage.value = '';
   try {
     await deleteUser(userId);

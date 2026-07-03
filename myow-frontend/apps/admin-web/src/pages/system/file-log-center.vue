@@ -61,6 +61,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
+import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
 import { deleteFile, downloadFile, kickOnlineUser, pageFiles, pageOnlineUsers, uploadFile } from '@/services/system-service';
 
 const tabs = ['文件管理', '操作日志', '登录日志', '在线用户'];
@@ -162,6 +163,7 @@ async function download(row: SystemRecord) {
 }
 
 async function remove(row: SystemRecord) {
+  if (!confirmDelete(`文件 ${row.code || row.id}`, '删除文件记录可能影响业务附件、导入模板或导出结果下载。')) return;
   await runWithFeedback(async () => {
     await deleteFile(row.id);
     showToast('文件已删除');
@@ -175,6 +177,11 @@ async function kick(row: SystemRecord) {
     errorMessage.value = '缺少会话 Token';
     return;
   }
+  if (!confirmImportantAction({
+    title: `强退在线会话 ${row.name || row.id}`,
+    risk: '强退会立即使该 Token 失效，用户下次请求将被要求重新登录。',
+    confirmText: '确认强退该在线会话？'
+  })) return;
   await runWithFeedback(async () => {
     await kickOnlineUser(token);
     showToast('在线会话已强退');

@@ -76,6 +76,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
+import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
 import { createSiteConfig, deleteSiteConfig, pageSiteConfigs, refreshSiteConfig, updateSiteConfig } from '@/services/system-service';
 
 const groups = ['GLOBAL', 'ADMIN', 'CLIENT', 'FILE', 'SECURITY'];
@@ -157,6 +158,11 @@ async function submit() {
 }
 
 async function refreshCache() {
+  if (!confirmImportantAction({
+    title: `刷新 ${current.value} 配置缓存`,
+    risk: '刷新缓存会让后续请求读取最新配置，可能立即影响前端展示或系统行为。',
+    confirmText: '确认刷新该配置缓存？'
+  })) return;
   await runWithFeedback(async () => {
     await refreshSiteConfig(current.value);
     showToast('配置缓存已刷新');
@@ -164,6 +170,7 @@ async function refreshCache() {
 }
 
 async function remove(row: SystemRecord) {
+  if (!confirmDelete(`配置 ${row.code || row.id}`, '删除配置可能导致站点、主题、安全或文件策略回退到默认值。')) return;
   await runWithFeedback(async () => {
     await deleteSiteConfig(row.id);
     showToast('配置已删除');

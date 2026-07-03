@@ -185,6 +185,13 @@ erDiagram
 
 字典由字典类型与字典数据组成，用于维护系统级枚举配置。字典类型全局唯一，字典数据归属于字典类型。
 
+字典不是单层列表，而是“字典集合 + 字典数据项”的主从结构：
+
+- Dict：字典集合/字典类型，例如用户状态、菜单类型、客户等级、订单状态。它描述一组枚举的业务含义、编码和生命周期。
+- DictData：字典集合下的具体选项，例如用户状态下的正常、停用、锁定。它必须归属于一个 dict_id，不允许脱离 Dict 独立维护。
+- 管理端页面必须同时使用 DictController 与 DictDataController。只展示 sys_dict 会导致用户只能维护集合，无法维护集合下的数据项，属于不完整实现。
+- 业务模块引用字典时优先引用 dict_code + data_value；管理后台维护时使用 dict_id 作为主从关联键。
+
 | 实体 | 关键字段 | 约束 | 说明 |
 | --- | --- | --- | --- |
 | Dict | dict_id, dict_code, dict_name | dict_code 全局唯一 | 字典类型 |
@@ -849,8 +856,8 @@ Authorization: satoken-xxxxx
 | UserPostController | /api/system/user-post | 用户-岗位关联 |
 | RoleMenuController | /api/system/role-menu | 角色-菜单关联 |
 | RoleDeptController | /api/system/role-dept | 角色-部门关联（数据权限） |
-| DictController | /api/system/dict | 字典类型 CRUD |
-| DictDataController | /api/system/dict-data | 字典数据 CRUD |
+| DictController | /api/system/dict | 字典集合/字典类型 CRUD，维护 sys_dict |
+| DictDataController | /api/system/dict-data | 字典数据项 CRUD，按 dict_id 维护 sys_dict_data |
 | I18nKeyController | /api/system/i18n-key | 国际化键 CRUD |
 | I18nMessageController | /api/system/i18n-message | 国际化消息 CRUD |
 | ConfigController | /api/system/config | 系统参数查询、更新、刷新缓存 |
@@ -1164,7 +1171,19 @@ flowchart TD
 
 - 字典编码格式：dict_code 必须以字母开头，只能包含字母、数字、下划线。
 
+- 主从结构：字典管理必须按 Dict / DictData 两层实现。DictController 只负责字典集合，DictDataController 只负责字典集合下的数据项，前端不得把两者合并成单层表格。
+
+- 页面交互：管理端字典页面采用左侧字典集合列表、右侧字典数据项列表。选中字典集合后，右侧以 dict_id 调用 DictDataController 分页查询数据项。
+
+- 新增数据项：新增字典数据必须携带 dict_id；禁止前端只传 dict_code 让后端猜测所属字典。
+
+- 唯一性：dict_code 全局唯一；同一 dict_id 下 data_value 唯一，data_label 建议唯一，避免同一字典下出现重复展示名。
+
 - 字典删除保护：删除字典类型前须校验是否存在字典数据，存在则禁止删除。
+
+- 字典数据删除保护：若字典数据已被业务表引用，后续应通过引用校验或禁用状态处理，避免直接删除导致历史数据无法解释。
+
+- 排序规则：同一 dict_id 下按 sort 升序展示，sort 相同时按 dict_data_id 升序。
 
 - 国际化乐观锁：t_i18n_message 表使用 @Version 实现乐观锁，并发更新时以版本号为准，冲突时返回更新失败。
 

@@ -71,7 +71,7 @@
 | 部门管理 | DeptController | 部门树、详情、新增、编辑、启停、排序。 | 已具备 |
 | 岗位管理 | PositionController、UserPostController | 岗位维护、用户岗位关联。 | 已具备 |
 | 租户管理 | TenantController、TenantPlansController | 租户 CRUD、启停、套餐。 | 已具备 |
-| 字典枚举 | DictController、DictDataController | 字典类型、字典值、状态枚举。 | 已具备 |
+| 字典枚举 | DictController、DictDataController | 字典集合与字典数据项两层维护；左侧字典集合调用 DictController，右侧按 dict_id 调用 DictDataController。 | 已具备，前端必须主从实现 |
 | 登录日志 | LoginLogController | 分页、详情、筛选。 | 已具备 |
 | 操作日志 | OperLogController | 分页、详情、筛选。 | 已具备 |
 | 权限初始化聚合接口 | 建议新增 ProfileController 方法 | 一次返回用户、菜单、按钮权限、数据权限、系统配置摘要。 | 已具备 |
@@ -115,6 +115,14 @@
 
 ## 07字典枚举与状态
 
+字典管理页面必须按后端两个 Controller 实现主从结构：
+
+- `DictController`：维护字典集合/字典类型，对应 `sys_dict`，接口包括 `/system/dict/page`、`/system/dict/create`、`/system/dict/update`、`/system/dict/delete`。
+- `DictDataController`：维护字典集合下的数据项，对应 `sys_dict_data`，接口包括 `/system/dict-data/page`、`/system/dict-data/create`、`/system/dict-data/update`、`/system/dict-data/delete`。
+- 前端页面不得只接 `DictController` 做单层 CRUD。正确形态是左侧字典集合列表，右侧字典数据列表。右侧查询参数必须带 `dictId`。
+- 新增/编辑字典数据项时，表单字段至少包含 `dictId`、`dataLabel`、`dataValue`、`sort`、`disabledFlag`。
+- 删除字典集合时，如果存在字典数据项，后端应拒绝，前端需展示“请先删除或迁移字典数据项”的明确提示。
+
 | 枚举 | 用途 | 来源 | 状态 |
 | --- | --- | --- | --- |
 | 用户状态 | 正常、停用、锁定、待改密。 | user 字典或常量 | 已具备 |
@@ -139,7 +147,7 @@
 | 部门组织 | 删除 | system:dept:delete | 删除部门节点。 |
 | 角色权限 | 新增 / 编辑 / 删除 | system:role:add / system:role:update / system:role:delete | 对应 RoleController 权限。 |
 | 菜单权限 | 新增 / 编辑 / 删除 | system:menu:add / system:menu:update / system:menu:delete | 对应 MenuController 权限。 |
-| 字典管理 | 新增 / 编辑 / 删除 | system:dict:add / system:dict:update / system:dict:delete | 对应 DictController 权限。 |
+| 字典管理 | 新增 / 编辑 / 删除 | system:dict:add / system:dict:update / system:dict:delete | 同时作用于 DictController 与 DictDataController；页面需区分字典集合和字典数据项操作。 |
 | 定时任务 | 新增 / 编辑 / 删除 / 执行 / 暂停 / 恢复 | system:job:create / system:job:update / system:job:delete / system:job:run / system:job:pause / system:job:resume | 权限码与 Flyway system seed 保持一致。 |
 | 通知公告 | 新增 / 编辑 / 删除 / 发布 / 下线 | system:notice:create / system:notice:update / system:notice:delete / system:notice:publish / system:notice:withdraw | 发布和下线分离。 |
 | 站点配置 | 新增 / 编辑 / 删除 / 刷新缓存 | system:site-config:create / system:site-config:update / system:site-config:delete / system:site-config:refresh | 刷新缓存按站点编码执行。 |

@@ -87,7 +87,7 @@ export const userRoutes: RouteRecordRaw[] = [
     path: 'user/dicts',
     alias: ['/system/dict', '/admin/system/dict'],
     name: 'DictCenter',
-    component: () => import('@/pages/common/generic-crud-list.vue'),
+    component: () => import('@/pages/user/dict-management.vue'),
     meta: {
       title: '字典管理',
       description: '维护系统字典类型和字典值。',

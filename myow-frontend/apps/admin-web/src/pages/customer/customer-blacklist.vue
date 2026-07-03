@@ -149,6 +149,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { BlacklistTargetType, CustomerBlacklist, CustomerBlacklistPayload } from '@myow/api';
+import { confirmDelete } from '@/composables/use-confirm-action';
 import { usePermission } from '@/composables/use-permission';
 import {
   createCustomerBlacklist,
@@ -291,7 +292,7 @@ async function submitForm() {
 }
 
 async function removeRow(row: CustomerBlacklist) {
-  if (!window.confirm(`确认删除黑名单 ${row.targetValue}？`)) return;
+  if (!confirmDelete(`黑名单 ${row.targetValue}`, '删除黑名单会解除该对象的风险拦截。若只是临时放行，建议先停用或调整有效期。')) return;
   await deleteCustomerBlacklist(row.blacklistId);
   showToast('黑名单已删除');
   await loadRows();

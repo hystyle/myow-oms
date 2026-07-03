@@ -732,6 +732,7 @@ import type {
   CustomerStatus,
   CustomerUpdatePayload
 } from '@myow/api';
+import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
 import { usePermission } from '@/composables/use-permission';
 import {
   changeCustomerStatus,
@@ -1007,14 +1008,19 @@ async function submitCustomer() {
 
 async function toggleStatus(row: CustomerProfile) {
   const nextStatus: CustomerStatus = row.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-  if (!window.confirm(`确认${nextStatus === 'ACTIVE' ? '启用' : '冻结'}客户 ${row.customerName}？`)) return;
+  const action = nextStatus === 'ACTIVE' ? '启用' : '冻结';
+  if (!confirmImportantAction({
+    title: `${action}客户 ${row.customerName}`,
+    risk: '客户状态会影响订单、结算、账号访问和业务处理，请确认该客户当前状态变更合理。',
+    confirmText: `确认${action}客户 ${row.customerName}？`
+  })) return;
   await changeCustomerStatus(row.customerId, nextStatus);
   showToast('客户状态已更新');
   await loadCustomers();
 }
 
 async function removeCustomer(row: CustomerProfile) {
-  if (!window.confirm(`确认删除客户 ${row.customerName}？`)) return;
+  if (!confirmDelete(`客户 ${row.customerName}`, '删除客户会影响客商档案、联系人、地址、附件、角色和后续业务引用。已有业务数据时建议冻结。')) return;
   await deleteCustomer(row.customerId);
   showToast('客户已删除');
   await loadCustomers();
@@ -1077,7 +1083,7 @@ async function submitRelation() {
 }
 
 async function removeRelation(relation: CustomerRelation) {
-  if (!selectedCustomer.value || !window.confirm(`确认删除关系 ${relationTypeText(relation.relationType)}？`)) return;
+  if (!selectedCustomer.value || !confirmDelete(`关系 ${relationTypeText(relation.relationType)}`, '删除客户关系会影响主子公司、多抬头和结算独立性判断。')) return;
   await deleteCustomerRelation(relation.relationId);
   showToast('客户关系已删除');
   await loadCustomerChildren(selectedCustomer.value.customerId);
@@ -1128,7 +1134,7 @@ async function submitAttachment() {
 }
 
 async function removeAttachment(attachment: CustomerAttachment) {
-  if (!selectedCustomer.value || !window.confirm(`确认删除附件 ${attachment.fileName || attachment.fileId}？`)) return;
+  if (!selectedCustomer.value || !confirmDelete(`附件 ${attachment.fileName || attachment.fileId}`, '删除附件索引后，业务人员可能无法继续查看合同、资质或证明材料。')) return;
   await deleteCustomerAttachment(attachment.attachmentId);
   showToast('附件已删除');
   await loadCustomerChildren(selectedCustomer.value.customerId);
@@ -1172,6 +1178,11 @@ async function submitKyc() {
 
 async function auditKycRecord(kyc: CustomerKyc, auditStatus: 'APPROVED' | 'REJECTED') {
   if (!selectedCustomer.value) return;
+  if (!confirmImportantAction({
+    title: `${auditStatus === 'APPROVED' ? '通过' : '驳回'} KYC ${kycTypeText(kyc.kycType)}`,
+    risk: 'KYC 审核结果会影响客户准入、风控和后续业务处理。',
+    confirmText: `确认${auditStatus === 'APPROVED' ? '通过' : '驳回'}该 KYC？`
+  })) return;
   const rejectReason = auditStatus === 'REJECTED' ? window.prompt('请输入驳回原因') || '' : '';
   await auditCustomerKyc({ kycId: kyc.kycId, auditStatus, rejectReason });
   showToast(auditStatus === 'APPROVED' ? 'KYC 已通过' : 'KYC 已驳回');
@@ -1179,7 +1190,7 @@ async function auditKycRecord(kyc: CustomerKyc, auditStatus: 'APPROVED' | 'REJEC
 }
 
 async function removeKyc(kyc: CustomerKyc) {
-  if (!selectedCustomer.value || !window.confirm(`确认删除 KYC ${kycTypeText(kyc.kycType)}？`)) return;
+  if (!selectedCustomer.value || !confirmDelete(`KYC ${kycTypeText(kyc.kycType)}`, '删除 KYC 记录会影响合规审计和客户准入判断。')) return;
   await deleteCustomerKyc(kyc.kycId);
   showToast('KYC 已删除');
   await loadCustomerChildren(selectedCustomer.value.customerId);
@@ -1228,7 +1239,7 @@ async function submitRole() {
 }
 
 async function removeRole(role: CustomerRole) {
-  if (!selectedCustomer.value || !window.confirm(`确认删除角色 ${roleTypeText(role.roleType)}？`)) return;
+  if (!selectedCustomer.value || !confirmDelete(`角色 ${roleTypeText(role.roleType)}`, '删除业务角色会影响客供一体、财务对冲和业务模块引用。')) return;
   await deleteCustomerRole(role.customerRoleId);
   showToast('业务角色已删除');
   await loadCustomerChildren(selectedCustomer.value.customerId);
@@ -1283,7 +1294,7 @@ async function submitContact() {
 }
 
 async function removeContact(contact: CustomerContact) {
-  if (!selectedCustomer.value || !window.confirm(`确认删除联系人 ${contact.contactName}？`)) return;
+  if (!selectedCustomer.value || !confirmDelete(`联系人 ${contact.contactName}`, '删除联系人会影响业务、财务、技术或仓储沟通记录。')) return;
   await deleteCustomerContact(contact.contactId);
   showToast('联系人已删除');
   await loadCustomerChildren(selectedCustomer.value.customerId);
@@ -1346,7 +1357,7 @@ async function submitAddress() {
 }
 
 async function removeAddress(address: CustomerAddress) {
-  if (!selectedCustomer.value || !window.confirm('确认删除该地址？')) return;
+  if (!selectedCustomer.value || !confirmDelete(`地址 ${address.contactName || address.addressId}`, '删除地址会影响发货、退货、注册地址和默认地址选择。')) return;
   await deleteCustomerAddress(address.addressId);
   showToast('地址已删除');
   await loadCustomerChildren(selectedCustomer.value.customerId);

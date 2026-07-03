@@ -183,6 +183,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { ApiId, DeptTreeNode, PageResult } from '@myow/api';
+import { confirmDelete } from '@/composables/use-confirm-action';
 import { postAdminData } from '@/services/admin-data-service';
 import { usePermission } from '@/composables/use-permission';
 
@@ -349,7 +350,7 @@ async function submitRole() {
 
 async function deleteSelectedRole() {
   if (!selectedRole.value?.roleId) return;
-  if (!window.confirm('确认删除该角色？删除后关联用户将失去该角色权限。')) return;
+  if (!confirmDelete(`角色 ${selectedRole.value.roleName || selectedRole.value.roleCode || selectedRole.value.roleId}`, '删除角色后，关联用户将失去该角色权限，可能无法进入原有菜单或执行按钮操作。')) return;
   errorMessage.value = '';
   try {
     await postAdminData('/myow/system/role/delete', { id: selectedRole.value.roleId });

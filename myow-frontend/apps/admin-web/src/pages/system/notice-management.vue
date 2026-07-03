@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
+import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
 import { createNotice, deleteNotice, pageNotices, publishNotice, updateNotice, withdrawNotice } from '@/services/system-service';
 
 const loading = ref(false);
@@ -173,6 +174,11 @@ async function submit() {
 }
 
 async function publish(row: SystemRecord) {
+  if (!confirmImportantAction({
+    title: `发布公告 ${row.code || row.id}`,
+    risk: '发布后公告将对目标范围可见，内容通常不应再直接修改。',
+    confirmText: '确认发布该公告？'
+  })) return;
   await runWithFeedback(async () => {
     await publishNotice(row.id);
     showToast('公告已发布');
@@ -181,6 +187,11 @@ async function publish(row: SystemRecord) {
 }
 
 async function withdraw(row: SystemRecord) {
+  if (!confirmImportantAction({
+    title: `下线公告 ${row.code || row.id}`,
+    risk: '下线后普通用户将不再看到该公告，可能影响通知触达。',
+    confirmText: '确认下线该公告？'
+  })) return;
   await runWithFeedback(async () => {
     await withdrawNotice(row.id);
     showToast('公告已下线');
@@ -189,6 +200,7 @@ async function withdraw(row: SystemRecord) {
 }
 
 async function remove(row: SystemRecord) {
+  if (!confirmDelete(`公告 ${row.code || row.id}`, '删除公告会移除管理端记录入口。已发布公告建议优先下线，而不是直接删除。')) return;
   await runWithFeedback(async () => {
     await deleteNotice(row.id);
     showToast('公告已删除');

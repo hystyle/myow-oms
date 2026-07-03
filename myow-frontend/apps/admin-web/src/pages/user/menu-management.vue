@@ -178,6 +178,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { ApiId, PageResult } from '@myow/api';
+import { confirmDelete } from '@/composables/use-confirm-action';
 import { postAdminData } from '@/services/admin-data-service';
 import { usePermission } from '@/composables/use-permission';
 
@@ -296,7 +297,7 @@ async function submitMenu() {
 
 async function deleteMenu(menu: MenuRecord) {
   if (!menu.menuId) return;
-  if (!window.confirm('确认删除该菜单？删除目录或菜单会影响子菜单和角色权限。')) return;
+  if (!confirmDelete(`菜单 ${menu.menuName || menu.menuId}`, '删除目录或菜单会影响子菜单、按钮权限和角色授权，可能导致用户无法访问相关页面。')) return;
   errorMessage.value = '';
   try {
     await postAdminData('/myow/system/menu/delete', { id: menu.menuId });

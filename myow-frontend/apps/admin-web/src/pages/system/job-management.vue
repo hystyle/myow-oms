@@ -110,6 +110,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
+import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
 import { createJob, deleteJob, pageJobLogs, pageJobs, pauseJob, resumeJob, runJob, updateJob } from '@/services/system-service';
 
 const loading = ref(false);
@@ -206,6 +207,11 @@ async function submit() {
 }
 
 async function run(job: SystemRecord) {
+  if (!confirmImportantAction({
+    title: `立即执行任务 ${job.code || job.name || job.id}`,
+    risk: '立即执行会触发后端任务处理器，可能产生数据清理、通知或同步动作。',
+    confirmText: '确认立即执行该任务？'
+  })) return;
   await runWithFeedback(async () => {
     await runJob(job.id);
     showToast('任务已触发执行');
@@ -214,6 +220,12 @@ async function run(job: SystemRecord) {
 }
 
 async function toggleStatus(job: SystemRecord) {
+  const action = job.status === 1 ? '暂停' : '恢复';
+  if (!confirmImportantAction({
+    title: `${action}任务 ${job.code || job.name || job.id}`,
+    risk: '任务状态变更会影响后续自动调度，请确认当前操作符合运维预期。',
+    confirmText: `确认${action}该任务？`
+  })) return;
   await runWithFeedback(async () => {
     if (job.status === 1) {
       await pauseJob(job.id);
@@ -227,6 +239,7 @@ async function toggleStatus(job: SystemRecord) {
 }
 
 async function remove(job: SystemRecord) {
+  if (!confirmDelete(`任务 ${job.code || job.name || job.id}`, '删除任务会移除调度配置，后续不会再自动执行。历史执行日志仍可能保留。')) return;
   await runWithFeedback(async () => {
     await deleteJob(job.id);
     showToast('任务已删除');

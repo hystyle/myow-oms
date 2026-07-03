@@ -7,6 +7,7 @@ import {
   downloadAdminRecord,
   type AdminRecord
 } from '@/services/admin-data-service';
+import { confirmDelete, confirmImportantAction } from '@/composables/use-confirm-action';
 import type { RowAction } from './admin-crud-types';
 
 // 行操作：负责删除、自定义行按钮执行、下载、结果抽屉展示
@@ -39,7 +40,7 @@ export function useAdminRowActions(deps: {
     const id = deps.readValue(row, deps.idKey());
     if (id == null) return;
     const pageTitle = String(route.meta.title ?? '数据');
-    if (!window.confirm(`确认删除这条${pageTitle}数据？`)) return;
+    if (!confirmDelete(pageTitle, '删除操作可能影响引用该数据的业务记录，执行后通常不可直接恢复。')) return;
     errorMessage.value = '';
     try {
       await deleteAdminRecord(`${deps.baseEndpoint()}/delete`, deps.idKey(), id);
@@ -51,7 +52,11 @@ export function useAdminRowActions(deps: {
   }
 
   async function handleRowAction(action: RowAction, row: AdminRecord) {
-    if (action.confirm && !window.confirm(action.confirm)) {
+    if (action.confirm && !confirmImportantAction({
+      title: action.label,
+      risk: '这是关键操作，可能改变业务状态或影响在线用户，请确认当前选择无误。',
+      confirmText: action.confirm
+    })) {
       return;
     }
     const actionIdKey = action.idKey ?? deps.idKey();

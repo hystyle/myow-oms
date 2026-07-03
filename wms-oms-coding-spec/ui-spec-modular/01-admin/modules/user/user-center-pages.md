@@ -84,3 +84,54 @@ Drawer: 部门名称 / 上级部门 / 负责人 / 排序 / 状态
 
 - 删除部门前必须校验是否有子部门、用户、角色数据范围引用。
 - 停用部门后，该部门下用户不应自动停用，但新增用户不可选择停用部门。
+
+### 2.5 字典管理
+
+页面目标：维护系统级枚举集合和集合下的数据项，为表单下拉、状态展示、业务枚举提供统一来源。
+
+页面必须是主从结构，不允许做成单层字典列表。
+
+布局：
+
+```text
+┌────────────────────┬────────────────────────────────────────────┐
+│ 字典集合             │ 查询：数据标签 / 数据值 / 启停状态             │
+│ 查询：编码/名称       │ Toolbar: 新增数据项 / 刷新缓存                │
+│ Toolbar: 新增集合     │ Table: 标签 / 值 / 排序 / 状态 / 操作          │
+│ List: 编码 / 名称     │ Drawer: 数据项表单，必须携带当前 dictId        │
+└────────────────────┴────────────────────────────────────────────┘
+```
+
+左侧字典集合：
+
+- 接口：`POST /myow/system/dict/page`
+- 新增：`POST /myow/system/dict/create`
+- 编辑：`POST /myow/system/dict/update`
+- 删除：`POST /myow/system/dict/delete`
+- 字段：`dictId`、`dictCode`、`dictName`、备注/状态（如后端已提供）。
+
+右侧字典数据：
+
+- 接口：`POST /myow/system/dict-data/page`
+- 新增：`POST /myow/system/dict-data/create`
+- 编辑：`POST /myow/system/dict-data/update`
+- 删除：`POST /myow/system/dict-data/delete`
+- 查询参数：必须包含当前选中的 `dictId`。
+- 字段：`dictDataId`、`dictId`、`dataLabel`、`dataValue`、`sort`、`disabledFlag`。
+
+关键交互：
+
+- 首次进入页面加载字典集合，默认选中第一条集合并加载其数据项。
+- 点击左侧字典集合后，右侧清空旧数据并按新的 `dictId` 查询数据项。
+- 新增数据项时，表单中的 `dictId` 固定为当前选中字典集合，不允许用户手填任意 dictId。
+- 删除字典集合前，如果右侧存在数据项或后端返回“字典被引用/存在数据项”，前端必须展示明确原因。
+- 禁用数据项优先于删除，用于已经被历史业务引用的枚举值。
+
+权限码：
+
+| 动作 | 权限码 |
+| --- | --- |
+| 查询字典集合/数据项 | `system:dict:query` |
+| 新增字典集合/数据项 | `system:dict:add` |
+| 编辑字典集合/数据项 | `system:dict:update` |
+| 删除字典集合/数据项 | `system:dict:delete` |

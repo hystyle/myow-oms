@@ -73,6 +73,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { ApiId, DeptCreatePayload, DeptUpdatePayload } from '@myow/api';
+import { confirmDelete } from '@/composables/use-confirm-action';
 import { postAdminData, type AdminRecord } from '@/services/admin-data-service';
 import { usePermission } from '@/composables/use-permission';
 import DeptFormDrawer from './components/dept-form-drawer.vue';
@@ -160,7 +161,7 @@ async function submitDept(payload: DeptCreatePayload | DeptUpdatePayload) {
 
 async function handleDelete() {
   if (!selected.value?.deptId) return;
-  if (!window.confirm('确认删除该部门？')) return;
+  if (!confirmDelete(`部门 ${selected.value.deptName || selected.value.name || selected.value.deptId}`, '删除部门会影响用户归属、角色数据权限和组织树结构。存在子部门或用户时后端应拒绝删除。')) return;
   errorMessage.value = '';
   try {
     await postAdminData('/myow/system/dept/delete', { id: selected.value.deptId });
