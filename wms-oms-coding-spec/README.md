@@ -13,10 +13,10 @@
 - [财务模块设计](./finance/business-design.md)
 - [前端架构设计](./frontend/architecture-design.md)
 - [前后端契约设计](./frontend/backend-contract-design.md)
-- [UI/UE 规范](./ui-spec/README.md)
+- [UI/UE 规范](./ui-spec-modular/README.md)
 
 ## 维护约定
 
 - 业务设计按模块目录维护，不再新增根目录 HTML 设计稿。
-- UI/UE 设计统一维护在 `ui-spec` 包下。
+- UI/UE 设计统一维护在 `ui-spec-modular` 包下。
 - 代码实现前应以对应模块 Markdown 作为规格来源。

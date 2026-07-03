@@ -1,68 +1,10 @@
 -- Customer core schema for PostgreSQL.
--- P0 scope: partner, customer, contact, address, settlement profile,
+-- P0 scope: customer, contact, address, settlement profile,
 -- customer relation, attachment index, and KYC audit records.
-
-CREATE TABLE IF NOT EXISTS cm_partner_profile (
-    partner_id BIGINT PRIMARY KEY,
-    tenant_id BIGINT NOT NULL,
-    partner_code VARCHAR(32) NOT NULL,
-    partner_name VARCHAR(128) NOT NULL,
-    partner_type VARCHAR(16) NOT NULL DEFAULT 'COMPANY',
-    country_code VARCHAR(8),
-    biz_license_no VARCHAR(64),
-    tax_no VARCHAR(64),
-    status VARCHAR(16) DEFAULT 'ACTIVE',
-    risk_level VARCHAR(16) DEFAULT 'NORMAL',
-    remark VARCHAR(512),
-    create_by BIGINT,
-    create_time TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    update_by BIGINT,
-    update_time TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag BOOLEAN DEFAULT FALSE,
-    CONSTRAINT uk_cm_partner_code UNIQUE (tenant_id, partner_code)
-);
-
-CREATE INDEX IF NOT EXISTS idx_cm_partner_name
-    ON cm_partner_profile (tenant_id, partner_name);
-CREATE INDEX IF NOT EXISTS idx_cm_partner_tax_no
-    ON cm_partner_profile (tenant_id, tax_no);
-CREATE INDEX IF NOT EXISTS idx_cm_partner_license
-    ON cm_partner_profile (tenant_id, biz_license_no);
-
-COMMENT ON TABLE cm_partner_profile IS 'Customer domain partner/company master data';
-COMMENT ON COLUMN cm_partner_profile.partner_code IS 'Unique partner code in tenant';
-COMMENT ON COLUMN cm_partner_profile.partner_type IS 'COMPANY / INDIVIDUAL';
-
-CREATE TABLE IF NOT EXISTS cm_partner_role (
-    partner_role_id BIGINT PRIMARY KEY,
-    tenant_id BIGINT NOT NULL,
-    partner_id BIGINT NOT NULL,
-    role_type VARCHAR(32) NOT NULL,
-    role_status VARCHAR(16) DEFAULT 'ACTIVE',
-    customer_id BIGINT,
-    supplier_code VARCHAR(32),
-    offset_enabled BOOLEAN DEFAULT FALSE,
-    create_by BIGINT,
-    create_time TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    update_by BIGINT,
-    update_time TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag BOOLEAN DEFAULT FALSE,
-    CONSTRAINT uk_cm_partner_role UNIQUE (tenant_id, partner_id, role_type)
-);
-
-CREATE INDEX IF NOT EXISTS idx_cm_partner_role_type
-    ON cm_partner_role (tenant_id, role_type, role_status);
-CREATE INDEX IF NOT EXISTS idx_cm_partner_role_customer
-    ON cm_partner_role (tenant_id, customer_id);
-
-COMMENT ON TABLE cm_partner_role IS 'Partner business roles';
-COMMENT ON COLUMN cm_partner_role.role_type IS 'CUSTOMER / SUPPLIER / OVERSEAS_AGENT / CARRIER / CUSTOMS_BROKER';
-COMMENT ON COLUMN cm_partner_role.offset_enabled IS 'Whether finance can offset receivable and payable for this partner';
 
 CREATE TABLE IF NOT EXISTS cm_customer (
     customer_id BIGINT PRIMARY KEY,
     tenant_id BIGINT NOT NULL,
-    partner_id BIGINT NOT NULL,
     customer_code VARCHAR(32) NOT NULL,
     customer_name VARCHAR(128) NOT NULL,
     customer_type VARCHAR(16) NOT NULL DEFAULT 'COMPANY',
@@ -90,12 +32,10 @@ CREATE INDEX IF NOT EXISTS idx_cm_customer_status
     ON cm_customer (tenant_id, status);
 CREATE INDEX IF NOT EXISTS idx_cm_customer_level
     ON cm_customer (tenant_id, customer_level);
-CREATE INDEX IF NOT EXISTS idx_cm_customer_partner
-    ON cm_customer (tenant_id, partner_id);
 CREATE INDEX IF NOT EXISTS idx_cm_customer_owner
     ON cm_customer (tenant_id, sales_owner_id, owner_dept_id, pool_status);
 
-COMMENT ON TABLE cm_customer IS 'Customer role view for partner master data';
+COMMENT ON TABLE cm_customer IS 'Customer and trading partner master data';
 COMMENT ON COLUMN cm_customer.status IS 'PENDING / ACTIVE / SUSPENDED / TERMINATED';
 COMMENT ON COLUMN cm_customer.pool_status IS 'PRIVATE / PUBLIC';
 

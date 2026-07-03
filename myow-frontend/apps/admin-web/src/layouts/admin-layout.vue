@@ -6,12 +6,22 @@
         <span>MYOW Platform</span>
       </div>
       <nav class="admin-menu">
-        <template v-for="group in menuGroups" :key="group.title">
-          <span class="admin-menu-title">{{ group.title }}</span>
-          <router-link v-for="menu in group.items" :key="menu.menuId" :to="normalizePath(menu.path)">
-            {{ menuDisplayName(menu.menuName, menu.menuId) }}
-          </router-link>
-        </template>
+        <section v-for="group in menuGroups" :key="group.title" class="admin-menu-group">
+          <button
+            class="admin-menu-title"
+            type="button"
+            :aria-expanded="isGroupExpanded(group)"
+            @click="toggleGroup(group)"
+          >
+            <span>{{ group.title }}</span>
+            <span class="admin-menu-chevron" aria-hidden="true"></span>
+          </button>
+          <div v-show="isGroupExpanded(group)" class="admin-menu-items">
+            <router-link v-for="menu in group.items" :key="menu.menuId" :to="normalizePath(menu.path)">
+              {{ menuDisplayName(menu.menuName, menu.menuId) }}
+            </router-link>
+          </div>
+        </section>
       </nav>
     </aside>
     <section class="admin-main">
@@ -31,13 +41,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, ref, watchEffect } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import type { MenuItem } from '@myow/api';
 import { useAuthStore } from '@/stores/user-session';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
+const expandedGroups = ref<Record<string, boolean>>({});
+const touchedGroups = ref<Record<string, boolean>>({});
 
 interface MenuGroup {
   title: string;
@@ -48,17 +61,17 @@ const fallbackMenuGroups: MenuGroup[] = [
   {
     title: '启动模块',
     items: [
-      menu('1', '工作台', '/dashboard'),
-      menu('2', '用户账号', '/user'),
-      menu('3', '系统概览', '/system')
+      menu('1', '工作台', '/admin/dashboard'),
+      menu('2', '用户账号', '/admin/system/user'),
+      menu('3', '系统概览', '/admin/system')
     ]
   },
   {
     title: '用户权限',
     items: [
-      menu('10', '部门组织', '/user/depts'),
-      menu('11', '角色权限', '/user/roles'),
-      menu('12', '菜单权限', '/user/menus'),
+      menu('10', '部门组织', '/admin/system/dept'),
+      menu('11', '角色权限', '/admin/system/role'),
+      menu('12', '菜单权限', '/admin/system/menu'),
       menu('13', '字典管理', '/user/dicts'),
       menu('14', '登录日志', '/user/login-logs')
     ]
@@ -66,10 +79,10 @@ const fallbackMenuGroups: MenuGroup[] = [
   {
     title: '系统运维',
     items: [
-      menu('20', '定时任务', '/system/jobs'),
-      menu('21', '通知公告', '/system/notices'),
-      menu('22', '站点配置', '/system/site-configs'),
-      menu('23', '文件管理', '/system/files'),
+      menu('20', '定时任务', '/admin/system/job'),
+      menu('21', '通知公告', '/admin/system/notice'),
+      menu('22', '站点配置', '/admin/system/config'),
+      menu('23', '文件管理', '/admin/system/file'),
       menu('24', '在线用户', '/system/online-users'),
       menu('25', '敏感词', '/system/sensitive-words'),
       menu('26', '消息模板', '/system/message-templates'),
@@ -144,6 +157,36 @@ function menuDisplayName(name?: string, menuId?: string) {
   return menuNameMap[name] ?? name;
 }
 
+watchEffect(() => {
+  const groups = menuGroups.value;
+  const currentPath = route.path;
+  const next = { ...expandedGroups.value };
+  let changed = false;
+  let hasActiveGroup = false;
+
+  groups.forEach((group) => {
+    const active = groupHasActiveRoute(group, currentPath);
+    hasActiveGroup = hasActiveGroup || active;
+    if (next[group.title] == null) {
+      next[group.title] = active;
+      changed = true;
+    }
+    if (active && !touchedGroups.value[group.title] && next[group.title] !== true) {
+      next[group.title] = true;
+      changed = true;
+    }
+  });
+
+  if (!hasActiveGroup && groups.length > 0 && Object.keys(next).length === 0) {
+    next[groups[0].title] = true;
+    changed = true;
+  }
+
+  if (changed) {
+    expandedGroups.value = next;
+  }
+});
+
 function groupBackendMenus(menus: MenuItem[]) {
   const parentById = new Map(menus.map((item) => [item.menuId, item]));
   const groups = new Map<string, MenuGroup>();
@@ -173,6 +216,28 @@ function inferGroupTitle(path?: string) {
 function normalizePath(path?: string) {
   if (!path) return '/dashboard';
   return path.startsWith('/') ? path : `/${path}`;
+}
+
+function isGroupExpanded(group: MenuGroup) {
+  return expandedGroups.value[group.title] === true;
+}
+
+function toggleGroup(group: MenuGroup) {
+  touchedGroups.value = {
+    ...touchedGroups.value,
+    [group.title]: true
+  };
+  expandedGroups.value = {
+    ...expandedGroups.value,
+    [group.title]: !isGroupExpanded(group)
+  };
+}
+
+function groupHasActiveRoute(group: MenuGroup, currentPath = route.path) {
+  return group.items.some((item) => {
+    const resolved = router.resolve(normalizePath(item.path));
+    return resolved.path === currentPath || resolved.matched.some((matched) => route.matched.some((active) => active.name === matched.name));
+  });
 }
 
 function isSupportedRoute(path?: string) {

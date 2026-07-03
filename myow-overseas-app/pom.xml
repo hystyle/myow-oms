@@ -46,6 +46,10 @@
         </dependency>
         <dependency>
             <groupId>com.myow.platform</groupId>
+            <artifactId>myow-customer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.platform</groupId>
             <artifactId>myow-overseas</artifactId>
         </dependency>
         <dependency>

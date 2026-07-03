@@ -392,3 +392,201 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .client-menu { padding-left: 14px; }
   .portal-route { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ui-spec-modular baseline: shared light SaaS frame */
+:root {
+  --color-ink: #17202a;
+  --color-graphite: #45515f;
+  --color-canvas: #f6f8fa;
+  --color-panel: #ffffff;
+  --color-line: #d8dee6;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-info: #0891b2;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}
+
+body {
+  color: var(--color-ink);
+  background: var(--color-canvas);
+}
+
+.client-shell {
+  grid-template-columns: 220px 1fr;
+  background: var(--color-canvas);
+}
+
+.client-sidebar {
+  background: var(--color-panel);
+  color: var(--color-ink);
+  border-right: 1px solid var(--color-line);
+  box-shadow: none;
+}
+
+.client-sidebar::after { display: none; }
+
+.client-logo {
+  height: 64px;
+  color: var(--color-ink);
+  border-bottom-color: var(--color-line);
+  background: var(--color-panel);
+}
+
+.client-logo-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: var(--color-primary);
+  box-shadow: none;
+}
+
+.client-menu {
+  padding: 12px;
+}
+
+.client-menu a {
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-graphite);
+  background: transparent;
+  box-shadow: none;
+}
+
+.client-menu a::before { display: none; }
+
+.client-menu a:hover {
+  color: var(--color-primary);
+  background: #f1f5ff;
+}
+
+.client-menu a.router-link-active {
+  color: var(--color-primary);
+  border: 0;
+  background: #eaf1ff;
+  box-shadow: none;
+}
+
+.client-topbar {
+  height: 64px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-panel);
+  backdrop-filter: none;
+}
+
+.client-topbar strong { color: var(--color-ink); }
+
+.client-topbar span {
+  border-color: #bfdbfe;
+  color: var(--color-primary);
+  background: #eff6ff;
+}
+
+.client-content { padding: 24px; }
+
+.page-heading {
+  border-bottom: 0;
+}
+
+.page-heading h1 {
+  padding-left: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.page-heading h1::before { display: none; }
+.page-heading p { color: var(--color-graphite); }
+
+.metric-card,
+.panel,
+.toolbar,
+.detail-grid div,
+.login-panel {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-panel);
+  box-shadow: none;
+}
+
+.metric-card { border-top: 0; }
+.metric-card::after { display: none; }
+
+.panel__head {
+  border-bottom-color: var(--color-line);
+}
+
+.primary-action,
+.login-panel button {
+  color: #ffffff;
+  background: var(--color-primary);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.primary-action:hover,
+.login-panel button:hover { background: var(--color-primary-hover); }
+
+.toolbar button {
+  border-color: var(--color-line);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  background: var(--color-panel);
+}
+
+.toolbar input,
+.toolbar select,
+.login-panel input {
+  border-color: var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-panel);
+}
+
+.data-table th {
+  border-bottom-color: var(--color-line);
+  color: var(--color-graphite);
+  background: #f8fafc;
+}
+
+.data-table td {
+  border-bottom-color: #edf0f4;
+  background: var(--color-panel);
+}
+
+.data-table tr:hover td { background: #f8fbff; }
+
+.timeline-list div,
+.shortcut-list a {
+  border-color: var(--color-line);
+  border-left: 0;
+  background: var(--color-panel);
+}
+
+.status-tag { border-radius: var(--radius-sm); }
+.status-tag[data-tone="green"] { color: #166534; background: #dcfce7; }
+.status-tag[data-tone="blue"] { color: #075985; background: #e0f2fe; }
+.status-tag[data-tone="amber"] { color: #92400e; background: #fef3c7; }
+.status-tag[data-tone="red"] { color: #991b1b; background: #fee2e2; }
+
+.login-page {
+  background: var(--color-canvas);
+}
+
+.portal-mark {
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: var(--color-primary);
+  box-shadow: none;
+}
+
+.login-copy__eyebrow { color: var(--color-primary); }
+
+.portal-route {
+  border-color: var(--color-line);
+  background: var(--color-panel);
+}

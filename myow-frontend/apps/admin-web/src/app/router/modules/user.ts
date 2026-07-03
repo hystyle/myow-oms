@@ -2,12 +2,12 @@ import type { RouteRecordRaw } from 'vue-router';
 import { aliasField, idField, NORMAL_DISABLE_OPTIONS, textColumn, textField } from '../helpers';
 
 export const userRoutes: RouteRecordRaw[] = [
-  { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/pages/dashboard/admin-dashboard.vue') },
-  { path: 'user', alias: ['/system/user'], name: 'UserCenter', component: () => import('@/pages/user/user-list.vue') },
-  { path: 'user/depts', alias: ['/system/dept'], name: 'DeptCenter', component: () => import('@/pages/user/dept-list.vue') },
+  { path: 'dashboard', alias: ['/admin/dashboard'], name: 'AdminDashboard', component: () => import('@/pages/dashboard/admin-dashboard.vue') },
+  { path: 'user', alias: ['/system/user', '/admin/system/user'], name: 'UserCenter', component: () => import('@/pages/user/user-list.vue') },
+  { path: 'user/depts', alias: ['/system/dept', '/admin/system/dept'], name: 'DeptCenter', component: () => import('@/pages/user/dept-list.vue') },
   {
     path: 'user/roles',
-    alias: ['/system/role'],
+    alias: ['/system/role', '/admin/system/role'],
     name: 'RoleCenter',
     component: () => import('@/pages/user/role-management.vue'),
     meta: {
@@ -42,7 +42,7 @@ export const userRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'user/menus',
-    alias: ['/system/menu'],
+    alias: ['/system/menu', '/admin/system/menu'],
     name: 'MenuCenter',
     component: () => import('@/pages/user/menu-management.vue'),
     meta: {
@@ -85,7 +85,7 @@ export const userRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'user/dicts',
-    alias: ['/system/dict'],
+    alias: ['/system/dict', '/admin/system/dict'],
     name: 'DictCenter',
     component: () => import('@/pages/common/generic-crud-list.vue'),
     meta: {
@@ -117,7 +117,7 @@ export const userRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'user/login-logs',
-    alias: ['/system/login-log'],
+    alias: ['/system/login-log', '/admin/system/login-log'],
     name: 'LoginLogCenter',
     component: () => import('@/pages/common/generic-crud-list.vue'),
     meta: {

@@ -2,10 +2,10 @@ import type { RouteRecordRaw } from 'vue-router';
 import { aliasField, idField, SYSTEM_STATUS_OPTIONS, textColumn, textField } from '../helpers';
 
 export const systemRoutes: RouteRecordRaw[] = [
-  { path: 'system', name: 'SystemCenter', component: () => import('@/pages/system/system-overview.vue') },
+  { path: 'system', alias: ['/admin/system'], name: 'SystemCenter', component: () => import('@/pages/system/system-overview.vue') },
   {
     path: 'system/jobs',
-    alias: ['/system-support/jobs'],
+    alias: ['/system-support/jobs', '/admin/system/job'],
     name: 'JobCrudCenter',
     component: () => import('@/pages/system/job-management.vue'),
     meta: {
@@ -43,7 +43,7 @@ export const systemRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'system/notices',
-    alias: ['/system-support/notices'],
+    alias: ['/system-support/notices', '/admin/system/notice'],
     name: 'NoticeCrudCenter',
     component: () => import('@/pages/system/notice-management.vue'),
     meta: {
@@ -79,7 +79,7 @@ export const systemRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'system/site-configs',
-    alias: ['/system-support/site-configs'],
+    alias: ['/system-support/site-configs', '/admin/system/config'],
     name: 'SiteConfigCenter',
     component: () => import('@/pages/system/site-config-management.vue'),
     meta: {
@@ -115,7 +115,7 @@ export const systemRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'system/files',
-    alias: ['/system-support/files'],
+    alias: ['/system-support/files', '/admin/system/file'],
     name: 'FileCenter',
     component: () => import('@/pages/system/file-log-center.vue'),
     meta: {
@@ -142,7 +142,7 @@ export const systemRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'system/online-users',
-    alias: ['/system-support/online-users'],
+    alias: ['/system-support/online-users', '/admin/system/online-user'],
     name: 'OnlineUserCenter',
     component: () => import('@/pages/common/generic-crud-list.vue'),
     meta: {

@@ -7,15 +7,15 @@
       </div>
       <nav class="client-menu">
         <router-link to="/dashboard">运营看板</router-link>
-        <router-link to="/orders">订单履约</router-link>
-        <router-link to="/inbound">入库预报</router-link>
+        <router-link to="/outbound">订单履约</router-link>
+        <router-link to="/inbound-asn">入库预报</router-link>
         <router-link to="/returns">退货售后</router-link>
-        <router-link to="/skus">商品 SKU</router-link>
+        <router-link to="/sku">商品 SKU</router-link>
         <router-link to="/inventory">库存中心</router-link>
-        <router-link to="/billing">账单费用</router-link>
-        <router-link to="/developer">开发者中心</router-link>
-        <router-link to="/accounts">账号权限</router-link>
-        <router-link to="/tickets">客服工单</router-link>
+        <router-link to="/billing/bill">账单费用</router-link>
+        <router-link to="/developer/api-credential">开发者中心</router-link>
+        <router-link to="/account/member">账号权限</router-link>
+        <router-link to="/support/ticket">客服工单</router-link>
       </nav>
     </aside>
     <section class="client-main">

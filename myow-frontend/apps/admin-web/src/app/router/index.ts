@@ -6,7 +6,7 @@ import { systemRoutes } from './modules/system';
 export const router = createRouter({
   history: createWebHistory('/'),
   routes: [
-    { path: '/login', name: 'AdminLogin', component: () => import('@/pages/login/admin-login.vue'), meta: { public: true } },
+    { path: '/login', alias: ['/admin/login'], name: 'AdminLogin', component: () => import('@/pages/login/admin-login.vue'), meta: { public: true } },
     {
       path: '/',
       component: () => import('@/layouts/admin-layout.vue'),

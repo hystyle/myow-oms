@@ -527,3 +527,303 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .admin-menu { padding-left: 14px; }
   .login-route-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ui-spec-modular baseline: unified light SaaS frame for admin and client */
+:root {
+  --color-ink: #17202a;
+  --color-graphite: #45515f;
+  --color-canvas: #f6f8fa;
+  --color-panel: #ffffff;
+  --color-line: #d8dee6;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-info: #0891b2;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}
+
+body {
+  color: var(--color-ink);
+  background: var(--color-canvas);
+}
+
+.admin-shell {
+  grid-template-columns: 220px 1fr;
+  background: var(--color-canvas);
+}
+
+.admin-sidebar {
+  background: var(--color-panel);
+  color: var(--color-ink);
+  border-right: 1px solid var(--color-line);
+  box-shadow: none;
+}
+
+.admin-sidebar::after { display: none; }
+
+.admin-logo {
+  height: 64px;
+  color: var(--color-ink);
+  border-bottom-color: var(--color-line);
+  background: var(--color-panel);
+}
+
+.admin-logo-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: var(--color-primary);
+  box-shadow: none;
+}
+
+.admin-menu {
+  padding: 12px;
+}
+
+.admin-menu-title {
+  margin: 16px 8px 6px;
+  color: #7b8794;
+  font-size: 12px;
+  text-transform: none;
+}
+
+.admin-menu a {
+  min-height: 20px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-graphite);
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-menu a::before { display: none; }
+
+.admin-menu a:hover {
+  color: var(--color-primary);
+  background: #f1f5ff;
+}
+
+.admin-menu a.router-link-active {
+  color: var(--color-primary);
+  background: #eaf1ff;
+  border: 0;
+  box-shadow: none;
+}
+
+.admin-topbar {
+  height: 64px;
+  padding: 0 24px;
+  background: var(--color-panel);
+  border-bottom: 1px solid var(--color-line);
+  backdrop-filter: none;
+}
+
+.admin-env {
+  border-color: #bfdbfe;
+  color: var(--color-primary);
+  background: #eff6ff;
+}
+
+.admin-user { color: var(--color-graphite); }
+
+.admin-topbar button {
+  color: #ffffff;
+  background: var(--color-primary);
+  border-radius: var(--radius-md);
+}
+
+.admin-content { padding: 24px; }
+
+.page-heading {
+  border-bottom: 0;
+}
+
+.page-heading h1 {
+  padding-left: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.page-heading h1::before { display: none; }
+.page-heading p { color: var(--color-graphite); }
+
+.metric-card,
+.panel,
+.system-card,
+.tree-panel,
+.toolbar,
+.role-item,
+.scope-option,
+.permission-tree,
+.permission-tree-head,
+.detail-grid div,
+.log-item,
+.login-panel {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-panel);
+  box-shadow: none;
+}
+
+.metric-card {
+  border-top: 0;
+}
+
+.metric-card::after { display: none; }
+
+.panel__head {
+  border-bottom-color: var(--color-line);
+}
+
+.primary-action,
+.login-panel button {
+  color: #ffffff;
+  background: var(--color-primary);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.primary-action:hover,
+.login-panel button:hover { background: var(--color-primary-hover); }
+
+.secondary-action,
+.toolbar button,
+.pagination-bar button,
+.pagination-bar select,
+.crud-actions button,
+.crud-drawer__head button {
+  border-color: var(--color-line);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  background: var(--color-panel);
+}
+
+.toolbar input,
+.toolbar select,
+.login-panel input,
+.crud-form input,
+.crud-form select,
+.crud-form textarea {
+  border-color: var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-panel);
+}
+
+.data-table th {
+  border-bottom-color: var(--color-line);
+  color: var(--color-graphite);
+  background: #f8fafc;
+}
+
+.data-table td {
+  border-bottom-color: #edf0f4;
+  background: var(--color-panel);
+}
+
+.data-table tr:hover td { background: #f8fbff; }
+
+.table-actions button {
+  color: var(--color-primary);
+}
+
+.status-tag { border-radius: var(--radius-sm); }
+.status-tag[data-tone="green"] { color: #166534; background: #dcfce7; }
+.status-tag[data-tone="blue"] { color: #075985; background: #e0f2fe; }
+.status-tag[data-tone="amber"] { color: #92400e; background: #fef3c7; }
+.status-tag[data-tone="red"] { color: #991b1b; background: #fee2e2; }
+
+.tree-item.active,
+.tree-item:hover,
+.org-node.active,
+.org-node:hover,
+.role-item.active,
+.role-item:hover,
+.scope-option.active {
+  border-color: #bfdbfe;
+  color: var(--color-primary);
+  background: #eaf1ff;
+}
+
+.tabs button.active {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.crud-backdrop { background: rgba(23, 32, 42, 0.34); }
+.crud-drawer { background: var(--color-panel); box-shadow: -12px 0 32px rgba(23, 32, 42, 0.14); }
+.crud-drawer__head { background: var(--color-panel); border-bottom-color: var(--color-line); }
+
+.login-page {
+  background: var(--color-canvas);
+}
+
+.login-brand__mark {
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  box-shadow: none;
+}
+
+.login-brand__eyebrow { color: var(--color-primary); }
+
+.login-route-strip {
+  border-color: var(--color-line);
+  background: var(--color-panel);
+}
+
+.admin-menu-group {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-menu-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 34px;
+  margin: 8px 0 2px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: #7b8794;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.admin-menu-title:hover {
+  color: var(--color-primary);
+  background: #f8fafc;
+}
+
+.admin-menu-title[aria-expanded="true"] {
+  color: var(--color-ink);
+}
+
+.admin-menu-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #94a3b8;
+  transition: transform 0.16s ease;
+}
+
+.admin-menu-title[aria-expanded="false"] .admin-menu-chevron {
+  transform: rotate(-90deg);
+}
+
+.admin-menu-items {
+  display: grid;
+  gap: 4px;
+}
