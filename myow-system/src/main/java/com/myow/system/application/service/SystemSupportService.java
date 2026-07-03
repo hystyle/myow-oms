@@ -1,9 +1,11 @@
 package com.myow.system.application.service;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.myow.common.exception.BusinessException;
 import com.myow.common.response.ResultCode;
 import com.myow.common.response.PageResult;
+import com.myow.common.security.UserContext;
 import com.myow.system.application.dto.SystemModels.ExportTaskCreateCommand;
 import com.myow.system.application.dto.SystemModels.IdCommand;
 import com.myow.system.application.dto.SystemModels.JobCreateCommand;
@@ -29,6 +31,7 @@ import com.myow.system.infrastructure.persistence.po.JobDO;
 import com.myow.system.infrastructure.persistence.po.JobLogDO;
 import com.myow.system.infrastructure.persistence.po.MessageTemplateDO;
 import com.myow.system.infrastructure.persistence.po.NoticeDO;
+import com.myow.system.infrastructure.persistence.po.NoticeUserDO;
 import com.myow.system.infrastructure.persistence.po.SensitiveWordDO;
 import com.myow.system.infrastructure.persistence.po.SiteConfigDO;
 import com.myow.system.infrastructure.persistence.repository.ExportTaskRepository;
@@ -37,14 +40,25 @@ import com.myow.system.infrastructure.persistence.repository.JobLogRepository;
 import com.myow.system.infrastructure.persistence.repository.JobRepository;
 import com.myow.system.infrastructure.persistence.repository.MessageTemplateRepository;
 import com.myow.system.infrastructure.persistence.repository.NoticeRepository;
+import com.myow.system.infrastructure.persistence.repository.NoticeUserRepository;
 import com.myow.system.infrastructure.persistence.repository.SensitiveWordRepository;
 import com.myow.system.infrastructure.persistence.repository.SiteConfigRepository;
+import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.sql.DataSource;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -68,6 +82,7 @@ public class SystemSupportService {
     private final JobRepository jobRepository;
     private final JobLogRepository jobLogRepository;
     private final NoticeRepository noticeRepository;
+    private final NoticeUserRepository noticeUserRepository;
     private final FileRepository fileRepository;
     private final SiteConfigRepository siteConfigRepository;
     private final SensitiveWordRepository sensitiveWordRepository;
@@ -76,10 +91,13 @@ public class SystemSupportService {
     private final SystemFileStorageService fileStorageService;
     private final SystemJobExecutor jobExecutor;
     private final SystemExportTaskRunner exportTaskRunner;
+    private final DataSource dataSource;
+    private final RedisConnectionFactory redisConnectionFactory;
 
     public SystemSupportService(JobRepository jobRepository,
                                 JobLogRepository jobLogRepository,
                                 NoticeRepository noticeRepository,
+                                NoticeUserRepository noticeUserRepository,
                                 FileRepository fileRepository,
                                 SiteConfigRepository siteConfigRepository,
                                 SensitiveWordRepository sensitiveWordRepository,
@@ -87,10 +105,13 @@ public class SystemSupportService {
                                 ExportTaskRepository exportTaskRepository,
                                 SystemFileStorageService fileStorageService,
                                 SystemJobExecutor jobExecutor,
-                                SystemExportTaskRunner exportTaskRunner) {
+                                SystemExportTaskRunner exportTaskRunner,
+                                ObjectProvider<DataSource> dataSource,
+                                ObjectProvider<RedisConnectionFactory> redisConnectionFactory) {
         this.jobRepository = jobRepository;
         this.jobLogRepository = jobLogRepository;
         this.noticeRepository = noticeRepository;
+        this.noticeUserRepository = noticeUserRepository;
         this.fileRepository = fileRepository;
         this.siteConfigRepository = siteConfigRepository;
         this.sensitiveWordRepository = sensitiveWordRepository;
@@ -99,6 +120,8 @@ public class SystemSupportService {
         this.fileStorageService = fileStorageService;
         this.jobExecutor = jobExecutor;
         this.exportTaskRunner = exportTaskRunner;
+        this.dataSource = dataSource.getIfAvailable();
+        this.redisConnectionFactory = redisConnectionFactory.getIfAvailable();
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -304,6 +327,56 @@ public class SystemSupportService {
             replaced = replaced.replace(hit, "***");
         }
         return attrs("hits", hits, "replacedText", replaced);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> importSensitiveWords(MultipartFile file) {
+        validateFile(file);
+        String suffix = fileSuffix(file);
+        if (!Set.of("csv", "txt").contains(suffix)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "sensitive word import only supports csv or txt files");
+        }
+        int total = 0;
+        int created = 0;
+        int skipped = 0;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String trimmed = line.trim();
+                if (!StringUtils.hasText(trimmed) || trimmed.startsWith("#")) {
+                    continue;
+                }
+                total++;
+                String[] columns = trimmed.split(",", -1);
+                String word = columns[0].trim();
+                if (!StringUtils.hasText(word) || "word".equalsIgnoreCase(word)) {
+                    skipped++;
+                    continue;
+                }
+                String category = columns.length > 1 && StringUtils.hasText(columns[1]) ? columns[1].trim() : "FORBIDDEN";
+                Integer level = parseLevel(columns.length > 2 ? columns[2] : null);
+                String replacement = columns.length > 3 && StringUtils.hasText(columns[3]) ? columns[3].trim() : "***";
+                if (sensitiveWordRepository.lambdaQuery()
+                        .eq(SensitiveWordDO::getWord, word)
+                        .eq(SensitiveWordDO::getCategory, category)
+                        .exists()) {
+                    skipped++;
+                    continue;
+                }
+                SensitiveWordDO data = new SensitiveWordDO()
+                        .setWord(word)
+                        .setCategory(category)
+                        .setLevel(level)
+                        .setReplacement(replacement)
+                        .setStatus(1)
+                        .setCreateTime(LocalDateTime.now());
+                sensitiveWordRepository.save(data);
+                created++;
+            }
+        } catch (Exception ex) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "sensitive word import failed: " + ex.getMessage());
+        }
+        return attrs("total", total, "created", created, "skipped", skipped);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -523,19 +596,116 @@ public class SystemSupportService {
     }
 
     public Map<String, Object> redisMetrics() {
-        return attrs("status", "UNKNOWN", "message", "Redis metrics adapter is not connected yet");
+        if (redisConnectionFactory == null) {
+            return attrs("status", "DISABLED", "message", "Redis connection factory is not configured");
+        }
+        try (RedisConnection connection = redisConnectionFactory.getConnection()) {
+            String pong = connection.ping();
+            PropertiesView properties = PropertiesView.from(connection.serverCommands().info());
+            return attrs("status", "UP", "ping", pong, "redisVersion", properties.get("redis_version"),
+                    "connectedClients", properties.get("connected_clients"), "usedMemoryHuman", properties.get("used_memory_human"));
+        } catch (Exception ex) {
+            return attrs("status", "DOWN", "message", ex.getMessage());
+        }
     }
 
     public Map<String, Object> dbMetrics() {
-        return attrs("status", "UNKNOWN", "message", "Database metrics adapter is not connected yet");
+        if (dataSource == null) {
+            return attrs("status", "DISABLED", "message", "DataSource is not configured");
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            DatabaseMetaData metaData = connection.getMetaData();
+            Map<String, Object> result = attrs("status", connection.isValid(2) ? "UP" : "DOWN",
+                    "database", metaData.getDatabaseProductName(),
+                    "version", metaData.getDatabaseProductVersion(),
+                    "url", metaData.getURL(),
+                    "user", metaData.getUserName());
+            if (dataSource instanceof HikariDataSource hikari) {
+                result.put("poolName", hikari.getPoolName());
+                result.put("maximumPoolSize", hikari.getMaximumPoolSize());
+                result.put("minimumIdle", hikari.getMinimumIdle());
+            }
+            return result;
+        } catch (Exception ex) {
+            return attrs("status", "DOWN", "message", ex.getMessage());
+        }
     }
 
     public PageResult<SystemRecordVO> onlineUsers(OnlineUserPageQuery query) {
-        return PageResult.empty();
+        long pageNum = normalizePageNum(query == null ? null : query.pageNum());
+        long pageSize = normalizePageSize(query == null ? null : query.pageSize());
+        String loginName = query == null ? null : query.loginName();
+        List<SystemRecordVO> all = new ArrayList<>();
+        try {
+            List<String> tokens = StpUtil.searchTokenValue("", 0, -1, false);
+            for (String token : tokens) {
+                Object loginId = StpUtil.getLoginIdByToken(token);
+                if (loginId == null) {
+                    continue;
+                }
+                String loginIdText = String.valueOf(loginId);
+                if (StringUtils.hasText(loginName) && !loginIdText.contains(loginName)) {
+                    continue;
+                }
+                Long userId = parseUserId(loginIdText);
+                long timeout = StpUtil.getTokenTimeout(token);
+                all.add(new SystemRecordVO(userId, "ONLINE_USER", token, loginIdText, timeout > 0 ? 1 : 0,
+                        attrs("token", token, "loginId", loginIdText, "userId", userId, "tokenTimeout", timeout),
+                        null, null));
+            }
+        } catch (Exception ex) {
+            return PageResult.empty();
+        }
+        int from = (int) Math.min(all.size(), (pageNum - 1) * pageSize);
+        int to = (int) Math.min(all.size(), from + pageSize);
+        PageResult<SystemRecordVO> result = new PageResult<>();
+        result.setPageNum(pageNum);
+        result.setPageSize(pageSize);
+        result.setTotal((long) all.size());
+        result.setPages((long) Math.ceil((double) all.size() / pageSize));
+        result.setList(all.subList(from, to));
+        result.setEmptyFlag(all.isEmpty());
+        return result;
     }
 
     public Boolean kickOnlineUser(String token) {
-        return token != null && !token.isBlank();
+        validateText(token, "token is required");
+        StpUtil.kickoutByTokenValue(token);
+        return true;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean readNotice(IdCommand command) {
+        validateId(command.id());
+        Long userId = UserContext.getUserId();
+        if (userId == null) {
+            return false;
+        }
+        NoticeUserDO data = noticeUserRepository.lambdaQuery()
+                .eq(NoticeUserDO::getNoticeId, command.id())
+                .eq(NoticeUserDO::getUserId, userId)
+                .one();
+        if (data == null) {
+            data = new NoticeUserDO().setNoticeId(command.id()).setUserId(userId);
+        }
+        data.setReadStatus(1).setReadTime(LocalDateTime.now());
+        return noticeUserRepository.saveOrUpdate(data);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean readAllNotices() {
+        Long userId = UserContext.getUserId();
+        if (userId == null) {
+            return false;
+        }
+        List<NoticeDO> notices = noticeRepository.lambdaQuery()
+                .eq(NoticeDO::getDeletedFlag, false)
+                .eq(NoticeDO::getStatus, 1)
+                .list();
+        for (NoticeDO notice : notices) {
+            readNotice(new IdCommand(notice.getNoticeId()));
+        }
+        return true;
     }
 
     private Boolean softDeleteJob(Long id) {
@@ -730,12 +900,55 @@ public class SystemSupportService {
         }
     }
 
+    private static String fileSuffix(MultipartFile file) {
+        String originalName = file == null ? null : file.getOriginalFilename();
+        if (!StringUtils.hasText(originalName) || !originalName.contains(".")) {
+            return "";
+        }
+        return originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
+    }
+
+    private static Integer parseLevel(String value) {
+        if (!StringUtils.hasText(value)) {
+            return 1;
+        }
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return Math.max(1, Math.min(parsed, 5));
+        } catch (NumberFormatException ignored) {
+            return 1;
+        }
+    }
+
+    private static Long parseUserId(String loginId) {
+        if (!StringUtils.hasText(loginId)) {
+            return null;
+        }
+        String raw = loginId.contains(":") ? loginId.substring(loginId.indexOf(':') + 1) : loginId;
+        try {
+            return Long.valueOf(raw);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
     private static Map<String, Object> attrs(Object... values) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         for (int i = 0; i + 1 < values.length; i += 2) {
             attributes.put(String.valueOf(values[i]), values[i + 1]);
         }
         return attributes;
+    }
+
+    private record PropertiesView(Map<Object, Object> source) {
+        static PropertiesView from(java.util.Properties properties) {
+            return new PropertiesView(properties == null ? Map.of() : properties);
+        }
+
+        String get(String key) {
+            Object value = source.get(key);
+            return value == null ? null : String.valueOf(value);
+        }
     }
 }
 

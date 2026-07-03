@@ -79,6 +79,30 @@ flowchart TB
 
 边界原则：当前阶段优先建设平台 OMS 能力，myow-overseas 负责业务编排和外部系统集成，不实现波次、拣货、复核、打包等库内 WMS 执行逻辑。未来自研 WMS 时再独立补充库内执行域。
 
+### 1.4 与客商中心的协作契约
+
+myow-overseas 不维护客户、供应商、仓库服务商、物流商、海外代理的基础档案，只引用 myow-customer 暴露的 customer_id 和角色状态。跨模块字段统一使用 customer_id，不使用 partner_id。
+
+| 使用场景 | 字段命名 | customer 角色要求 | overseas 维护内容 |
+| --- | --- | --- | --- |
+| 货主/卖家客户 | customer_id | CUSTOMER | SKU、入库、库存、出库、合同、费用规则、客户仓库授权 |
+| 仓库服务商 | service_provider_customer_id | WAREHOUSE_PROVIDER | 物理仓合作类型、WMS 系统、外部仓库编码、仓库运营属性 |
+| 物流商/承运商 | carrier_customer_id | CARRIER | 物流产品、物流渠道、规则库、Zone File、打单配置 |
+| 海外代理 | overseas_agent_customer_id | OVERSEAS_AGENT | 覆盖国家/港口、服务能力、代理业务配置 |
+| 报关/清关服务商 | customs_broker_customer_id | CUSTOMS_BROKER | 清关服务配置、适用国家、单据要求 |
+
+协作规则：
+
+- 创建或启用物理仓、物流产品、物流渠道、海外代理配置前，必须调用 CustomerRoleProvider.validateRole(customerId, roleType) 校验角色处于 ACTIVE。
+
+- 创建 SKU、ASN、出库单、库存调整、合同和费用规则前，必须调用 CustomerProvider.validateActive(customerId) 校验客户状态，并调用 BlacklistProvider.check 进行黑名单强校验。
+
+- 页面选择器必须按角色过滤候选主体：仓库服务商只列 WAREHOUSE_PROVIDER，物流商只列 CARRIER，海外代理只列 OVERSEAS_AGENT。
+
+- overseas 可以保存 customer_code、customer_name、联系人、地址等业务快照，用于订单、面单、计费事件和历史审计；快照不是主数据来源，不得反向更新 customer。
+
+- 对账、合同、费用规则和报表统一以 customer_id 做归集。一个 customer_id 同时具备客户与供应商角色时，财务对冲由 myow-finance 根据 customer 角色和 offset_enabled 处理。
+
 ## 02 模块结构总览
 
 myow-overseas 按海外仓 OMS 的业务闭环划分模块。当前结构先确定业务边界与章节骨架，后续再逐个模块细化领域模型、状态机、API、DDL、权限码、错误码和开发优先级。
@@ -123,7 +147,7 @@ myow-overseas 按海外仓 OMS 的业务闭环划分模块。当前结构先确�
 | --- | --- | --- | --- |
 | 仓群配置WarehouseCluster | 纯逻辑容器，一端连接客户售价、报价方案和 ERP 仓库编码，一端绑定多个物理仓。 | 仓群代码、仓群名称、所属国家、结算币种、状态、备注。 | 仓群代码租户内唯一；仓群本身不产生库存，不接收 WMS 回传；报价、客户授权和 ERP 映射优先挂到仓群。 |
 | 仓群物理仓绑定WarehouseClusterMember | 维护仓群与物理仓的元素集合关系，后台以穿梭框选择物理仓。 | 仓群 ID、物理仓 ID、优先级、是否默认、启用状态、生效时间。 | 一个仓群可绑定多个物理仓；一个物理仓可归属多个仓群；同一仓群只能有一个默认物理仓。 |
-| 物理仓配置PhysicalWarehouse | 真实仓库资源，用于 WMS 指令、库存归属、截单时间、发货地址、渠道分区和运营统计。 | 物理仓代码、仓库名称、仓库服务商 customer_id、合作类型、仓库系统、关联仓库代码、备注。 | 物理仓代码租户内唯一；仓库服务商必须来自客商管理中心且具备供应商/仓库服务商角色。 |
+| 物理仓配置PhysicalWarehouse | 真实仓库资源，用于 WMS 指令、库存归属、截单时间、发货地址、渠道分区和运营统计。 | 物理仓代码、仓库名称、仓库服务商 service_provider_customer_id、合作类型、仓库系统、关联仓库代码、备注。 | 物理仓代码租户内唯一；仓库服务商必须来自客商管理中心且具备 WAREHOUSE_PROVIDER 角色。 |
 | 仓库地址与联系人WarehouseAddressContact | 维护仓库发货地址、联系人和时区信息，供物流分区、截单时间和面单发件人使用。 | 国家、省/州、城市、邮编、详细地址、时区、联系人、电话、邮箱。 | 每个物理仓至少维护一个默认发货地址；地址变更需要保留历史，避免影响已创建订单和面单。 |
 | 仓库附加数据WarehouseOperationProfile | 维护运营和计费所需的物理属性。 | 仓库面积、总容积、最大托盘数、存储结构、工作时间、截单时间、重量单位、尺寸单位、尺重单位、默认体积重系数。 | 截单时间按仓库本地时区判断；重量/尺寸单位必须和渠道计费规则可转换。 |
 
@@ -133,11 +157,11 @@ myow-overseas 按海外仓 OMS 的业务闭环划分模块。当前结构先确�
 
 | 对象 | 定位 | 核心字段 | 关键规则 |
 | --- | --- | --- | --- |
-| 物流商档案 | 物流商主体由客商管理中心维护，myow-overseas 引用 customer_id 并维护物流业务能力。 | 物流商 customer_id、合作状态、支持国家、对接方式、备注。 | 物流商必须在客商中心具备供应商/物流商角色；黑名单或停用物流商禁止新增产品和渠道。 |
-| 物流产品配置LogisticsProduct | 逻辑容器，一端连接客户售价和 ERP 渠道编码，一端根据路由规则匹配一个或多个物流渠道。 | 物流产品代码、物流产品名称、物流商、类型、状态、备注。 | 产品代码租户内唯一；客户下单或 ERP 推单优先选择物流产品，而不是直接选择具体渠道。 |
+| 物流商档案 | 物流商主体由客商管理中心维护，myow-overseas 引用 carrier_customer_id 并维护物流业务能力。 | carrier_customer_id、合作状态、支持国家、对接方式、备注。 | 物流商必须在客商中心具备 CARRIER 角色；黑名单或停用物流商禁止新增产品和渠道。 |
+| 物流产品配置LogisticsProduct | 逻辑容器，一端连接客户售价和 ERP 渠道编码，一端根据路由规则匹配一个或多个物流渠道。 | 物流产品代码、物流产品名称、carrier_customer_id、类型、状态、备注。 | 产品代码租户内唯一；客户下单或 ERP 推单优先选择物流产品，而不是直接选择具体渠道。 |
 | 物流产品类型 | 标识面单、结算和执行责任。 | 客户记账码、自供面单、仓库面单、卡派 LTL。 | 不同类型决定是否需要 OMS 打单、是否需要客户上传面单、是否允许仓库代打、是否进入卡派预约流程。 |
 | 物流产品规则配置 | 维护产品级可达、附加费和风险判断规则。 | 偏远地址规则库、AHS 超长规则库、AHS 超重规则库、OS 规则库、地址类型规则库、燃油附加费联动规则。 | 产品级规则用于报价和候选渠道过滤；渠道级规则用于最终执行校验。 |
-| 物流渠道配置LogisticsChannel | 真实执行通道，用于打单、承运商下单、轨迹同步和成本核算。 | 渠道代码、渠道名称、物流商、渠道类型、备注、状态。 | 渠道代码租户内唯一；停用渠道不能被路由选中，但历史订单仍保留原渠道。 |
+| 物流渠道配置LogisticsChannel | 真实执行通道，用于打单、承运商下单、轨迹同步和成本核算。 | 渠道代码、渠道名称、carrier_customer_id、渠道类型、备注、状态。 | 渠道代码租户内唯一；停用渠道不能被路由选中，但历史订单仍保留原渠道。 |
 | 渠道业务属性 | 描述渠道对包裹、地址和服务选项的支持范围。 | 签名服务、支持地址类型、是否支持带电、是否提供保险、是否支持一单多件、是否支持子母件。 | 订单审单和路由时必须同时校验商品敏感属性、包裹结构、地址类型和服务选项。 |
 | 面单服务配置 | 定义面单来源和打单系统。 | 面单获取方式、打单系统、账号配置、面单模板、面单尺寸、是否支持多件标签。 | 面单获取方式包括导入面单、仓库面单、打单系统；选择物流渠道时必须校验对应打单系统可用。 |
 | 面单格式配置 | 配置订单信息打印到面单或扩展标签上的内容。 | 打印字段、字段映射、参考号规则、客户编码、订单号、SKU 摘要、仓库备注。 | 仅在打单系统或承运商 API 支持自定义字段时生效；字段不得包含客户敏感信息的未授权明文。 |
@@ -181,7 +205,27 @@ myow-overseas 按海外仓 OMS 的业务闭环划分模块。当前结构先确�
 | 打单系统集成配置 | TMS/Carrier API、账号、API 地址、授权方式、面单模板、支持渠道、回调配置。 | 物流渠道的面单获取方式为打单系统时，必须绑定有效打单系统配置。 |
 | ERP 映射配置 | 客户、ERP 系统、ERP 仓库编码、ERP 物流渠道编码、平台仓群、平台物流产品。 | ERP 推单优先映射到仓群和物流产品，再由 OMS 路由到物理仓和物流渠道。 |
 
-#### 2.3.6 状态生命周期
+#### 2.3.6 客商角色引用规则
+
+海外仓基础数据中心所有外部主体引用都以 customer_id 字段表达，但字段名必须体现业务语义，避免后续查询和报表混淆。
+
+| 字段 | 适用对象 | 必需角色 | 校验失败错误码 |
+| --- | --- | --- | --- |
+| customer_id | SKU、ASN、库存、出库、合同、费用规则、客户仓库授权 | CUSTOMER | OWH_BASE_002 / OWH_SKU_009 |
+| service_provider_customer_id | 物理仓 | WAREHOUSE_PROVIDER | OWH_BASE_002 |
+| carrier_customer_id | 物流产品、物流渠道、物流规则库、Zone File | CARRIER | OWH_BASE_002 |
+| overseas_agent_customer_id | 海外代理服务配置 | OVERSEAS_AGENT | OWH_BASE_002 |
+| customs_broker_customer_id | 清关服务配置 | CUSTOMS_BROKER | OWH_BASE_002 |
+
+实现要求：
+
+- 新增和更新接口接收上述 ID 时，Application Service 必须通过 customer 模块 Provider 校验主体存在、状态 ACTIVE、角色 ACTIVE、未命中黑名单。
+
+- 禁止在 overseas 新建物流商主表、供应商主表、仓库服务商主表。海外仓只维护执行层扩展属性，例如合作类型、服务能力、外部系统编码、规则和价格。
+
+- 如果业务单据需要长期可追溯，允许保存 customer_code_snapshot、customer_name_snapshot、address_snapshot 等快照字段，快照字段不得参与主数据唯一性判断。
+
+#### 2.3.7 状态生命周期
 
 基础数据属于低频维护、高频读取的数据，必须严格控制启停、发布和历史引用。已被订单、库存、费用规则、合同或外部映射引用的数据，原则上不做物理删除，只允许停用或失效。
 
@@ -194,7 +238,7 @@ myow-overseas 按海外仓 OMS 的业务闭环划分模块。当前结构先确�
 | 规则库 / 路由规则 | DRAFT、PUBLISHED、EXPIRED、ARCHIVED | 草稿可编辑；发布后生成版本号；失效后不再参与新订单判断；归档只读。 | 订单必须记录命中的规则版本，后续费用复算和争议处理按订单创建时版本。 |
 | 第三方集成配置 | DRAFT、ENABLED、DISABLED | 启用前必须通过连接测试；停用后禁止新推送，但允许接收历史回调。 | 已推送外部系统的业务单据保留原配置 ID 和外部编码。 |
 
-#### 2.3.7 唯一性、版本与生效规则
+#### 2.3.8 唯一性、版本与生效规则
 
 - 租户隔离：所有基础数据表均包含 tenant_id BIGINT、deleted_flag BOOLEAN、审计字段；全局物流规则如需跨租户复用，也必须通过租户授权或模板复制落地到租户数据。
 
@@ -208,7 +252,7 @@ myow-overseas 按海外仓 OMS 的业务闭环划分模块。当前结构先确�
 
 - 删除限制：已被客户授权、合同报价、订单、库存、计费事件或映射引用的数据禁止物理删除，只能停用、失效或归档。
 
-#### 2.3.8 物流路由执行链路
+#### 2.3.9 物流路由执行链路
 
 物流路由必须先完成编码翻译，再完成候选渠道过滤，最后进行决策。路由结果需要保存完整命中链路，用于客服解释、费用复算和异常排查。
 
@@ -235,7 +279,7 @@ flowchart TD
 
 图 2-1：物流路由执行链路
 
-#### 2.3.9 领域对象与建议表结构
+#### 2.3.10 领域对象与建议表结构
 
 本小节先给出基础数据中心的建议表清单，后续在数据库章节统一收口为正式 DDL。
 
@@ -255,7 +299,7 @@ flowchart TD
 | owh_integration_mapping | 第三方映射 | external_system_id, mapping_type, platform_biz_id, external_code, external_name, status | uk: tenant_id + external_system_id + mapping_type + external_code |
 | owh_integration_config | 第三方集成配置 | system_type, system_code, auth_type, endpoint_url, credential_ref, callback_secret, retry_policy, status | uk: tenant_id + system_code |
 
-#### 2.3.10 API 规格草案
+#### 2.3.11 API 规格草案
 
 基础数据 API 统一使用命令式 POST，所有路径以 /api/v1/overseas/base 开头。查询接口也采用 POST，便于复杂条件和权限上下文扩展。
 
@@ -278,7 +322,7 @@ flowchart TD
 | 集成 | POST /integration-config/test-connection | 测试 WMS/TMS/Carrier 连接 | integrationConfigId |
 | 映射 | POST /integration-mapping/save | 保存第三方编码映射 | externalSystemId, mappingType, platformBizId, externalCode |
 
-#### 2.3.11 权限码与错误码
+#### 2.3.12 权限码与错误码
 
 | 权限码 | 说明 |
 | --- | --- |
@@ -294,7 +338,7 @@ flowchart TD
 | 错误码 | 说明 | 触发场景 |
 | --- | --- | --- |
 | OWH_BASE_001 | 编码已存在 | 仓群、物理仓、物流产品、物流渠道编码重复。 |
-| OWH_BASE_002 | 客商主体不可用 | 仓库服务商或物流商 customer_id 不存在、停用、黑名单或角色不匹配。 |
+| OWH_BASE_002 | 客商主体不可用 | customer_id 不存在、停用、黑名单或角色不匹配；仓库服务商要求 WAREHOUSE_PROVIDER，物流商要求 CARRIER，海外代理要求 OVERSEAS_AGENT。 |
 | OWH_BASE_003 | 状态不允许操作 | 已归档数据被编辑，或停用数据被新业务引用。 |
 | OWH_BASE_004 | 存在业务引用，禁止删除 | 基础数据已被订单、库存、合同、规则或映射引用。 |
 | OWH_BASE_005 | 规则生效区间冲突 | 同一规则类型、物流商、渠道下有效时间重叠。 |
@@ -304,7 +348,7 @@ flowchart TD
 | OWH_BASE_009 | 物流分区未命中 | 按发货仓、物流商、目的邮编无法匹配 Zone。 |
 | OWH_BASE_010 | 面单配置不可用 | 渠道要求打单系统，但未绑定有效打单配置或面单模板。 |
 
-#### 2.3.12 开发优先级
+#### 2.3.13 开发优先级
 
 | 阶段 | 范围 | 完成标准 |
 | --- | --- | --- |
@@ -670,7 +714,7 @@ erDiagram
 | channel_id | BIGINT | PK | 渠道唯一标识 |
 | channel_code | VARCHAR(32) | NOT NULL, UK | 渠道编码 |
 | channel_name | VARCHAR(64) | NOT NULL | 渠道名称 |
-| carrier_customer_id | BIGINT | FK, NOT NULL | 物流商客商 ID，关联 myow-customer 的 customer_id |
+| carrier_customer_id | BIGINT | FK, NOT NULL | 物流商 customer_id，必须具备 CARRIER 角色 |
 | service_type | VARCHAR(32) |  | 服务类型：GROUND=陆运, EXPRESS=快递, INTERNATIONAL=国际 |
 | max_weight | INT |  | 最大重量限制（克） |
 | max_length | INT |  | 最大边长限制（厘米） |
@@ -1849,7 +1893,7 @@ stateDiagram-v2
 
 - 只读历史：仓群、物理仓、物流产品、物流渠道、规则库和集成配置一旦被订单、库存、合同、报价或外部映射引用，禁止物理删除，只允许停用、失效或归档。
 
-- 启用前校验：物理仓启用前必须维护地址、时区、仓库服务商 customer_id 和 WMS 集成关系；物流渠道启用前必须维护物流商 customer_id、面单来源和渠道能力。
+- 启用前校验：物理仓启用前必须维护地址、时区、service_provider_customer_id、WMS 集成关系，并校验其 WAREHOUSE_PROVIDER 角色；物流渠道启用前必须维护 carrier_customer_id、面单来源和渠道能力，并校验其 CARRIER 角色。
 
 - 规则发布：路由规则、Zone File、偏远/AHS/OS/燃油/地址规则必须先保存草稿，再发布版本；发布后不覆盖修改，只能发布新版本。
 
@@ -2072,7 +2116,7 @@ stateDiagram-v2
 | 错误码 | 说明 | 触发场景 |
 | --- | --- | --- |
 | OWH_BASE_001 | 编码已存在 | 仓群、物理仓、物流产品、物流渠道编码重复。 |
-| OWH_BASE_002 | 客商主体不可用 | 仓库服务商或物流商 customer_id 不存在、停用、黑名单或角色不匹配。 |
+| OWH_BASE_002 | 客商主体不可用 | customer_id 不存在、停用、黑名单或角色不匹配；仓库服务商要求 WAREHOUSE_PROVIDER，物流商要求 CARRIER，海外代理要求 OVERSEAS_AGENT。 |
 | OWH_BASE_003 | 状态不允许操作 | 已归档数据被编辑，或停用数据被新业务引用。 |
 | OWH_BASE_004 | 存在业务引用，禁止删除 | 基础数据已被订单、库存、合同、规则或映射引用。 |
 | OWH_BASE_005 | 规则生效区间冲突 | 同一规则类型、物流商、渠道下有效时间重叠。 |
@@ -2094,5 +2138,6 @@ stateDiagram-v2
 | OWH_SKU_006 | 复测数据无效 | 尺重为空、负数、单位不支持或明显异常。 |
 | OWH_SKU_007 | SKU 同步失败 | WMS API 返回失败或网络异常。 |
 | OWH_SKU_008 | SKU 存在库存，禁止归档 | SKU 在任意物理仓存在在途、可用、预占或冻结库存。 |
+| OWH_SKU_009 | 客户主体不可用 | SKU 所属 customer_id 不存在、非 ACTIVE、黑名单命中或不具备 CUSTOMER 角色。 |
 
 MYOW-Overseas 业务设计文档 v1.0 | 基于 myow-oms 项目编码规范 | 2026年6月

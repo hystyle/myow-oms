@@ -6,6 +6,10 @@ const NOTICE_BASE = '/myow/api/v1/system/notices';
 const SITE_CONFIG_BASE = '/myow/api/v1/system/site-configs';
 const FILE_BASE = '/myow/api/v1/system/files';
 const ONLINE_USER_BASE = '/myow/api/v1/system/online-users';
+const SENSITIVE_WORD_BASE = '/myow/api/v1/system/sensitive-words';
+const MESSAGE_TEMPLATE_BASE = '/myow/api/v1/system/message-templates';
+const EXPORT_TASK_BASE = '/myow/api/v1/system/export-tasks';
+const MONITOR_BASE = '/myow/api/v1/system/monitor';
 
 export function createJob(data: Record<string, unknown>) {
   return request.post<SystemRecord>(`${JOB_BASE}/create`, data);
@@ -104,4 +108,82 @@ export function deleteFile(id: ApiId) {
 
 export function pageOnlineUsers(query: PageQuery) {
   return request.post<PageResult<SystemRecord>>(`${ONLINE_USER_BASE}/page`, query);
+}
+
+export function kickOnlineUser(token: string) {
+  return request.post<boolean>(`${ONLINE_USER_BASE}/kick`, { token });
+}
+
+export function createSensitiveWord(data: Record<string, unknown>) {
+  return request.post<SystemRecord>(`${SENSITIVE_WORD_BASE}/create`, data);
+}
+
+export function updateSensitiveWord(data: Record<string, unknown>) {
+  return request.post<SystemRecord>(`${SENSITIVE_WORD_BASE}/update`, data);
+}
+
+export function pageSensitiveWords(query: PageQuery) {
+  return request.post<PageResult<SystemRecord>>(`${SENSITIVE_WORD_BASE}/page`, query);
+}
+
+export function deleteSensitiveWord(id: ApiId) {
+  return request.post<boolean>(`${SENSITIVE_WORD_BASE}/delete`, { id });
+}
+
+export function checkSensitiveWords(text: string) {
+  return request.post<Record<string, unknown>>(`${SENSITIVE_WORD_BASE}/check`, { text });
+}
+
+export function importSensitiveWords(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request.post<Record<string, unknown>>(`${SENSITIVE_WORD_BASE}/import`, formData);
+}
+
+export function createMessageTemplate(data: Record<string, unknown>) {
+  return request.post<SystemRecord>(`${MESSAGE_TEMPLATE_BASE}/create`, data);
+}
+
+export function updateMessageTemplate(data: Record<string, unknown>) {
+  return request.post<SystemRecord>(`${MESSAGE_TEMPLATE_BASE}/update`, data);
+}
+
+export function pageMessageTemplates(query: PageQuery) {
+  return request.post<PageResult<SystemRecord>>(`${MESSAGE_TEMPLATE_BASE}/page`, query);
+}
+
+export function deleteMessageTemplate(id: ApiId) {
+  return request.post<boolean>(`${MESSAGE_TEMPLATE_BASE}/delete`, { id });
+}
+
+export function previewMessageTemplate(data: Record<string, unknown>) {
+  return request.post<Record<string, unknown>>(`${MESSAGE_TEMPLATE_BASE}/preview`, data);
+}
+
+export function createExportTask(data: Record<string, unknown>) {
+  return request.post<SystemRecord>(`${EXPORT_TASK_BASE}/create`, data);
+}
+
+export function pageExportTasks(query: PageQuery) {
+  return request.post<PageResult<SystemRecord>>(`${EXPORT_TASK_BASE}/my-page`, query);
+}
+
+export function downloadExportTask(id: ApiId) {
+  return request.download(`${EXPORT_TASK_BASE}/download`, { id });
+}
+
+export function deleteExportTask(id: ApiId) {
+  return request.post<boolean>(`${EXPORT_TASK_BASE}/delete`, { id });
+}
+
+export function loadServerMetrics() {
+  return request.post<Record<string, unknown>>(`${MONITOR_BASE}/server`, {});
+}
+
+export function loadRedisMetrics() {
+  return request.post<Record<string, unknown>>(`${MONITOR_BASE}/redis`, {});
+}
+
+export function loadDbMetrics() {
+  return request.post<Record<string, unknown>>(`${MONITOR_BASE}/db`, {});
 }

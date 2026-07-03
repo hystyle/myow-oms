@@ -22,7 +22,28 @@
         </dependency>
         <dependency>
             <groupId>com.myow.platform</groupId>
+            <artifactId>myow-common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.platform</groupId>
+            <artifactId>myow-common-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.platform</groupId>
             <artifactId>myow-common-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.myow.platform</groupId>
+            <artifactId>myow-customer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

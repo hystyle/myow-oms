@@ -31,7 +31,7 @@
             <td class="table-actions">
               <button v-if="current === '文件管理'" type="button" @click="download(row)">下载</button>
               <button v-if="current === '文件管理'" type="button" @click="remove(row)">删除</button>
-              <button v-if="current === '在线用户'" type="button">强退</button>
+              <button v-if="current === '在线用户'" type="button" @click="kick(row)">强退</button>
             </td>
           </tr>
           <tr v-if="!loading && rows.length === 0"><td class="empty-cell" colspan="6">{{ emptyText }}</td></tr>
@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { SystemRecord } from '@myow/api';
-import { deleteFile, downloadFile, pageFiles, pageOnlineUsers, uploadFile } from '@/services/system-service';
+import { deleteFile, downloadFile, kickOnlineUser, pageFiles, pageOnlineUsers, uploadFile } from '@/services/system-service';
 
 const tabs = ['文件管理', '操作日志', '登录日志', '在线用户'];
 const current = ref(tabs[0]);
@@ -165,6 +165,19 @@ async function remove(row: SystemRecord) {
   await runWithFeedback(async () => {
     await deleteFile(row.id);
     showToast('文件已删除');
+    await loadData();
+  });
+}
+
+async function kick(row: SystemRecord) {
+  const token = String(attr(row, 'token') ?? row.code ?? '');
+  if (!token) {
+    errorMessage.value = '缺少会话 Token';
+    return;
+  }
+  await runWithFeedback(async () => {
+    await kickOnlineUser(token);
+    showToast('在线会话已强退');
     await loadData();
   });
 }

@@ -89,6 +89,13 @@ const fallbackMenuGroups: MenuGroup[] = [
       menu('27', '导出任务', '/system/export-tasks'),
       menu('28', '系统监控', '/system/monitor')
     ]
+  },
+  {
+    title: '客商中心',
+    items: [
+      menu('40', '客户档案', '/customer/customers'),
+      menu('41', '黑名单', '/customer/blacklist')
+    ]
   }
 ];
 
@@ -128,7 +135,12 @@ const menuNameMap: Record<string, string> = {
   'Message Template': '消息模板',
   'Export Task': '导出任务',
   Monitor: '系统监控',
-  'Online User': '在线用户'
+  'Online User': '在线用户',
+  'Customer Center': '客商中心',
+  Customers: '客户档案',
+  'Customer Contacts': '客户联系人',
+  'Customer Addresses': '客户地址簿',
+  'Customer Blacklist': '黑名单'
 };
 
 const menuIdNameMap: Record<string, string> = {
@@ -148,7 +160,33 @@ const menuIdNameMap: Record<string, string> = {
   '1960': '消息模板',
   '1970': '导出任务',
   '1980': '系统监控',
-  '1990': '在线用户'
+  '1990': '在线用户',
+  '4000': '客商中心',
+  '4100': '客户档案',
+  '4104': '客商角色查询',
+  '4105': '客商角色新增',
+  '4106': '客商角色编辑',
+  '4107': '客商角色删除',
+  '4108': '客户关系查询',
+  '4109': '客户关系新增',
+  '4110': '客户关系编辑',
+  '4111': '客户关系删除',
+  '4112': '客户附件查询',
+  '4113': '客户附件新增',
+  '4114': '客户附件编辑',
+  '4115': '客户附件删除',
+  '4116': '客户KYC查询',
+  '4117': '客户KYC新增',
+  '4118': '客户KYC编辑',
+  '4119': '客户KYC审核',
+  '4120': '客户KYC删除',
+  '4200': '客户联系人',
+  '4300': '客户地址簿',
+  '4400': '黑名单',
+  '4401': '黑名单新增',
+  '4402': '黑名单编辑',
+  '4403': '黑名单删除',
+  '4404': '黑名单校验'
 };
 
 function menuDisplayName(name?: string, menuId?: string) {
@@ -208,6 +246,7 @@ function groupBackendMenus(menus: MenuItem[]) {
 function inferGroupTitle(path?: string) {
   if (!path) return '其他';
   if (path.startsWith('/user') || path.startsWith('user')) return '用户权限';
+  if (path.startsWith('/customer') || path.startsWith('customer')) return '客商中心';
   if (path.startsWith('/system-support') || path.startsWith('system-support')) return '系统运维';
   if (path.startsWith('/system') || path.startsWith('system')) return '系统运维';
   return '启动模块';

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/user-session';
+import { customerRoutes } from './modules/customer';
 import { userRoutes } from './modules/user';
 import { systemRoutes } from './modules/system';
 
@@ -13,6 +14,7 @@ export const router = createRouter({
       children: [
         { path: '', redirect: '/dashboard' },
         ...userRoutes,
+        ...customerRoutes,
         ...systemRoutes
       ]
     },

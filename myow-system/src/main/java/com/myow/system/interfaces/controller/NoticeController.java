@@ -85,12 +85,12 @@ public class NoticeController {
     @Operation(summary = "Mark notice read", description = "Marks a notice as read for current user.")
     @PostMapping("/read")
     public Result<Boolean> read(@RequestBody IdCommand command) {
-        return Result.success(command.id() != null);
+        return Result.success(service.readNotice(command));
     }
 
     @Operation(summary = "Mark all notices read", description = "Marks all notices as read for current user.")
     @PostMapping("/read-all")
     public Result<Boolean> readAll() {
-        return Result.success(true);
+        return Result.success(service.readAllNotices());
     }
 }

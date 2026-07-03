@@ -18,7 +18,7 @@ myow-customer 模块是 MYOW Platform 的客商主数据中心，负责海外仓
 
 #### 客商主体
 
-统一维护公司/个人/海外代理等外部主体，一个主体只保留一个 partner_code，并通过业务角色区分客户、供应商、船公司等身份。
+统一维护公司/个人/海外代理等外部主体，一个主体只保留一个 customer_code 作为跨模块可见编码，并通过业务角色区分客户、供应商、仓库服务商、物流商、海外代理、船公司等身份。customer 模块内部可以保留聚合实现细节，但对外接口、Provider、业务单据和报表统一只暴露 customer_id，不使用 partner_id 作为跨模块字段。
 
 #### 联系人管理
 
@@ -45,18 +45,31 @@ myow-customer 模块是 MYOW Platform 的客商主数据中心，负责海外仓
 | myow-finance | 账单生成时读取客户结算偏好、开票信息、财务主体 | customer 提供客户主数据，finance 管理费用项、账单、账户与收付款 |
 | myow-firstmile | 头程运输单引用委托客户 | customer 提供客户档案，firstmile 做运输单关联 |
 
-设计原则：myow-customer 作为客商主数据（Partner Master Data）和客户角色视图（Customer View）的唯一来源，其他业务模块通过只读接口（PartnerProvider / CustomerProvider）查询主体和客户信息，禁止在业务模块内重复维护客户、供应商或代理档案。商品 SKU 只归属 myow-overseas；头程模块如需要商品信息，采用单据快照字段填写，不引用 customer SKU。业务合同和价格规则归属具体业务模块，费用项字典、账户、账单和收付款归属 myow-finance。
+设计原则：myow-customer 作为客商主数据和业务角色视图的唯一来源，其他业务模块通过只读接口（CustomerProvider / CustomerRoleProvider）查询主体、角色和状态，禁止在业务模块内重复维护客户、供应商、仓库服务商、物流商或代理档案。商品 SKU 只归属 myow-overseas；头程模块如需要商品信息，采用单据快照字段填写，不引用 customer SKU。业务合同和价格规则归属具体业务模块，费用项字典、账户、账单和收付款归属 myow-finance。
+
+### 1.3 跨模块引用契约
+
+- 唯一对外键：所有业务模块引用外部业务主体时统一使用 customer_id。禁止在 overseas、firstmile、finance 等模块新增 partner_id 作为跨模块外键。
+
+- 角色表达：同一个 customer_id 可以同时具备 CUSTOMER、SUPPLIER、WAREHOUSE_PROVIDER、CARRIER、OVERSEAS_AGENT、CUSTOMS_BROKER 等业务角色，用于支撑客供一体、仓库服务商、物流商和海外代理等场景。
+
+- 客供一体：同一家公司既是客户又是供应商时，只维护一份客户主档，增加多个角色。财务应收应付对冲依据 customer_id + role_type + offset_enabled 判断，具体对冲执行归属 myow-finance。
+
+- 服务商选择：海外仓物理仓的仓库服务商、物流产品/渠道的物流商、海外代理能力都从 customer 模块按角色过滤选择。业务模块只保存 service_provider_customer_id、carrier_customer_id、overseas_agent_customer_id 等语义化 customer_id 字段。
+
+- 主数据边界：业务模块可保存客户名称、编码、地址、联系方式等快照字段用于历史审计和展示，但快照不是主数据来源，不得反向更新 customer 模块。
+
+- 准入校验：业务模块创建或启用引用 customer_id 的配置前，必须通过 CustomerProvider 校验客户存在、状态可用、未命中黑名单，并通过 CustomerRoleProvider 校验目标角色处于 ACTIVE。
 
 ## 02 领域模型设计
 
-客户域以客商主体（Partner）为底层唯一主体，以客户档案（Customer）作为客户角色视图。联系人、地址、结算偏好等实体围绕 customer_id 展开；供应商、海外代理、船公司等身份通过 partner_role 表表达。各业务模块通过 customer_id 引用客户业务数据，通过 partner_id 进行客供一体识别和财务对冲关联；商品 SKU、业务合同、业务价格规则、账户流水和账单不放在 customer 模块。
+客户域以客户档案（Customer）作为外部主体统一视图。联系人、地址、结算偏好等实体围绕 customer_id 展开；供应商、仓库服务商、物流商、海外代理、船公司等身份通过 cm_customer_role 业务角色标签表达。各业务模块只通过 customer_id 引用客户、供应商或服务商业务数据，客供一体识别和财务对冲也以同一个 customer_id 的多角色为基础；商品 SKU、业务合同、业务价格规则、账户流水和账单不放在 customer 模块。
 
 ### 2.1 实体关系图
 
 ```mermaid
 erDiagram
-    PARTNER ||--o{ PARTNER_ROLE : has
-    PARTNER ||--o{ CUSTOMER : owns
+    CUSTOMER ||--o{ CUSTOMER_ROLE : has
     CUSTOMER ||--o{ CUSTOMER_CONTACT : has
     CUSTOMER ||--o{ CUSTOMER_ADDRESS : has
     CUSTOMER ||--o{ CUSTOMER_SETTLEMENT_PROFILE : configures
@@ -68,12 +81,11 @@ erDiagram
 
 #### 2.2.1 客户档案聚合（Customer Aggregate）
 
-cm_customer 是客户角色聚合根，必须关联 cm_partner_profile.partner_id。同一个 partner 可以同时具备 CUSTOMER、SUPPLIER、OVERSEAS_AGENT、CARRIER 等业务角色，但客户业务模块只通过 customer_id 做业务引用，避免根据业务概念频繁改字段名。
+cm_customer 是客户/客商统一聚合根。同一个 customer_id 可以同时具备 CUSTOMER、SUPPLIER、WAREHOUSE_PROVIDER、OVERSEAS_AGENT、CARRIER 等业务角色；客户、供应商、服务商、海外代理等业务模块只通过 customer_id 做业务引用，避免根据业务概念频繁改字段名。
 
 | 字段 | 类型 | 约束 | 说明 |
 | --- | --- | --- | --- |
 | customer_id | BIGINT | PK | 客户唯一标识 |
-| partner_id | BIGINT | NOT NULL | 客商主体 ID，用于客供一体和财务对冲识别 |
 | customer_code | VARCHAR(32) | NOT NULL, UK | 客户编码，全局唯一 |
 | tenant_id | BIGINT | NOT NULL | 所属租户 |
 | customer_name | VARCHAR(128) | NOT NULL | 客户公司名称 |
@@ -182,87 +194,36 @@ myow-customer 模块设计客商主体、客户档案、联系人、地址、结
 
 | 表名 | 中文名 | 预估数据量 | 核心索引 |
 | --- | --- | --- | --- |
-| cm_partner_profile | 客商主体表 | 千级/租户 | uk: partner_code; uk: tax_no / license_no |
-| cm_partner_role | 客商业务角色表 | 千级/租户 | uk: partner_id + role_type; idx: role_type |
-| cm_customer | 客户档案表 | 千级/租户 | uk: customer_code; idx: partner_id; idx: owner |
+| cm_customer | 客户/客商统一主档表 | 千级/租户 | uk: customer_code; uk: tax_no / license_no; idx: owner |
+| cm_customer_role | 客商业务角色标签表 | 千级/租户 | uk: customer_id + role_type; idx: role_type |
 | cm_customer_contact | 客户联系人表 | 万级/租户 | idx: customer_id; idx: is_primary |
 | cm_customer_settlement_profile | 客户结算偏好表 | 千级/租户 | uk: customer_id |
 | cm_customer_address | 客户地址表 | 万级/租户 | idx: customer_id + address_type; idx: is_default |
 
 ### 3.2 核心表 DDL
 
-#### cm_partner_profile（客商主体表）
-
-```sql
-CREATE TABLE cm_partner_profile (
-    partner_id        BIGINT PRIMARY KEY,
-    tenant_id         BIGINT NOT NULL,
-    partner_code      VARCHAR(32) NOT NULL,
-    partner_name      VARCHAR(128) NOT NULL,
-    partner_type      VARCHAR(16) NOT NULL DEFAULT 'COMPANY',
-    country_code      VARCHAR(8),
-    biz_license_no    VARCHAR(64),
-    tax_no            VARCHAR(64),
-    status            VARCHAR(16) DEFAULT 'ACTIVE',
-    risk_level        VARCHAR(16) DEFAULT 'NORMAL',
-    remark            VARCHAR(512),
-    create_by         BIGINT,
-    create_time       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    update_by         BIGINT,
-    update_time       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag      BOOLEAN DEFAULT FALSE,
-    CONSTRAINT uk_partner_code UNIQUE (tenant_id, partner_code)
-);
-CREATE INDEX idx_partner_name ON cm_partner_profile(tenant_id, partner_name);
-CREATE INDEX idx_partner_tax_no ON cm_partner_profile(tenant_id, tax_no);
-COMMENT ON TABLE cm_partner_profile IS '客商主体表，一个外部公司或个人在系统内只保留一个主体编码';
-```
-
-#### cm_partner_role（客商业务角色表）
-
-```sql
-CREATE TABLE cm_partner_role (
-    partner_role_id   BIGINT PRIMARY KEY,
-    tenant_id         BIGINT NOT NULL,
-    partner_id        BIGINT NOT NULL,
-    role_type         VARCHAR(32) NOT NULL,
-    role_status       VARCHAR(16) DEFAULT 'ACTIVE',
-    customer_id       BIGINT,
-    supplier_code     VARCHAR(32),
-    offset_enabled    BOOLEAN DEFAULT FALSE,
-    create_by         BIGINT,
-    create_time       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    update_by         BIGINT,
-    update_time       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-    deleted_flag      BOOLEAN DEFAULT FALSE,
-    CONSTRAINT uk_partner_role UNIQUE (tenant_id, partner_id, role_type)
-);
-CREATE INDEX idx_partner_role_type ON cm_partner_role(tenant_id, role_type, role_status);
-COMMENT ON COLUMN cm_partner_role.role_type IS 'CUSTOMER / SUPPLIER / OVERSEAS_AGENT / CARRIER / CUSTOMS_BROKER';
-COMMENT ON COLUMN cm_partner_role.offset_enabled IS '是否允许 finance 做应收应付对冲，具体对冲执行归属 myow-finance';
-```
-
-#### cm_customer（客户档案表）
+#### cm_customer（客户/客商统一主档表）
 
 ```sql
 CREATE TABLE cm_customer (
     customer_id       BIGINT PRIMARY KEY,
     tenant_id         BIGINT NOT NULL,
-    partner_id        BIGINT NOT NULL,
     customer_code     VARCHAR(32) NOT NULL,
     customer_name     VARCHAR(128) NOT NULL,
     customer_type     VARCHAR(16) NOT NULL DEFAULT 'COMPANY',
     customer_level    VARCHAR(16) DEFAULT 'BRONZE',
+    country_code      VARCHAR(8),
     biz_license_no    VARCHAR(64),
     tax_no            VARCHAR(64),
     settlement_type   VARCHAR(16) DEFAULT 'PREPAID',
     default_currency  VARCHAR(8) DEFAULT 'USD',
     status            VARCHAR(16) DEFAULT 'PENDING',
+    risk_level        VARCHAR(16) DEFAULT 'NORMAL',
     sales_owner_id    BIGINT,
     owner_dept_id     BIGINT,
     pool_status       VARCHAR(16) DEFAULT 'PRIVATE',
-    register_time     TIMESTAMP,
-    audit_time        TIMESTAMP,
+    register_time     TIMESTAMP(3),
+    audit_time        TIMESTAMP(3),
     remark            VARCHAR(512),
     create_by         BIGINT,
     create_time       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
@@ -271,14 +232,34 @@ CREATE TABLE cm_customer (
     deleted_flag      BOOLEAN DEFAULT FALSE,
     CONSTRAINT uk_customer_code UNIQUE (tenant_id, customer_code)
 );
-CREATE INDEX idx_customer_status ON cm_customer(status);
-CREATE INDEX idx_customer_level ON cm_customer(customer_level);
-CREATE INDEX idx_customer_tenant ON cm_customer(tenant_id, status);
-CREATE INDEX idx_customer_partner ON cm_customer(tenant_id, partner_id);
-CREATE INDEX idx_customer_owner ON cm_customer(tenant_id, sales_owner_id, owner_dept_id, pool_status);
-COMMENT ON TABLE cm_customer IS '客户档案表';
-COMMENT ON COLUMN cm_customer.status IS 'PENDING / ACTIVE / SUSPENDED / TERMINATED';
-COMMENT ON COLUMN cm_customer.pool_status IS 'PRIVATE / PUBLIC';
+CREATE INDEX idx_customer_name ON cm_customer(tenant_id, customer_name);
+CREATE INDEX idx_customer_tax_no ON cm_customer(tenant_id, tax_no);
+CREATE INDEX idx_customer_owner ON cm_customer(tenant_id, sales_owner_id, owner_dept_id);
+COMMENT ON TABLE cm_customer IS '客户/客商统一主档表，一个外部公司或个人在系统内只保留一个 customer_id';
+```
+
+#### cm_customer_role（客商业务角色标签表）
+
+```sql
+CREATE TABLE cm_customer_role (
+    customer_role_id  BIGINT PRIMARY KEY,
+    tenant_id         BIGINT NOT NULL,
+    customer_id       BIGINT NOT NULL,
+    role_type         VARCHAR(32) NOT NULL,
+    role_status       VARCHAR(16) DEFAULT 'ACTIVE',
+    role_code         VARCHAR(32),
+    offset_enabled    BOOLEAN DEFAULT FALSE,
+    create_by         BIGINT,
+    create_time       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+    update_by         BIGINT,
+    update_time       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+    deleted_flag      BOOLEAN DEFAULT FALSE,
+    CONSTRAINT uk_cm_customer_role UNIQUE (tenant_id, customer_id, role_type)
+);
+CREATE INDEX idx_cm_customer_role_type ON cm_customer_role(tenant_id, role_type, role_status);
+COMMENT ON TABLE cm_customer_role IS '客商业务角色标签表，不用于客户门户 RBAC';
+COMMENT ON COLUMN cm_customer_role.role_type IS 'CUSTOMER / SUPPLIER / WAREHOUSE_PROVIDER / OVERSEAS_AGENT / CARRIER / CUSTOMS_BROKER';
+COMMENT ON COLUMN cm_customer_role.offset_enabled IS '是否允许 finance 做应收应付对冲，具体对冲执行归属 myow-finance';
 ```
 
 #### cm_customer_contact（客户联系人表）
@@ -358,7 +339,7 @@ COMMENT ON COLUMN cm_customer_address.address_type IS 'SHIP_FROM / SHIP_TO / BIL
 
 ### 3.3 分表与归档策略
 
-- cm_partner_profile：客商主体唯一来源，按 partner_code、名称、税号做检索；客户、供应商、代理共享同一主体。
+- cm_customer：客商主体唯一来源，按 customer_code、名称、税号做检索；客户、供应商、仓库服务商、物流商、代理共享同一主体。
 
 - cm_customer：千级数据量，无需分区；全表缓存到 Redis，变更时失效；列表查询必须叠加内部员工数据权限条件。
 
@@ -463,7 +444,7 @@ flowchart TD
 
 - 全局唯一：customer_code 在租户内全局唯一，通过数据库唯一索引强制约束。
 
-- 主体防重：同一租户下按 partner_code、税号、营业执照号、公司名称相似度和联系人信息检测重复主体。允许同一 partner 拥有多个业务角色，但不允许同一公司重复创建多个 partner。
+- 主体防重：同一租户下按 customer_code、税号、营业执照号、公司名称相似度和联系人信息检测重复主体。允许同一 customer_id 拥有多个业务角色，但不允许同一公司重复创建多个 customer 主档。
 
 - 状态流转：PENDING -> ACTIVE -> SUSPENDED/TERMINATED。只有 ACTIVE 状态的客户可以创建业务单据（入库单/出库单/运输单）；SUSPENDED 状态客户暂停下单但保留历史数据；TERMINATED 状态客户不可恢复，仅做归档查询。
 
@@ -523,9 +504,8 @@ flowchart TD
 
 | Controller | 基路径 | 职责 | P 阶段 |
 | --- | --- | --- | --- |
-| PartnerController | /api/v1/customer/partners | 客商主体创建、更新、详情、分页、重复主体检测 | P0 |
-| PartnerRoleController | /api/v1/customer/partner-roles | 客户/供应商/海外代理等业务角色维护 | P0 |
-| CustomerController | /api/v1/customer/customers | 客户档案 CRUD、审核、暂停、恢复、终止、负责人变更 | P0 |
+| CustomerController | /api/v1/customer/customers | 客户/客商主档 CRUD、审核、暂停、恢复、终止、负责人变更 | P0 |
+| CustomerRoleController | /api/v1/customer/roles | 客户/供应商/仓库服务商/物流商/海外代理等业务角色标签维护 | P0 |
 | ContactController | /api/v1/customer/contacts | 联系人 CRUD、角色维护、设为主联系人 | P0 |
 | AddressController | /api/v1/customer/addresses | 地址 CRUD、设为默认、停用 | P0 |
 | SettlementProfileController | /api/v1/customer/settlement-profiles | 结算偏好、开票信息、财务主体编码维护 | P0 |
@@ -543,19 +523,19 @@ flowchart TD
 
 | 功能域 | 接口 | Command / Query | 权限码 |
 | --- | --- | --- | --- |
-| Partner | POST /partners/create | PartnerCreateCommand | customer:partner:create |
-| Partner | POST /partners/update | PartnerUpdateCommand | customer:partner:update |
-| Partner | POST /partners/page | PartnerPageQuery | customer:partner:list |
-| Partner | POST /partners/detail | {partnerId} | customer:partner:detail |
-| Partner | POST /partners/check-duplicate | PartnerDuplicateCheckQuery | customer:partner:list |
-| PartnerRole | POST /partner-roles/save | PartnerRoleSaveCommand | customer:partner-role:save |
 | Customer | POST /customers/create | CustomerCreateCommand | customer:customer:create |
 | Customer | POST /customers/update | CustomerUpdateCommand | customer:customer:update |
 | Customer | POST /customers/page | CustomerPageQuery | customer:customer:list |
 | Customer | POST /customers/detail | {customerId} | customer:customer:detail |
+| Customer | POST /customers/check-duplicate | CustomerDuplicateCheckQuery | customer:customer:list |
 | Customer | POST /customers/audit | CustomerAuditCommand | customer:customer:audit |
 | Customer | POST /customers/change-status | CustomerStatusChangeCommand | customer:customer:change-status |
 | Customer | POST /customers/change-owner | CustomerOwnerChangeCommand | customer:customer:change-owner |
+| CustomerRole | POST /roles/create | RoleCreateCommand | customer:role:create |
+| CustomerRole | POST /roles/update | RoleUpdateCommand | customer:role:update |
+| CustomerRole | POST /roles/page | RolePageQuery | customer:role:list |
+| CustomerRole | POST /roles/options-by-role | RoleOptionQuery | customer:role:list |
+| CustomerRole | POST /roles/validate-role | RoleValidateCommand | customer:role:list |
 | Contact | POST /contacts/create | ContactCreateCommand | customer:contact:create |
 | Contact | POST /contacts/update | ContactUpdateCommand | customer:contact:update |
 | Contact | POST /contacts/list-by-customer | {customerId} | customer:contact:list |
@@ -582,14 +562,15 @@ flowchart TD
 
 ### 7.3 Provider 契约
 
-Provider 是 customer 对其他模块开放的稳定只读契约。业务模块不得直接访问 customer 表，也不得复制客户主数据。商品 SKU 不通过 customer Provider 提供，海外仓 SKU 由 myow-overseas 自管。
+Provider 是 customer 对其他模块开放的稳定只读契约。业务模块不得直接访问 customer 表，也不得复制客户主数据。跨模块字段统一使用 customer_id；商品 SKU 不通过 customer Provider 提供，海外仓 SKU 由 myow-overseas 自管。
 
 | Provider | 方法 | 调用方 | 说明 |
 | --- | --- | --- | --- |
-| PartnerProvider | getPartner(partnerId) | finance / overseas / firstmile | 查询客商主体，用于客供一体识别 |
-| PartnerProvider | listRoles(partnerId) | finance | 查询主体是否同时具备客户、供应商、海外代理等角色 |
 | CustomerProvider | getCustomer(customerId) | overseas / firstmile / finance | 查询客户基础档案和状态 |
 | CustomerProvider | validateActive(customerId) | overseas / firstmile | 校验客户是否允许创建业务单据 |
+| CustomerRoleProvider | listRoles(customerId) | finance / overseas / firstmile | 查询主体是否同时具备客户、供应商、仓库服务商、物流商、海外代理等角色 |
+| CustomerRoleProvider | validateRole(customerId, roleType) | overseas / firstmile / finance | 校验 customer_id 是否具备指定 ACTIVE 业务角色 |
+| CustomerRoleProvider | listOptionsByRole(roleType, keyword) | overseas / firstmile / finance | 按角色筛选可选客商，用于仓库服务商、物流商、海外代理选择器 |
 | SettlementProfileProvider | getProfile(customerId) | finance | 查询结算偏好、币种、开票信息 |
 | AddressProvider | getDefaultAddress(customerId, addressType) | overseas / firstmile | 查询默认地址 |
 | CustomerAccountProvider | getAccount(accountId) | customer portal / audit | 查询客户账号基础信息 |
@@ -607,9 +588,8 @@ Provider 是 customer 对其他模块开放的稳定只读契约。业务模块�
 
 | 阶段 | 表名 | 说明 | 核心索引/约束 |
 | --- | --- | --- | --- |
-| P0 | cm_partner_profile | 客商主体 | uk: tenant_id + partner_code; idx: tax_no |
-| P0 | cm_partner_role | 客商业务角色 | uk: tenant_id + partner_id + role_type |
-| P0 | cm_customer | 客户角色视图 | uk: tenant_id + customer_code; idx: partner_id; idx: owner |
+| P0 | cm_customer | 客户/客商统一主档 | uk: tenant_id + customer_code; idx: owner |
+| P0 | cm_customer_role | 客商业务角色标签 | uk: tenant_id + customer_id + role_type |
 | P0 | cm_customer_contact | 客户联系人 | idx: customer_id + contact_role |
 | P0 | cm_customer_address | 客户地址 | idx: customer_id + address_type |
 | P0 | cm_customer_settlement_profile | 结算偏好 | uk: tenant_id + customer_id |
@@ -617,10 +597,10 @@ Provider 是 customer 对其他模块开放的稳定只读契约。业务模块�
 | P0 | cm_customer_attachment | 附件索引 | idx: customer_id + attachment_type |
 | P0 | cm_customer_kyc | KYC 审核记录 | idx: customer_id + audit_status |
 | P1 | cm_customer_account | 客户门户账号 | uk: tenant_id + login_name; idx: customer_id |
-| P1 | cm_customer_role | 客户侧角色 | uk: tenant_id + customer_id + role_code |
+| P1 | cm_customer_portal_role | 客户门户侧角色 | uk: tenant_id + customer_id + role_code |
 | P1 | cm_customer_permission | 客户侧权限字典 | uk: tenant_id + permission_code |
 | P1 | cm_customer_account_role | 账号角色关系 | pk: account_id + role_id |
-| P1 | cm_customer_role_permission | 角色权限关系 | pk: role_id + permission_code |
+| P1 | cm_customer_portal_role_permission | 客户门户角色权限关系 | pk: portal_role_id + permission_code |
 | P1 | cm_customer_account_scope | 客户账号数据范围 | idx: customer_id + account_id |
 | P1 | cm_customer_login_log | 客户登录安全日志 | idx: account_id + login_time |
 | P1 | cm_customer_oper_log | 客户域操作日志 | idx: biz_type + biz_id; idx: operator |
@@ -636,7 +616,7 @@ Provider 是 customer 对其他模块开放的稳定只读契约。业务模块�
 | P3 | cm_customer_tag | 标签定义 | uk: tenant_id + tag_code |
 | P3 | cm_customer_tag_relation | 客户标签关系 | uk: customer_id + tag_id |
 | P3 | cm_customer_segment | 客户分群 | idx: tenant_id + status |
-| P4 | cm_overseas_agent_capability | 海外代理能力 | idx: partner_id + country + port_code |
+| P4 | cm_overseas_agent_capability | 海外代理能力 | idx: customer_id + country + port_code |
 | P4 | cm_blacklist | 黑名单主表 | idx: target_type + target_value_hash |
 | P4 | cm_blacklist_hit_log | 黑名单命中日志 | idx: biz_type + biz_id + hit_time |
 
@@ -644,11 +624,11 @@ Provider 是 customer 对其他模块开放的稳定只读契约。业务模块�
 
 | 脚本 | 范围 | 说明 |
 | --- | --- | --- |
-| V1__customer_core.sql | P0 | partner、customer、contact、address、settlement、relation、attachment、kyc |
+| V1__customer_core.sql | P0 | customer、customer_role、contact、address、settlement、relation、attachment、kyc |
 | V2__customer_account_rbac.sql | P1 | customer account、role、permission、account scope、login log、oper log |
 | V3__customer_api_credential.sql | P2 | API credential、IP whitelist、API call log |
 | V4__customer_sales_operation.sql | P3 | 公海、跟进、标签、分群 |
-| V5__customer_risk_partner.sql | P4 | 海外代理能力、黑名单、黑名单命中日志 |
+| V5__customer_risk_role.sql | P4 | 海外代理能力、黑名单、黑名单命中日志 |
 
 ### 8.3 DDL 规则
 
@@ -658,7 +638,7 @@ Provider 是 customer 对其他模块开放的稳定只读契约。业务模块�
 
 - 审计字段：写表默认包含 create_by、create_time、update_by、update_time；日志表可只保留 create_time。
 
-- 主体唯一性：partner_code 是客商主体唯一编码；customer_code 是客户角色编码；同一公司不得重复创建多个 partner。
+- 主体唯一性：customer_code 是客商主体唯一编码；同一公司不得重复创建多个 customer 主档。
 
 - 商品边界：禁止创建 cm_customer_sku 或同类 customer 商品主数据表。
 
@@ -697,8 +677,8 @@ com.myow.customer
 
 | 聚合 | 应用服务 | 职责 | 禁止职责 |
 | --- | --- | --- | --- |
-| Partner | PartnerService | 客商主体创建、重复主体识别、业务角色维护、客供一体关系 | 应收应付对冲执行、供应商账款核销 |
-| Customer | CustomerService | 客户创建、更新、审核、暂停、恢复、终止、详情与分页、销售归属 | 合同签订、费用计算、账户扣款 |
+| Customer | CustomerService | 客户/客商主档创建、更新、审核、暂停、恢复、终止、详情与分页、销售归属、重复主体识别 | 合同签订、费用计算、账户扣款 |
+| CustomerRole | CustomerRoleService | 客户、供应商、仓库服务商、物流商、海外代理等业务角色标签维护，客供一体关系 | 客户门户 RBAC、应收应付对冲执行、供应商账款核销 |
 | CustomerContact | ContactService | 联系人增删改查、主联系人维护 | 消息发送、通知模板 |
 | CustomerAddress | AddressService | 地址增删改查、默认地址维护、地址引用保护 | 物流可达校验、渠道选择 |
 | SettlementProfile | SettlementProfileService | 结算方式、默认币种、账期、开票信息、财务主体编码 | 余额、信用额度、账单、核销 |
@@ -709,9 +689,8 @@ com.myow.customer
 
 | 功能域 | 权限码 | 说明 |
 | --- | --- | --- |
-| Partner | customer:partner:list, customer:partner:detail, customer:partner:create, customer:partner:update | 客商主体管理 |
-| PartnerRole | customer:partner-role:save | 客商业务角色维护 |
 | Customer | customer:customer:list, customer:customer:detail, customer:customer:create, customer:customer:update, customer:customer:audit, customer:customer:change-status, customer:customer:change-owner | 客户生命周期与负责人 |
+| CustomerRole | customer:role:list, customer:role:create, customer:role:update, customer:role:delete | 客商业务角色标签维护 |
 | Contact | customer:contact:list, customer:contact:create, customer:contact:update, customer:contact:delete, customer:contact:set-primary | 联系人管理 |
 | Address | customer:address:list, customer:address:create, customer:address:update, customer:address:delete, customer:address:set-default | 地址簿管理 |
 | Settlement | customer:settlement:save, customer:settlement:detail | 结算偏好 |
@@ -746,7 +725,7 @@ portal:address:manage
 | 错误码 | 名称 | 触发场景 |
 | --- | --- | --- |
 | CM_1001 | 参数错误 | 必填字段为空、格式非法 |
-| CM_1002 | 编码已存在 | partner_code、customer_code 或 login_name 冲突 |
+| CM_1002 | 编码已存在 | customer_code 或 login_name 冲突 |
 | CM_1003 | 疑似重复主体 | 名称、税号、营业执照、联系人命中重复主体规则 |
 | CM_2001 | 客户不存在 | customer_id 未找到或已删除 |
 | CM_2002 | 客户状态非法 | 非 ACTIVE 状态客户尝试创建新业务 |
@@ -778,7 +757,7 @@ portal:address:manage
 
 - 结算偏好：每个客户最多一条有效结算偏好；缺失时 finance 可按租户默认策略处理，但业务模块不得自行推断账户余额。
 
-- 客供一体：同一税号、营业执照或高相似名称不得创建多个 partner；新增客户/供应商/代理时必须先匹配已有 partner。
+- 客供一体：同一税号、营业执照或高相似名称不得创建多个 customer 主档；新增客户/供应商/代理时必须先匹配已有 customer，并通过业务角色表达多身份。
 
 - 内部数据权限：后台客户列表、详情、联系人、附件、跟进记录必须先构建 staff customer scope，再查询业务数据。
 
@@ -790,7 +769,7 @@ portal:address:manage
 
 | 事件 | 触发时机 | 消费者 | 用途 |
 | --- | --- | --- | --- |
-| PartnerRoleChangedEvent | 客商主体角色新增、停用、开启对冲标识 | finance / overseas / firstmile | 刷新客供一体和代理能力缓存 |
+| CustomerRoleChangedEvent | 客商业务角色新增、停用、开启对冲标识 | finance / overseas / firstmile | 刷新客供一体、仓库服务商、物流商和代理能力缓存 |
 | CustomerCreatedEvent | 客户创建成功 | user / finance | 可选创建门户账号、初始化财务主体映射 |
 | CustomerOwnerChangedEvent | 客户认领、指派、回收、负责人变更 | customer / audit | 刷新内部数据权限缓存，记录客户归属历史 |
 | CustomerStatusChangedEvent | 客户状态变更 | overseas / firstmile / finance | 刷新业务准入缓存 |
@@ -804,7 +783,7 @@ portal:address:manage
 
 - 客户档案缓存：key = customer:profile:{customerId}，TTL 24 小时，客户状态或负责人变更时失效。
 
-- 客商主体缓存：key = customer:partner:{partnerId}，TTL 24 小时，角色变更时失效。
+- 客商角色缓存：key = customer:role:{customerId}，TTL 24 小时，角色变更时失效。
 
 - 客户账号权限缓存：key = customer:account:perm:{accountId}，TTL 2 小时，角色或权限变更时失效。
 
@@ -812,11 +791,11 @@ portal:address:manage
 
 ### 9.9 开发阶段
 
-- P0 客商与客户主数据：partner/customer/contact/address/settlement-profile 基础 CRUD、状态流转、Provider。
+- P0 客商与客户主数据：customer/customer-role/contact/address/settlement-profile 基础 CRUD、状态流转、Provider。
 
 - P1 账号与数据权限：客户门户主子账号、客户侧 RBAC、客户账号数据范围、内部员工客户数据权限。
 
-- P2 跨模块集成：overseas/firstmile 引用 customer_id，finance 引用结算偏好、partner_id 和对冲标识。
+- P2 跨模块集成：overseas/firstmile/finance 统一引用 customer_id，finance 引用结算偏好、业务角色和对冲标识。
 
 - P3 销售运营：公海、跟进、标签画像、分群。
 

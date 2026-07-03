@@ -39,11 +39,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { postAdminData, type AdminRecord } from '@/services/admin-data-service';
+import { loadDbMetrics, loadRedisMetrics, loadServerMetrics } from '@/services/system-service';
 
-const server = ref<AdminRecord>({});
-const redis = ref<AdminRecord>({});
-const db = ref<AdminRecord>({});
+type MetricRecord = Record<string, unknown>;
+
+const server = ref<MetricRecord>({});
+const redis = ref<MetricRecord>({});
+const db = ref<MetricRecord>({});
 const errorMessage = ref('');
 
 const cards = computed(() => [
@@ -67,9 +69,9 @@ async function loadMonitor() {
   errorMessage.value = '';
   try {
     const [serverResult, redisResult, dbResult] = await Promise.all([
-      postAdminData<AdminRecord>('/myow/api/v1/system/monitor/server'),
-      postAdminData<AdminRecord>('/myow/api/v1/system/monitor/redis'),
-      postAdminData<AdminRecord>('/myow/api/v1/system/monitor/db')
+      loadServerMetrics(),
+      loadRedisMetrics(),
+      loadDbMetrics()
     ]);
     server.value = serverResult ?? {};
     redis.value = redisResult ?? {};
@@ -79,7 +81,7 @@ async function loadMonitor() {
   }
 }
 
-function toEntries(record: AdminRecord) {
+function toEntries(record: MetricRecord) {
   return Object.entries(record).slice(0, 12).map(([key, value]) => ({
     key,
     value: formatValue(value)

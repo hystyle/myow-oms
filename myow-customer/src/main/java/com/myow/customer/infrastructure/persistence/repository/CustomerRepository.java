@@ -8,6 +8,9 @@ import com.myow.customer.infrastructure.persistence.po.CustomerDO;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.util.Collection;
+import java.util.List;
+
 @Repository
 public class CustomerRepository extends ServiceImpl<CustomerMapper, CustomerDO> {
 
@@ -34,5 +37,19 @@ public class CustomerRepository extends ServiceImpl<CustomerMapper, CustomerDO> 
                 .eq(CustomerDO::getDeletedFlag, false)
                 .ne(excludeCustomerId != null, CustomerDO::getCustomerId, excludeCustomerId)
                 .exists();
+    }
+
+    public List<CustomerDO> listActiveOptions(Long tenantId, Collection<Long> customerIds, String keyword, long limit) {
+        return lambdaQuery()
+                .eq(CustomerDO::getTenantId, tenantId)
+                .eq(CustomerDO::getStatus, "ACTIVE")
+                .eq(CustomerDO::getDeletedFlag, false)
+                .in(customerIds != null && !customerIds.isEmpty(), CustomerDO::getCustomerId, customerIds)
+                .and(StringUtils.hasText(keyword), wrapper -> wrapper
+                        .like(CustomerDO::getCustomerCode, keyword)
+                        .or().like(CustomerDO::getCustomerName, keyword))
+                .orderByAsc(CustomerDO::getCustomerCode)
+                .last("LIMIT " + limit)
+                .list();
     }
 }

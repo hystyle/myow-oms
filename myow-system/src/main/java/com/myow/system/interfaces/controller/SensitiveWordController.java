@@ -66,11 +66,11 @@ public class SensitiveWordController {
         return Result.success(service.delete("SENSITIVE_WORD", command));
     }
 
-    @Operation(summary = "Import sensitive words", description = "Imports sensitive words from Excel or CSV.")
+    @Operation(summary = "Import sensitive words", description = "Imports sensitive words from CSV or TXT. Each line uses word,category,level,replacement.")
     @PostMapping("/import")
     @SaCheckPermission("system:sensitive-word:import")
-    public Result<Boolean> importFile(MultipartFile file) {
-        return Result.success(file != null);
+    public Result<Map<String, Object>> importFile(MultipartFile file) {
+        return Result.success(service.importSensitiveWords(file));
     }
 
     @Operation(summary = "Check text", description = "Checks text against active sensitive word library.")
